@@ -1,8 +1,18 @@
 export type TaskType = "follow_up" | "appointment" | "labs" | "scan" | "billing" | "other"
 
-export type TaskStatus = "pending" | "done" | "snoozed" | "cancelled"
+export type TaskStatus = "pending" | "done" | "cancelled"
 
 export type TaskPriority = "low" | "normal" | "high"
+
+export type TaskSource = "manual" | "alert" | "ai"
+
+export type AlertTaskPayload = {
+  alertType: "question" | "lab"
+  severity: "critical" | "warning" | "info"
+  message?: string
+  labResultId?: string
+  labTestName?: string
+}
 
 export interface Task {
   id: string
@@ -17,10 +27,14 @@ export interface Task {
   assignedToUserId?: string
   patientId?: string
   clinicId: string
+  source: TaskSource
+  sourceId?: string
+  sourcePayload?: AlertTaskPayload
 }
 
 export interface TaskListItem extends Task {
   patientName?: string
+  patientPhone?: string
   assignedToName?: string
   createdByName?: string
 }
@@ -32,6 +46,7 @@ export interface ListTasksParams {
   status?: TaskStatus | "all"
   type?: TaskType | "all"
   priority?: TaskPriority | "all"
+  source?: TaskSource | "all"
   query?: string
   page: number
   pageSize: number
@@ -65,9 +80,4 @@ export interface UpdateTaskStatusPayload {
 export interface AssignTaskPayload {
   id: string
   assignedToUserId?: string
-}
-
-export interface SnoozeTaskPayload {
-  id: string
-  nextDueDate: string
 }

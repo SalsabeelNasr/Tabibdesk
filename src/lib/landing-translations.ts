@@ -91,7 +91,7 @@ export const translations = {
     problem3: "Follow-ups get lost",
     outcome1: "Ready summary for each patient",
     outcome2: "Tasks for secretary and patient",
-    outcome3: "Alerts for follow-ups and labs",
+    outcome3: "Automated tasks for follow-ups and labs",
 
     // Differentiators
     diff1: "Voice recording → Ready notes",

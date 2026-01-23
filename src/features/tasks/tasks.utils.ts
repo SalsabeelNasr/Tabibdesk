@@ -6,8 +6,6 @@ export function getStatusBadgeVariant(status: TaskStatus): "default" | "success"
       return "default"
     case "done":
       return "success"
-    case "snoozed":
-      return "warning"
     case "cancelled":
       return "error"
     default:
@@ -21,8 +19,6 @@ export function getStatusLabel(status: TaskStatus): string {
       return "Pending"
     case "done":
       return "Done"
-    case "snoozed":
-      return "Snoozed"
     case "cancelled":
       return "Cancelled"
     default:

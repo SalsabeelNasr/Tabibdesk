@@ -92,6 +92,7 @@ function FeatureDisabledState({
     tasks: "Tasks",
     insights: "Insights",
     alerts: "Alerts",
+    accounting: "Accounting",
     labs: "Labs",
     medications: "Medications",
     files: "Files",

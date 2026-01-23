@@ -10,16 +10,16 @@ import { useDebounce } from "@/lib/useDebounce"
 import { TasksToolbar } from "./TasksToolbar"
 import { TasksTable } from "./TasksTable"
 import { TasksCards } from "./TasksCards"
-import { NewTaskModal, SnoozeModal, AssignModal } from "./TaskModals"
+import { NewTaskModal, AssignModal } from "./TaskModals"
 import {
   listTasks,
   createTask,
   updateTaskStatus,
   assignTask,
-  snoozeTask,
 } from "./tasks.api"
 import type {
   TaskListItem,
+  TaskSource,
   TaskStatus,
   CreateTaskPayload,
 } from "./tasks.types"
@@ -28,19 +28,29 @@ interface TasksPageProps {
   role: "doctor" | "assistant" | "manager"
   currentUserId: string
   clinicId: string
+  defaultSourceFilter?: TaskSource | "all"
+  pageTitle?: string
+  pageSubtitle?: string
 }
 
-export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
+export function TasksPage({
+  role,
+  currentUserId,
+  clinicId,
+  defaultSourceFilter = "all",
+  pageTitle,
+  pageSubtitle,
+}: TasksPageProps) {
   const [tasks, setTasks] = useState<TaskListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const debouncedSearch = useDebounce(searchQuery, 250)
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("pending")
+  const [sourceFilter, setSourceFilter] = useState<TaskSource | "all">(defaultSourceFilter)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [showNewTaskModal, setShowNewTaskModal] = useState(false)
-  const [snoozeTaskData, setSnoozeTaskData] = useState<TaskListItem | null>(null)
   const [assignTaskData, setAssignTaskData] = useState<TaskListItem | null>(null)
 
   const pageSize = 20
@@ -51,6 +61,7 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
       const response = await listTasks({
         clinicId,
         status: statusFilter,
+        source: sourceFilter,
         query: debouncedSearch,
         page,
         pageSize,
@@ -68,7 +79,11 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
   useEffect(() => {
     fetchTasks()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, statusFilter, page, clinicId])
+  }, [debouncedSearch, statusFilter, sourceFilter, page, clinicId])
+
+  useEffect(() => {
+    setPage(1)
+  }, [statusFilter, sourceFilter, debouncedSearch])
 
   const handleCreateTask = async (payload: CreateTaskPayload) => {
     await createTask(payload)
@@ -77,12 +92,6 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
 
   const handleMarkDone = async (task: TaskListItem) => {
     await updateTaskStatus({ id: task.id, status: "done" })
-    await fetchTasks()
-  }
-
-  const handleSnooze = async (nextDueDate: string) => {
-    if (!snoozeTaskData) return
-    await snoozeTask({ id: snoozeTaskData.id, nextDueDate })
     await fetchTasks()
   }
 
@@ -99,11 +108,12 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tasks"
+        title={pageTitle || "Tasks"}
         subtitle={
-          searchQuery
+          pageSubtitle ||
+          (searchQuery
             ? `${filteredCount} task${filteredCount !== 1 ? "s" : ""} found`
-            : `${total} total task${total !== 1 ? "s" : ""}`
+            : `${total} total task${total !== 1 ? "s" : ""}`)
         }
       />
 
@@ -112,9 +122,9 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
         onSearchChange={setSearchQuery}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        sourceFilter={sourceFilter}
+        onSourceFilterChange={setSourceFilter}
         onNewTask={() => setShowNewTaskModal(true)}
-        totalTasks={total}
-        filteredCount={filteredCount}
       />
 
       {loading && tasks.length === 0 ? (
@@ -151,10 +161,8 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
             <TasksTable
               tasks={tasks}
               onMarkDone={handleMarkDone}
-              onSnooze={(task) => setSnoozeTaskData(task)}
               onAssign={(task) => setAssignTaskData(task)}
               role={role}
-              currentUserId={currentUserId}
             />
           </div>
           
@@ -163,10 +171,8 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
             <TasksCards
               tasks={tasks}
               onMarkDone={handleMarkDone}
-              onSnooze={(task) => setSnoozeTaskData(task)}
               onAssign={(task) => setAssignTaskData(task)}
               role={role}
-              currentUserId={currentUserId}
             />
           </div>
 
@@ -193,14 +199,6 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
         defaultAssignedToUserId={defaultAssignedTo}
         currentUserId={currentUserId}
         clinicId={clinicId}
-        role={role}
-      />
-
-      <SnoozeModal
-        isOpen={!!snoozeTaskData}
-        onClose={() => setSnoozeTaskData(null)}
-        onSubmit={handleSnooze}
-        task={snoozeTaskData}
       />
 
       <AssignModal
@@ -208,8 +206,6 @@ export function TasksPage({ role, currentUserId, clinicId }: TasksPageProps) {
         onClose={() => setAssignTaskData(null)}
         onSubmit={handleAssign}
         task={assignTaskData}
-        currentUserId={currentUserId}
-        role={role}
       />
     </div>
   )

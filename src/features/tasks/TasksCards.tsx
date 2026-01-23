@@ -1,8 +1,11 @@
 import Link from "next/link"
+import { Button } from "@/components/Button"
 import {
   RiUserLine,
   RiCheckLine,
   RiCheckboxBlankCircleLine,
+  RiUserSharedLine,
+  RiWhatsappLine,
 } from "@remixicon/react"
 import {
   formatTaskDate,
@@ -14,25 +17,26 @@ import { cx } from "@/lib/utils"
 interface TasksCardsProps {
   tasks: TaskListItem[]
   onMarkDone: (task: TaskListItem) => void
-  onSnooze: (task: TaskListItem) => void
   onAssign: (task: TaskListItem) => void
   role: "doctor" | "assistant" | "manager"
-  currentUserId: string
 }
 
 export function TasksCards({
   tasks,
   onMarkDone,
-  onSnooze,
   onAssign,
   role,
-  currentUserId,
 }: TasksCardsProps) {
   return (
     <div className="space-y-3">
       {tasks.map((task) => {
         const overdue = isOverdue(task.dueDate)
         const isDone = task.status === "done"
+        const canAssign = role === "doctor" || role === "assistant" || role === "manager"
+        const waPhone = task.patientPhone ? task.patientPhone.replace(/[^\d]/g, "") : undefined
+        const waHref = waPhone
+          ? `https://wa.me/${waPhone}?text=${encodeURIComponent("Hello, this is TabibDesk clinic following up. When is a good time to talk?")}`
+          : undefined
         
         return (
           <div
@@ -117,6 +121,23 @@ export function TasksCards({
                       </span>
                     )}
                   </div>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2">
+                  {waHref && (
+                    <Button asChild variant="secondary" size="sm" className="gap-2">
+                      <a href={waHref} target="_blank" rel="noreferrer">
+                        <RiWhatsappLine className="size-4" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                  {canAssign && (
+                    <Button variant="secondary" size="sm" className="gap-2" onClick={() => onAssign(task)}>
+                      <RiUserSharedLine className="size-4" />
+                      Assign
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

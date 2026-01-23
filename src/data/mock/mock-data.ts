@@ -1323,101 +1323,6 @@ const generateMockAppointments = (): Appointment[] => [
 // Export fresh appointments
 export const mockAppointments: Appointment[] = generateMockAppointments()
 
-// Urgent Alerts
-interface UrgentAlert {
-  id: string
-  type: "question" | "lab"
-  severity: "critical" | "warning" | "info"
-  patient_id: string
-  patient_name: string
-  title: string
-  message: string
-  created_at: string
-  is_reviewed: boolean
-  // Type-specific fields
-  lab_result_id?: string  // For type "lab"
-  lab_test_name?: string  // For type "lab"
-}
-
-export const mockUrgentAlerts: UrgentAlert[] = [
-  // Critical - patient question
-  {
-    id: "alert-001",
-    type: "question",
-    severity: "critical",
-    patient_id: "patient-004",
-    patient_name: "Omar Khalil",
-    title: "Urgent: Severe Side Effects",
-    message: "Patient reports severe chest pain and breathing difficulty",
-    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    is_reviewed: false,
-  },
-  // Critical lab result
-  {
-    id: "alert-002",
-    type: "lab",
-    severity: "critical",
-    patient_id: "patient-002",
-    patient_name: "Ahmed Abdullah",
-    title: "Abnormal HbA1c Result",
-    message: "HbA1c level at 6.8% - above normal range",
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    is_reviewed: false,
-    lab_result_id: "lab-004",
-    lab_test_name: "HbA1c",
-  },
-  // Warning - patient question
-  {
-    id: "alert-003",
-    type: "question",
-    severity: "warning",
-    patient_id: "patient-001",
-    patient_name: "Fatima Mohamed",
-    title: "Patient Complaint: Dizziness",
-    message: "Experiencing frequent dizziness after taking blood pressure medication",
-    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    is_reviewed: false,
-  },
-  // Warning - lab result
-  {
-    id: "alert-004",
-    type: "lab",
-    severity: "warning",
-    patient_id: "patient-001",
-    patient_name: "Fatima Mohamed",
-    title: "Borderline LDL Cholesterol",
-    message: "LDL level at 115 mg/dL - slightly above recommended range",
-    created_at: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
-    is_reviewed: false,
-    lab_result_id: "lab-003",
-    lab_test_name: "LDL",
-  },
-  // Info - patient question
-  {
-    id: "alert-005",
-    type: "question",
-    severity: "info",
-    patient_id: "patient-003",
-    patient_name: "Layla Ibrahim",
-    title: "Question About Diet Plan",
-    message: "Can I substitute quinoa with brown rice in my meal plan?",
-    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    is_reviewed: false,
-  },
-  // Already reviewed (should not show in alerts)
-  {
-    id: "alert-006",
-    type: "question",
-    severity: "warning",
-    patient_id: "patient-005",
-    patient_name: "Nour Amin",
-    title: "GERD Symptoms Worsening",
-    message: "Experiencing increased heartburn despite medication",
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    is_reviewed: true,
-  },
-]
-
 // Export all mock data
 // Transcriptions
 export interface Transcription {
@@ -1639,7 +1544,6 @@ export const mockData = {
   patientDiets: mockPatientDiets,
   labFiles: mockLabFiles,
   labResults: mockLabResults,
-  urgentAlerts: mockUrgentAlerts,
   transcriptions: mockTranscriptions,
   attachments: mockAttachments,
   leads: mockLeads,

@@ -17,6 +17,7 @@ export type FeatureKey =
   | "tasks"
   | "insights"
   | "alerts"
+  | "accounting"
   // Optional modules
   | "labs"
   | "medications"

@@ -19,7 +19,6 @@ interface NewTaskModalProps {
   defaultAssignedToUserId?: string
   currentUserId: string
   clinicId: string
-  role: "doctor" | "assistant" | "manager"
 }
 
 export function NewTaskModal({
@@ -29,7 +28,6 @@ export function NewTaskModal({
   defaultAssignedToUserId,
   currentUserId,
   clinicId,
-  role,
 }: NewTaskModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -49,7 +47,7 @@ export function NewTaskModal({
       )
     : []
 
-  const availableUsers = role === "doctor" ? mockUsers : mockUsers.filter((u) => u.id === currentUserId)
+  const availableUsers = mockUsers
 
   useEffect(() => {
     if (isOpen) {
@@ -147,23 +145,21 @@ export function NewTaskModal({
             </div>
           </div>
 
-          {role === "doctor" && (
-            <div className="space-y-2">
-              <Label htmlFor="assignedTo">Assign To</Label>
-              <Select
-                id="assignedTo"
-                value={assignedToUserId}
-                onChange={(e) => setAssignedToUserId(e.target.value)}
-              >
-                <option value="">Unassigned</option>
-                {availableUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name} ({user.role === "doctor" ? "Doctor" : "Assistant"})
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="assignedTo">Assign To</Label>
+            <Select
+              id="assignedTo"
+              value={assignedToUserId}
+              onChange={(e) => setAssignedToUserId(e.target.value)}
+            >
+              <option value="">Unassigned</option>
+              {availableUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.full_name} ({user.role === "doctor" ? "Doctor" : user.role === "assistant" ? "Assistant" : "Manager"})
+                </option>
+              ))}
+            </Select>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="patient">Patient (Optional)</Label>
@@ -216,85 +212,11 @@ export function NewTaskModal({
   )
 }
 
-interface SnoozeModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (nextDueDate: string) => Promise<void>
-  task: TaskListItem | null
-}
-
-export function SnoozeModal({ isOpen, onClose, onSubmit, task }: SnoozeModalProps) {
-  const [nextDueDate, setNextDueDate] = useState<Date | undefined>(undefined)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (isOpen && task) {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      setNextDueDate(tomorrow)
-    }
-  }, [isOpen, task])
-
-  const handleSubmit = async () => {
-    if (!nextDueDate) return
-
-    setIsSubmitting(true)
-    try {
-      await onSubmit(nextDueDate.toISOString())
-      onClose()
-    } catch (error) {
-      // Error handling would go here
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Snooze Task</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            When should this task be due next?
-          </p>
-
-          <div className="space-y-2">
-            <Label htmlFor="nextDueDate">Next Due Date</Label>
-            <DatePicker
-              value={nextDueDate}
-              onChange={setNextDueDate}
-              placeholder="Select date"
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !nextDueDate}
-          >
-            Snooze
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 interface AssignModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (assignedToUserId: string | undefined) => Promise<void>
   task: TaskListItem | null
-  currentUserId: string
-  role: "doctor" | "assistant" | "manager"
 }
 
 export function AssignModal({
@@ -302,13 +224,11 @@ export function AssignModal({
   onClose,
   onSubmit,
   task,
-  currentUserId,
-  role,
 }: AssignModalProps) {
   const [assignedToUserId, setAssignedToUserId] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const availableUsers = role === "doctor" ? mockUsers : mockUsers.filter((u) => u.id === currentUserId)
+  const availableUsers = mockUsers
 
   useEffect(() => {
     if (isOpen && task) {
@@ -326,10 +246,6 @@ export function AssignModal({
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  if (role !== "doctor") {
-    return null
   }
 
   return (
@@ -350,7 +266,7 @@ export function AssignModal({
               <option value="">Unassigned</option>
               {availableUsers.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.full_name} ({user.role === "doctor" ? "Doctor" : "Assistant"})
+                  {user.full_name} ({user.role === "doctor" ? "Doctor" : user.role === "assistant" ? "Assistant" : "Manager"})
                 </option>
               ))}
             </Select>

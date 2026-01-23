@@ -41,6 +41,12 @@ export const FEATURE_METADATA: Record<FeatureKey, FeatureMetadata> = {
     description: "Important notifications and urgent patient alerts",
     group: "core",
   },
+  accounting: {
+    key: "accounting",
+    name: "Accounting",
+    description: "Payment collection, expenses, and financial tracking",
+    group: "core",
+  },
 
   // Optional modules
   labs: {

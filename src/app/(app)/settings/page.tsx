@@ -24,7 +24,6 @@ import {
   RiCalendarLine,
   RiTaskLine,
   RiBarChartLine,
-  RiAlarmWarningLine,
   RiTestTubeLine,
   RiCapsuleLine,
   RiFileLine,
@@ -288,7 +287,6 @@ function ModulesTab({ canEdit }: { canEdit: boolean }) {
         { key: "appointments" as const, name: "Appointments", description: "Scheduling and calendar management", icon: RiCalendarLine },
         { key: "tasks" as const, name: "Tasks", description: "Task management and assignments", icon: RiTaskLine },
         { key: "insights" as const, name: "Insights", description: "Analytics and reporting", icon: RiBarChartLine },
-        { key: "alerts" as const, name: "Alerts", description: "Important notifications and alerts", icon: RiAlarmWarningLine },
       ],
     },
     {

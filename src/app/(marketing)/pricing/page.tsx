@@ -112,7 +112,7 @@ function PricingPageContent() {
                     <li className="flex items-start gap-3">
                       <RiCheckLine className="mt-0.5 size-5 shrink-0 text-green-600" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {lang === "ar" ? "تنبيهات أساسية" : "Basic alerts"}
+                        {lang === "ar" ? "مهام متابعة أساسية" : "Basic follow-up tasks"}
                       </span>
                     </li>
                     <li className="flex items-start gap-3">

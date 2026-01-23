@@ -23,7 +23,6 @@ interface TaskActionsProps {
   onSnooze: () => void
   onAssign: () => void
   role: "doctor" | "assistant" | "manager"
-  currentUserId: string
 }
 
 export function TaskActions({
@@ -32,10 +31,9 @@ export function TaskActions({
   onSnooze,
   onAssign,
   role,
-  currentUserId,
 }: TaskActionsProps) {
-  const canMarkDone = task.status === "pending" || task.status === "snoozed"
-  const canSnooze = task.status === "pending"
+  const canMarkDone = task.status === "pending"
+  const canSnooze = false
   const canAssign = role === "doctor"
 
   if (!canMarkDone && !canSnooze && !canAssign) {

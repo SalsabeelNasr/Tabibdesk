@@ -8,7 +8,6 @@ import type {
   CreateTaskPayload,
   UpdateTaskStatusPayload,
   AssignTaskPayload,
-  SnoozeTaskPayload,
 } from "./tasks.types"
 
 // In-memory store for tasks (demo mode only)
@@ -23,7 +22,7 @@ function initializeMockTasks() {
     const nextWeek = new Date(now)
     nextWeek.setDate(nextWeek.getDate() + 7)
 
-    tasksStore = [
+    const manualTasks: Task[] = [
       {
         id: "task-001",
         title: "Follow up with patient Ahmed",
@@ -37,6 +36,7 @@ function initializeMockTasks() {
         assignedToUserId: "user-003",
         patientId: mockData.patients[0]?.id,
         clinicId: "clinic-001",
+        source: "manual",
       },
       {
         id: "task-002",
@@ -51,6 +51,7 @@ function initializeMockTasks() {
         assignedToUserId: "user-001",
         patientId: mockData.patients[1]?.id,
         clinicId: "clinic-001",
+        source: "manual",
       },
       {
         id: "task-003",
@@ -64,6 +65,7 @@ function initializeMockTasks() {
         createdByUserId: "user-001",
         assignedToUserId: "user-003",
         clinicId: "clinic-001",
+        source: "manual",
       },
       {
         id: "task-004",
@@ -77,21 +79,147 @@ function initializeMockTasks() {
         createdByUserId: "user-001",
         assignedToUserId: "user-003",
         clinicId: "clinic-001",
+        source: "manual",
       },
       {
         id: "task-005",
         title: "Review scan results",
         description: "X-ray review needed",
         type: "scan",
-        status: "snoozed",
+        status: "pending",
         priority: "high",
         dueDate: nextWeek.toISOString(),
         createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
         createdByUserId: "user-001",
         assignedToUserId: "user-001",
         clinicId: "clinic-001",
+        source: "manual",
       },
     ]
+
+    function makeAlertTask(seed: {
+      id: string
+      alertType: "question" | "lab"
+      severity: "critical" | "warning" | "info"
+      patientId: string
+      title: string
+      message: string
+      createdAt: string
+      isReviewed: boolean
+      labResultId?: string
+      labTestName?: string
+    }): Task {
+      const priority = seed.severity === "critical" ? "high" : seed.severity === "warning" ? "normal" : "low"
+      const type = seed.alertType === "lab" ? "labs" : "follow_up"
+
+      // Lightweight SLA based on severity
+      const due = new Date(seed.createdAt)
+      if (seed.severity === "critical") due.setHours(due.getHours() + 1)
+      else if (seed.severity === "warning") due.setHours(due.getHours() + 24)
+      else due.setHours(due.getHours() + 72)
+
+      return {
+        id: `alert-task-${seed.id}`,
+        title: seed.title,
+        description: seed.message,
+        type,
+        status: seed.isReviewed ? "done" : "pending",
+        priority,
+        dueDate: due.toISOString(),
+        createdAt: seed.createdAt,
+        createdByUserId: "system",
+        // Default triage owner: assistant
+        assignedToUserId: "user-003",
+        patientId: seed.patientId,
+        clinicId: "clinic-001",
+        source: "alert",
+        sourceId: seed.id,
+        sourcePayload: {
+          alertType: seed.alertType,
+          severity: seed.severity,
+          message: seed.message,
+          labResultId: seed.labResultId,
+          labTestName: seed.labTestName,
+        },
+      }
+    }
+
+    const alertSeeds = [
+      // Critical - patient question
+      {
+        id: "alert-001",
+        alertType: "question" as const,
+        severity: "critical" as const,
+        patientId: "patient-004",
+        title: "Urgent: Severe Side Effects",
+        message: "Patient reports severe chest pain and breathing difficulty",
+        createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        isReviewed: false,
+      },
+      // Critical lab result
+      {
+        id: "alert-002",
+        alertType: "lab" as const,
+        severity: "critical" as const,
+        patientId: "patient-002",
+        title: "Abnormal HbA1c Result",
+        message: "HbA1c level at 6.8% - above normal range",
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        isReviewed: false,
+        labResultId: "lab-004",
+        labTestName: "HbA1c",
+      },
+      // Warning - patient question
+      {
+        id: "alert-003",
+        alertType: "question" as const,
+        severity: "warning" as const,
+        patientId: "patient-001",
+        title: "Patient Complaint: Dizziness",
+        message: "Experiencing frequent dizziness after taking blood pressure medication",
+        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        isReviewed: false,
+      },
+      // Warning - lab result
+      {
+        id: "alert-004",
+        alertType: "lab" as const,
+        severity: "warning" as const,
+        patientId: "patient-001",
+        title: "Borderline LDL Cholesterol",
+        message: "LDL level at 115 mg/dL - slightly above recommended range",
+        createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
+        isReviewed: false,
+        labResultId: "lab-003",
+        labTestName: "LDL",
+      },
+      // Info - patient question
+      {
+        id: "alert-005",
+        alertType: "question" as const,
+        severity: "info" as const,
+        patientId: "patient-003",
+        title: "Question About Diet Plan",
+        message: "Can I substitute quinoa with brown rice in my meal plan?",
+        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        isReviewed: false,
+      },
+      // Already reviewed
+      {
+        id: "alert-006",
+        alertType: "question" as const,
+        severity: "warning" as const,
+        patientId: "patient-005",
+        title: "GERD Symptoms Worsening",
+        message: "Experiencing increased heartburn despite medication",
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        isReviewed: true,
+      },
+    ]
+
+    const alertTasks: Task[] = alertSeeds.map(makeAlertTask)
+
+    tasksStore = [...alertTasks, ...manualTasks]
   }
 }
 
@@ -105,13 +233,14 @@ function enrichTaskWithNames(task: Task): TaskListItem {
   return {
     ...task,
     patientName: patient ? `${patient.first_name} ${patient.last_name}` : undefined,
+    patientPhone: patient?.phone,
     assignedToName: assignedTo?.full_name,
-    createdByName: createdBy?.full_name,
+    createdByName: createdBy?.full_name || (task.createdByUserId === "system" ? "System" : undefined),
   }
 }
 
 export async function listTasks(params: ListTasksParams): Promise<ListTasksResponse> {
-  const { clinicId, assignedToUserId, createdByUserId, status, type, priority, query, page, pageSize } = params
+  const { clinicId, assignedToUserId, createdByUserId, status, type, priority, source, query, page, pageSize } = params
 
   let filteredTasks = tasksStore.filter((task) => task.clinicId === clinicId)
 
@@ -142,6 +271,11 @@ export async function listTasks(params: ListTasksParams): Promise<ListTasksRespo
   // Filter by priority
   if (priority && priority !== "all") {
     filteredTasks = filteredTasks.filter((task) => task.priority === priority)
+  }
+
+  // Filter by source
+  if (source && source !== "all") {
+    filteredTasks = filteredTasks.filter((task) => task.source === source)
   }
 
   // Filter by query (search in title, description, patient name)
@@ -213,6 +347,7 @@ export async function createTask(payload: CreateTaskPayload): Promise<TaskListIt
     assignedToUserId: payload.assignedToUserId,
     patientId: payload.patientId,
     clinicId: payload.clinicId,
+    source: "manual",
   }
 
   tasksStore.push(newTask)
@@ -236,16 +371,5 @@ export async function assignTask(payload: AssignTaskPayload): Promise<TaskListIt
   }
 
   task.assignedToUserId = payload.assignedToUserId || undefined
-  return enrichTaskWithNames(task)
-}
-
-export async function snoozeTask(payload: SnoozeTaskPayload): Promise<TaskListItem> {
-  const task = tasksStore.find((t) => t.id === payload.id)
-  if (!task) {
-    throw new Error("Task not found")
-  }
-
-  task.status = "snoozed"
-  task.dueDate = payload.nextDueDate
   return enrichTaskWithNames(task)
 }

@@ -118,7 +118,7 @@ const filteredNav = navigation.filter(item =>
 - Appointments ✅
 - Medications ✅
 - Files ✅
-- Alerts ✅
+- Automated tasks ✅
 
 ### Multi ($99/month)
 - Everything in Solo
@@ -142,7 +142,6 @@ type FeatureKey =
   | "appointments"
   | "tasks"
   | "insights"
-  | "alerts"
   // Optional modules
   | "labs"
   | "medications"

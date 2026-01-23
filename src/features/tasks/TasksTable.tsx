@@ -1,8 +1,11 @@
 import Link from "next/link"
+import { Button } from "@/components/Button"
 import {
   RiUserLine,
   RiCheckLine,
   RiCheckboxBlankCircleLine,
+  RiUserSharedLine,
+  RiWhatsappLine,
 } from "@remixicon/react"
 import {
   formatTaskDate,
@@ -14,25 +17,26 @@ import { cx } from "@/lib/utils"
 interface TasksTableProps {
   tasks: TaskListItem[]
   onMarkDone: (task: TaskListItem) => void
-  onSnooze: (task: TaskListItem) => void
   onAssign: (task: TaskListItem) => void
   role: "doctor" | "assistant" | "manager"
-  currentUserId: string
 }
 
 export function TasksTable({
   tasks,
   onMarkDone,
-  onSnooze,
   onAssign,
   role,
-  currentUserId,
 }: TasksTableProps) {
   return (
     <div className="space-y-3">
       {tasks.map((task) => {
         const overdue = isOverdue(task.dueDate)
         const isDone = task.status === "done"
+        const canAssign = role === "doctor" || role === "assistant" || role === "manager"
+        const waPhone = task.patientPhone ? task.patientPhone.replace(/[^\d]/g, "") : undefined
+        const waHref = waPhone
+          ? `https://wa.me/${waPhone}?text=${encodeURIComponent("Hello, this is TabibDesk clinic following up. When is a good time to talk?")}`
+          : undefined
 
         return (
           <div
@@ -104,23 +108,50 @@ export function TasksTable({
               </div>
             </div>
 
-            {/* Right Side - Due Date and Creator */}
-            <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
-              {task.dueDate && (
-                <span className={cx(
-                  "inline-block text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
-                  isDone ? "bg-gray-50 text-gray-400 dark:bg-gray-800/50" :
-                  overdue ? "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400" :
-                  "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-                )}>
-                  {formatTaskDate(task.dueDate)}
-                </span>
+            {/* Right Side - Actions + Due Date */}
+            <div className="flex items-center gap-2 ml-4 shrink-0">
+              {waHref && (
+                <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0" title="Contact on WhatsApp">
+                  <a href={waHref} target="_blank" rel="noreferrer">
+                    <RiWhatsappLine className="size-4" />
+                    <span className="sr-only">Contact on WhatsApp</span>
+                  </a>
+                </Button>
               )}
-              {task.createdByName && (
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  by: {task.createdByName}
-                </span>
+              {canAssign && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => onAssign(task)}
+                  title="Assign / Reassign"
+                >
+                  <RiUserSharedLine className="size-4" />
+                  <span className="sr-only">Assign</span>
+                </Button>
               )}
+
+              <div className="flex flex-col items-end gap-1">
+                {task.dueDate && (
+                  <span
+                    className={cx(
+                      "inline-block text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
+                      isDone
+                        ? "bg-gray-50 text-gray-400 dark:bg-gray-800/50"
+                        : overdue
+                        ? "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+                    )}
+                  >
+                    {formatTaskDate(task.dueDate)}
+                  </span>
+                )}
+                {task.createdByName && (
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    by: {task.createdByName}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         )
