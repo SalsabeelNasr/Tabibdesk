@@ -3,12 +3,11 @@
 import React from "react"
 import { cx, focusRing } from "@/lib/utils"
 import {
-  RiHomeLine,
-  RiUserLine,
-  RiCalendarLine,
-  RiCalendarEventLine,
-  RiMenuLine,
-} from "@remixicon/react"
+  getNavigationForRole,
+  isActiveRoute,
+  type Role,
+} from "@/lib/navigation"
+import { RiMenuLine, RiUser3Line } from "@remixicon/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/Button"
@@ -22,31 +21,18 @@ import {
   DrawerBody,
   DrawerClose,
 } from "@/components/Drawer"
-import type { RemixiconComponentType } from "@remixicon/react"
+import { DropdownUserProfile } from "./DropdownUserProfile"
+import { useUserClinic } from "@/contexts/user-clinic-context"
 
-type NavItem = {
-  name: string
-  href: string
-  icon: RemixiconComponentType
-  badge?: number
+interface MobileSidebarProps {
+  role: Role
 }
 
-const navigation: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard", icon: RiHomeLine },
-  { name: "Patients", href: "/patients", icon: RiUserLine },
-  { name: "Appointments", href: "/appointments", icon: RiCalendarLine },
-]
-
-export default function MobileSidebar() {
+export default function MobileSidebar({ role }: MobileSidebarProps) {
   const pathname = usePathname()
-
-  const isActive = (itemHref: string) => {
-    // For dashboard, match exactly
-    if (itemHref === "/dashboard") {
-      return pathname === "/dashboard" || pathname === "/"
-    }
-    return pathname.startsWith(itemHref)
-  }
+  const navigation = getNavigationForRole(role)
+  const { currentUser } = useUserClinic()
+  const roleLabel = currentUser.role === "doctor" ? "طبيب" : "مساعد"
 
   return (
     <>
@@ -74,7 +60,7 @@ export default function MobileSidebar() {
               </div>
             </DrawerTitle>
           </DrawerHeader>
-          <DrawerBody>
+          <DrawerBody className="flex flex-col">
             <nav
               aria-label="Mobile navigation"
               className="flex flex-1 flex-col gap-y-4"
@@ -82,7 +68,7 @@ export default function MobileSidebar() {
               {/* Primary Navigation */}
               <ul role="list" className="space-y-0.5">
                 {navigation.map((item) => {
-                  const active = isActive(item.href)
+                  const active = isActiveRoute(item.href, pathname)
 
                   return (
                     <li key={item.name}>
@@ -112,6 +98,36 @@ export default function MobileSidebar() {
                 })}
               </ul>
             </nav>
+
+            {/* User Profile Section - For assistants, show at bottom */}
+            {currentUser.role === "assistant" && (
+              <div className="mt-auto border-t border-gray-200 pt-4 dark:border-gray-800">
+                <DropdownUserProfile>
+                  <button
+                    className={cx(
+                      "flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-left transition-colors",
+                      "hover:bg-gray-100 hover:border-gray-300",
+                      "dark:border-gray-800 dark:bg-gray-800/50 dark:hover:bg-gray-800 dark:hover:border-gray-700",
+                      focusRing
+                    )}
+                    aria-label="User settings"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
+                      {currentUser.avatar_initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
+                        {currentUser.full_name}
+                      </p>
+                      <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                        {roleLabel}
+                      </p>
+                    </div>
+                    <RiUser3Line className="size-4 shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+                  </button>
+                </DropdownUserProfile>
+              </div>
+            )}
           </DrawerBody>
         </DrawerContent>
       </Drawer>

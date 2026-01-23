@@ -59,8 +59,7 @@ export default function LoginPage() {
     router.push("/dashboard")
   }
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`)
+  const handleSocialLogin = (_provider: string) => {
     // Implement social login here
   }
 

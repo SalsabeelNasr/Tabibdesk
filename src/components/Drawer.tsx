@@ -53,13 +53,10 @@ const DrawerOverlay = React.forwardRef<
         "bg-black/30",
         // transition
         "data-[state=closed]:animate-hide data-[state=open]:animate-dialogOverlayShow",
+        "drawer-overlay-animated",
         className,
       )}
       {...props}
-      style={{
-        animationDuration: "400ms",
-        animationFillMode: "backwards",
-      }}
     />
   )
 })

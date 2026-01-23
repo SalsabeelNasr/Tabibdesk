@@ -1,0 +1,48 @@
+"use client"
+
+import { cx } from "@/lib/utils"
+import { SidebarProvider, useSidebar } from "@/contexts/sidebar-context"
+import { useUserClinic } from "@/contexts/user-clinic-context"
+import { Sidebar } from "./Sidebar"
+
+interface AppShellProps {
+  children: React.ReactNode
+  role?: "doctor" | "assistant" | "manager" // Optional, will use current user's role if not provided
+}
+
+function AppShellContent({ children, role: propRole }: AppShellProps) {
+  const { isCollapsed } = useSidebar()
+  const { currentUser } = useUserClinic()
+  // Use prop role if provided, otherwise use current user's role
+  const role = propRole || currentUser.role
+
+  return (
+    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Sidebar - TailAdmin style */}
+      <Sidebar role={role} />
+
+      {/* Main Content Area */}
+      <div
+        className={cx(
+          "flex flex-1 flex-col transition-all duration-300 ease-in-out",
+          isCollapsed ? "lg:ps-20" : "lg:ps-72"
+        )}
+      >
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export function AppShell({ children, role }: AppShellProps) {
+  return (
+    <SidebarProvider>
+      <AppShellContent role={role}>{children}</AppShellContent>
+    </SidebarProvider>
+  )
+}

@@ -10,7 +10,6 @@ import {
   RiFileTextLine,
   RiVoiceprintLine,
   RiRestaurantLine,
-  RiLineChartLine,
   RiAttachmentLine,
 } from "@remixicon/react"
 
@@ -18,7 +17,6 @@ export type HistoryTab =
   | "general"
   | "medications"
   | "labs"
-  | "progress"
   | "appointments"
   | "tasks"
   | "notes"
@@ -37,7 +35,6 @@ const tabs = [
   { id: "medications" as HistoryTab, label: "Medications", icon: RiCapsuleLine },
   { id: "labs" as HistoryTab, label: "Labs", icon: RiFlaskLine },
   { id: "tasks" as HistoryTab, label: "Tasks", icon: RiTaskLine },
-  { id: "progress" as HistoryTab, label: "Progress", icon: RiLineChartLine },
   { id: "appointments" as HistoryTab, label: "Appointments", icon: RiCalendarLine },
   { id: "transcriptions" as HistoryTab, label: "Transcriptions", icon: RiVoiceprintLine },
   { id: "attachments" as HistoryTab, label: "Attachments", icon: RiAttachmentLine },

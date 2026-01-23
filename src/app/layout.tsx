@@ -1,16 +1,24 @@
-import { MainContent } from "@/components/shell/navigation/MainContent"
-import { SidebarWrapper } from "@/components/shell/navigation/SidebarWrapper"
+import { TailAdminLayoutWrapper } from "@/components/shell/TailAdminLayoutWrapper"
 import { DemoProvider } from "@/contexts/demo-context"
+import { UserClinicProvider } from "@/contexts/user-clinic-context"
+import { ToastProvider } from "@/hooks/useToast"
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
-import { Inter } from "next/font/google"
+import { Inter, Noto_Sans_Arabic } from "next/font/google"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
 
 const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-sans",
   display: "swap",
-  variable: "--font-inter",
+})
+
+const arabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-arabic",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -49,16 +57,19 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr" className={`${inter.variable} ${arabic.variable}`}>
       <body
-        className={`${inter.className} overflow-y-scroll scroll-auto antialiased selection:bg-primary-100 selection:text-primary-700 dark:bg-gray-950`}
+        className={`overflow-y-scroll scroll-auto antialiased selection:bg-primary-100 selection:text-primary-700 dark:bg-gray-950`}
         suppressHydrationWarning
       >
         <div className="mx-auto max-w-screen-2xl">
           <ThemeProvider defaultTheme="system" attribute="class">
             <DemoProvider>
-              <SidebarWrapper />
-              <MainContent>{children}</MainContent>
+              <UserClinicProvider>
+                <ToastProvider>
+                  <TailAdminLayoutWrapper>{children}</TailAdminLayoutWrapper>
+                </ToastProvider>
+              </UserClinicProvider>
             </DemoProvider>
           </ThemeProvider>
         </div>

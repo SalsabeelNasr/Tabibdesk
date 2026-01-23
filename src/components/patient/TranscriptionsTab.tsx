@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { AIExtractionModal } from "./AIExtractionModal"
-import { RiVoiceprintLine, RiAddLine, RiTimeLine, RiPlayLine, RiRobot2Line } from "@remixicon/react"
+import { RiVoiceprintLine, RiTimeLine, RiRobot2Line } from "@remixicon/react"
 
 interface Transcription {
   id: string

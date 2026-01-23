@@ -7,7 +7,6 @@ export const siteConfig = {
     dashboard: "/dashboard",
     patients: "/patients",
     appointments: "/appointments",
-    insights: "/insights",
     settings: "/settings",
   },
 }

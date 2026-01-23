@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
-import { RiRestaurantLine, RiEditLine, RiHistoryLine } from "@remixicon/react"
+import { RiRestaurantLine, RiHistoryLine } from "@remixicon/react"
 
 interface PatientDiet {
   id: string
@@ -20,7 +20,7 @@ interface DietTabProps {
   onEditDiet?: () => void
 }
 
-export function DietTab({ diets, onEditDiet }: DietTabProps) {
+export function DietTab({ diets, onEditDiet: _onEditDiet }: DietTabProps) {
   // Get active diet
   const activeDiet = diets.find((d) => d.is_active)
 

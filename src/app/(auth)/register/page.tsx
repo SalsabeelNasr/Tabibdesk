@@ -122,8 +122,7 @@ export default function RegisterPage() {
     setErrors(newErrors)
   }
 
-  const handleSocialSignup = (provider: string) => {
-    console.log(`Sign up with ${provider}`)
+  const handleSocialSignup = (_provider: string) => {
     // Implement social signup here
   }
 

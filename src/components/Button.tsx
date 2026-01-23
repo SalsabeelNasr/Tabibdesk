@@ -10,7 +10,7 @@ import { cx, focusRing } from "@/lib/utils"
 const buttonVariants = tv({
   base: [
     // base
-    "relative inline-flex items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-center text-sm font-medium shadow-sm transition-all duration-100 ease-in-out sm:text-sm",
+    "relative inline-flex items-center justify-center whitespace-nowrap rounded-md border text-center text-sm font-medium shadow-sm transition-all duration-100 ease-in-out sm:text-sm",
     // disabled
     "disabled:pointer-events-none disabled:shadow-none",
     // focus
@@ -59,6 +59,13 @@ const buttonVariants = tv({
         "disabled:bg-gray-100 disabled:text-gray-400",
         "disabled:dark:bg-gray-800 disabled:dark:text-gray-600",
       ],
+      outline: [
+        "shadow-none",
+        "border-gray-300 dark:border-gray-700",
+        "bg-transparent text-gray-900 dark:text-gray-50",
+        "hover:bg-gray-50 dark:hover:bg-gray-900/60",
+        "disabled:text-gray-400 disabled:dark:text-gray-600",
+      ],
       ghost: [
         // base
         "shadow-none",
@@ -86,9 +93,15 @@ const buttonVariants = tv({
         "disabled:dark:bg-red-950 disabled:dark:text-red-400",
       ],
     },
+    size: {
+      default: "px-3 py-2",
+      sm: "h-8 px-2 text-xs",
+      lg: "h-11 px-6 text-base",
+    },
   },
   defaultVariants: {
     variant: "primary",
+    size: "default",
   },
 })
 
@@ -109,6 +122,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       disabled,
       variant,
+      size,
       children,
       ...props
     }: ButtonProps,
@@ -118,7 +132,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Component
         ref={forwardedRef}
-        className={cx(buttonVariants({ variant }), className)}
+        className={cx(buttonVariants({ variant, size }), className)}
         disabled={disabled || isLoading}
         {...props}
       >

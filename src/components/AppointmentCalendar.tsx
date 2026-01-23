@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react"
 import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react"
-import { Badge } from "@/components/Badge"
 
 interface Appointment {
   id: string
@@ -22,47 +21,48 @@ interface AppointmentCalendarProps {
 export function AppointmentCalendar({ appointments, onAppointmentClick }: AppointmentCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
-  const monthStart = useMemo(() => {
-    return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-  }, [currentDate])
-
-  const monthEnd = useMemo(() => {
-    return new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
-  }, [currentDate])
-
-  const startDate = useMemo(() => {
-    const start = new Date(monthStart)
-    start.setDate(start.getDate() - start.getDay())
+  // Week view: get the start of the current week (Sunday)
+  const weekStart = useMemo(() => {
+    const start = new Date(currentDate)
+    const day = start.getDay()
+    start.setDate(start.getDate() - day)
+    start.setHours(0, 0, 0, 0)
     return start
-  }, [monthStart])
+  }, [currentDate])
 
-  const endDate = useMemo(() => {
-    const end = new Date(monthEnd)
-    end.setDate(end.getDate() + (6 - end.getDay()))
+  // Week view: get the end of the current week (Saturday)
+  const weekEnd = useMemo(() => {
+    const end = new Date(weekStart)
+    end.setDate(end.getDate() + 6)
+    end.setHours(23, 59, 59, 999)
     return end
-  }, [monthEnd])
+  }, [weekStart])
 
   const calendarDays = useMemo(() => {
     const days: Date[] = []
-    const current = new Date(startDate)
-    while (current <= endDate) {
+    const current = new Date(weekStart)
+    while (current <= weekEnd) {
       days.push(new Date(current))
       current.setDate(current.getDate() + 1)
     }
     return days
-  }, [startDate, endDate])
+  }, [weekStart, weekEnd])
 
   const getAppointmentsForDay = (day: Date) => {
     const dayString = day.toISOString().split("T")[0]
     return appointments.filter((apt) => apt.date === dayString)
   }
 
-  const previousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+  const previousWeek = () => {
+    const newDate = new Date(currentDate)
+    newDate.setDate(newDate.getDate() - 7)
+    setCurrentDate(newDate)
   }
 
-  const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+  const nextWeek = () => {
+    const newDate = new Date(currentDate)
+    newDate.setDate(newDate.getDate() + 7)
+    setCurrentDate(newDate)
   }
 
   const isToday = (day: Date) => {
@@ -74,8 +74,14 @@ export function AppointmentCalendar({ appointments, onAppointmentClick }: Appoin
     )
   }
 
-  const isCurrentMonth = (day: Date) => {
-    return day.getMonth() === currentDate.getMonth()
+  const isCurrentWeek = (day: Date) => {
+    return day >= weekStart && day <= weekEnd
+  }
+
+  const formatWeekRange = () => {
+    const start = weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    const end = weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    return `${start} - ${end}`
   }
 
   const getStatusColor = (status: string) => {
@@ -102,17 +108,17 @@ export function AppointmentCalendar({ appointments, onAppointmentClick }: Appoin
       {/* Calendar Header */}
       <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-          {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          {formatWeekRange()}
         </h2>
         <div className="flex gap-2">
           <button
-            onClick={previousMonth}
+            onClick={previousWeek}
             className="flex size-8 items-center justify-center rounded-lg border border-gray-300 text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             <RiArrowLeftSLine className="size-5" />
           </button>
           <button
-            onClick={nextMonth}
+            onClick={nextWeek}
             className="flex size-8 items-center justify-center rounded-lg border border-gray-300 text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             <RiArrowRightSLine className="size-5" />
@@ -139,7 +145,7 @@ export function AppointmentCalendar({ appointments, onAppointmentClick }: Appoin
               <div
                 key={index}
                 className={`min-h-[100px] rounded-lg border p-2 transition ${
-                  isCurrentMonth(day)
+                  isCurrentWeek(day)
                     ? "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
                     : "border-gray-100 bg-gray-50 dark:border-gray-800/50 dark:bg-gray-900/50"
                 } ${isToday(day) ? "ring-2 ring-primary-600 dark:ring-primary-500" : ""}`}
@@ -148,7 +154,7 @@ export function AppointmentCalendar({ appointments, onAppointmentClick }: Appoin
                   className={`mb-2 text-sm ${
                     isToday(day)
                       ? "font-bold text-primary-600 dark:text-primary-400"
-                      : isCurrentMonth(day)
+                      : isCurrentWeek(day)
                       ? "font-medium text-gray-900 dark:text-gray-50"
                       : "text-gray-400 dark:text-gray-600"
                   }`}

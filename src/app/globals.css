@@ -1,3 +1,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles moved from inline styles */
+
+/* DashboardCategoryBarCard - dynamic width */
+.category-bar-item {
+  width: var(--category-bar-width, 0%);
+}
+
+/* Tooltip - dynamic positioning */
+.tooltip-positioned {
+  top: var(--tooltip-top, 0px);
+  left: var(--tooltip-left, 0px);
+}
+
+/* ProgressBar - dynamic width */
+.progress-bar-fill {
+  width: var(--progress-width, 0%);
+}
+
+/* Drawer - animation styles */
+.drawer-overlay-animated {
+  animation-duration: 400ms;
+  animation-fill-mode: backwards;
+}
+
+/* LineChart - SVG text anchor */
+.chart-label-text-anchor {
+  text-anchor: middle;
+}
+
+/* 
+ * Note: icon.tsx and apple-icon.tsx use Next.js ImageResponse API which only supports inline styles.
+ * The styles are extracted to constants in those files for maintainability.
+ * Icon styles:
+ * - fontSize: 18px (icon.tsx) / 72px (apple-icon.tsx)
+ * - background: #158ce2
+ * - width: 100%
+ * - height: 100%
+ * - display: flex
+ * - alignItems: center
+ * - justifyContent: center
+ * - color: white
+ * - fontWeight: bold
+ * - borderRadius: 6px (icon.tsx) / 32px (apple-icon.tsx)
+ */
+
+/* ✅ Fonts: Inter (EN) + Noto Sans Arabic (AR) */
+@layer base {
+  body {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  }
+
+  html:lang(ar) body,
+  [dir="rtl"] body {
+    font-family: var(--font-arabic), var(--font-sans), ui-sans-serif, system-ui;
+  }
+}

@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
-import { Button } from "@/components/Button"
-import { RiFileTextLine, RiAddLine, RiTimeLine, RiArrowDownSLine, RiArrowUpSLine } from "@remixicon/react"
+import { RiFileTextLine, RiTimeLine, RiArrowDownSLine, RiArrowUpSLine } from "@remixicon/react"
 
 interface DoctorNote {
   id: string
@@ -17,7 +16,7 @@ interface NotesTabProps {
   patient?: any
 }
 
-export function NotesTab({ notes, patient }: NotesTabProps) {
+export function NotesTab({ notes, patient: _patient }: NotesTabProps) {
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
 
   // Sort notes by date (newest first)

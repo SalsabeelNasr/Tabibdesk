@@ -17,11 +17,22 @@ interface DemoContextType {
 const DemoContext = createContext<DemoContextType | undefined>(undefined)
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  // Initialize from localStorage to prevent flash of empty state
+  const [isDemoMode, setIsDemoMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("demo-mode") === "true"
+    }
+    return true // Default to demo mode for development
+  })
 
   useEffect(() => {
+    // Sync with localStorage on mount in case initial state was wrong
     const storedDemoMode = localStorage.getItem("demo-mode")
-    if (storedDemoMode === "true") {
+    if (storedDemoMode === null) {
+      // If no preference stored, enable demo mode by default
+      setIsDemoMode(true)
+      localStorage.setItem("demo-mode", "true")
+    } else if (storedDemoMode === "true") {
       setIsDemoMode(true)
     }
   }, [])

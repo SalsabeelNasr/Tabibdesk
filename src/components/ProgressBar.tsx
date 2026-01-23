@@ -80,14 +80,14 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
         >
           <div
             className={cx(
-              "h-full flex-col rounded-full",
+              "h-full flex-col rounded-full progress-bar-fill",
               bar(),
               showAnimation &&
                 "transform-gpu transition-all duration-300 ease-in-out",
             )}
             style={{
-              width: max ? `${(safeValue / max) * 100}%` : `${safeValue}%`,
-            }}
+              "--progress-width": max ? `${(safeValue / max) * 100}%` : `${safeValue}%`,
+            } as React.CSSProperties}
           />
         </div>
         {label ? (

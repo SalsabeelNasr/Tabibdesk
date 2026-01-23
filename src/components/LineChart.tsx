@@ -675,10 +675,9 @@ const LineChart = React.forwardRef<HTMLDivElement, LineChartProps>(
               {yAxisLabel && (
                 <Label
                   position="insideLeft"
-                  style={{ textAnchor: "middle" }}
                   angle={-90}
                   offset={-15}
-                  className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
+                  className="fill-gray-800 text-sm font-medium dark:fill-gray-200 chart-label-text-anchor"
                 >
                   {yAxisLabel}
                 </Label>

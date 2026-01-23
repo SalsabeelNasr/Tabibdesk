@@ -170,8 +170,8 @@ export default function Overview() {
             valueDescription="this month"
             subtitle="Revenue breakdown"
             ctaDescription="View detailed breakdown in"
-            ctaText="insights."
-            ctaLink="/insights"
+            ctaText="dashboard."
+            ctaLink="/dashboard"
             data={data3}
           />
         </div>

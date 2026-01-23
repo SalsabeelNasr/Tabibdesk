@@ -1,10 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
-import { Button } from "@/components/Button"
-import { Badge } from "@/components/Badge"
-import { RiTaskLine, RiAddLine, RiCalendarLine, RiCheckLine, RiCloseLine } from "@remixicon/react"
+import { cx } from "@/lib/utils"
+import { useUserClinic } from "@/contexts/user-clinic-context"
+import { Input } from "@/components/Input"
+import {
+  RiTaskLine,
+  RiCheckLine,
+  RiCheckboxBlankCircleLine,
+  RiAddLine,
+} from "@remixicon/react"
+import { formatTaskDate, isOverdue } from "@/features/tasks/tasks.utils"
 
 interface Task {
   id: string
@@ -12,192 +18,166 @@ interface Task {
   title: string
   description: string | null
   type: string
-  status: "pending" | "completed" | "ignored"
+  status: string
   due_date: string
   completed_at: string | null
   ignored_at: string | null
   created_at: string
   updated_at: string | null
+  created_by_name?: string
 }
 
 interface TasksTabProps {
   tasks: Task[]
-  onAddTask?: () => void
+  patientId: string
+  onAddTask: (title: string) => void
+  onToggleStatus: (taskId: string) => void
+  onEditTask?: (taskId: string) => void
+  onDeleteTask?: (taskId: string) => void
 }
 
-export function TasksTab({ tasks, onAddTask }: TasksTabProps) {
-  const [filter, setFilter] = useState<"all" | "pending" | "completed" | "ignored">("all")
+export function TasksTab({
+  tasks,
+  patientId: _patientId,
+  onAddTask,
+  onToggleStatus,
+}: TasksTabProps) {
+  const [newTaskTitle, setNewTaskTitle] = useState("")
+  const { currentUser } = useUserClinic()
 
-  const filteredTasks = tasks.filter((task) => {
-    if (filter === "all") return true
-    return task.status === filter
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && newTaskTitle.trim()) {
+      onAddTask(newTaskTitle.trim())
+      setNewTaskTitle("")
+    }
+  }
+
+  // Sort tasks: pending first, then by date
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const aPending = a.status === "pending"
+    const bPending = b.status === "pending"
+
+    if (aPending && !bPending) return -1
+    if (!aPending && bPending) return 1
+
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
-
-  // Sort tasks: pending first (by due date), then completed/ignored (by date)
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (a.status === "pending" && b.status !== "pending") return -1
-    if (a.status !== "pending" && b.status === "pending") return 1
-
-    if (a.status === "pending" && b.status === "pending") {
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-    }
-
-    const aDate = a.completed_at || a.ignored_at || a.created_at
-    const bDate = b.completed_at || b.ignored_at || b.created_at
-    return new Date(bDate).getTime() - new Date(aDate).getTime()
-  })
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="warning">Pending</Badge>
-      case "completed":
-        return <Badge variant="success">Completed</Badge>
-      case "ignored":
-        return <Badge variant="neutral">Ignored</Badge>
-      default:
-        return <Badge variant="neutral">{status}</Badge>
-    }
-  }
-
-  const getTypeBadge = (type: string) => {
-    const typeLabels: Record<string, string> = {
-      follow_up: "Follow-up",
-      lab_test: "Lab Test",
-      medication: "Medication",
-      diet_review: "Diet Review",
-      other: "Other",
-    }
-    return <Badge variant="default">{typeLabels[type] || type}</Badge>
-  }
-
-  const isOverdue = (task: Task) => {
-    return task.status === "pending" && new Date(task.due_date) < new Date()
-  }
-
-  const pendingCount = tasks.filter((t) => t.status === "pending").length
-  const completedCount = tasks.filter((t) => t.status === "completed").length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Quick Add Input */}
+      <div className="relative group">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
+          <RiAddLine className="size-5" />
+        </div>
+        <Input
+          placeholder="Write a task and press Enter..."
+          value={newTaskTitle}
+          onChange={(e) => setNewTaskTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="pl-10 h-12 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 focus:ring-primary-500/20 focus:border-primary-500 rounded-xl shadow-sm"
+        />
+      </div>
+
       {sortedTasks.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <RiTaskLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              {filter === "all" ? "No tasks yet" : `No ${filter} tasks`}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="py-12 text-center bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+          <RiTaskLine className="mx-auto size-12 text-gray-300" />
+          <p className="mt-2 text-sm text-gray-500">No tasks for this patient yet.</p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {sortedTasks.map((task) => (
-            <Card
-              key={task.id}
-              className={
-                isOverdue(task)
-                  ? "border-l-4 border-l-red-600"
-                  : task.status === "pending"
-                  ? "border-l-4 border-l-yellow-600"
-                  : ""
-              }
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
-                          task.status === "completed"
-                            ? "bg-green-100 dark:bg-green-900/20"
-                            : task.status === "ignored"
-                            ? "bg-gray-100 dark:bg-gray-800"
-                            : "bg-yellow-100 dark:bg-yellow-900/20"
-                        }`}
-                      >
-                        <RiTaskLine
-                          className={`size-5 ${
-                            task.status === "completed"
-                              ? "text-green-600 dark:text-green-400"
-                              : task.status === "ignored"
-                              ? "text-gray-600 dark:text-gray-400"
-                              : "text-yellow-600 dark:text-yellow-400"
-                          }`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{task.title}</CardTitle>
-                        {task.description && (
-                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          {getTypeBadge(task.type)}
-                          {getStatusBadge(task.status)}
-                          {isOverdue(task) && <Badge variant="error">Overdue</Badge>}
-                        </div>
-                        <div className="mt-2 flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                          <RiCalendarLine className="size-4" />
-                          <span>
-                            Due: {new Date(task.due_date).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </div>
-                      </div>
+          {sortedTasks.map((task) => {
+            const overdue = isOverdue(task.due_date)
+            const isDone = task.status === "completed" || task.status === "done"
+
+            return (
+              <div
+                key={task.id}
+                className={cx(
+                  "group relative flex items-center justify-between p-3 transition-colors bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 shadow-sm",
+                  isDone && "opacity-75"
+                )}
+              >
+                {/* Status Accent Line */}
+                <div
+                  className={cx(
+                    "absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-colors",
+                    isDone
+                      ? "bg-green-500"
+                      : overdue
+                      ? "bg-red-500"
+                      : "bg-gray-200 dark:bg-gray-700"
+                  )}
+                />
+
+                <div className="flex items-center gap-3 flex-1 min-w-0 ml-1">
+                  {/* Status Circle / Mark Done Action */}
+                  <button
+                    onClick={() => onToggleStatus(task.id)}
+                    className={cx(
+                      "flex size-9 shrink-0 items-center justify-center rounded-full transition-all group/done cursor-pointer",
+                      isDone
+                        ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-gray-50 text-gray-400 hover:bg-green-500 hover:text-white dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-green-600"
+                    )}
+                    title={isDone ? "Mark as Pending" : "Mark as Done"}
+                  >
+                    <div className={cx(isDone ? "block" : "group-hover/done:hidden")}>
+                      {isDone ? (
+                        <RiCheckLine className="size-5" />
+                      ) : (
+                        <RiCheckboxBlankCircleLine className="size-5" />
+                      )}
                     </div>
+                    {!isDone && (
+                      <div className="hidden group-hover/done:block">
+                        <RiCheckLine className="size-5" />
+                      </div>
+                    )}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={cx(
+                        "text-sm text-gray-900 dark:text-white truncate",
+                        isDone && "text-gray-400 line-through decoration-gray-400/50"
+                      )}
+                    >
+                      {task.title}
+                    </p>
+                    {task.description && (
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {task.description}
+                      </p>
+                    )}
                   </div>
-                  {task.status === "pending" && (
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        <RiCheckLine className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <RiCloseLine className="size-4" />
-                      </Button>
-                    </div>
+                </div>
+
+                {/* Right Side - Due Date and Creator */}
+                <div className="flex flex-col items-end gap-1 ml-4 shrink-0">
+                  <span
+                    className={cx(
+                      "inline-block text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
+                      isDone
+                        ? "bg-gray-50 text-gray-400 dark:bg-gray-800/50"
+                        : overdue
+                        ? "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+                    )}
+                  >
+                    {formatTaskDate(task.due_date)}
+                  </span>
+                  {task.created_by_name && (
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      by: {task.created_by_name}
+                    </span>
                   )}
                 </div>
-              </CardHeader>
-            </Card>
-          ))}
+              </div>
+            )
+          })}
         </div>
-      )}
-
-      {/* Summary */}
-      {tasks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Tasks</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
-                  {tasks.length}
-                </p>
-              </div>
-              <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/10">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
-                <p className="mt-1 text-2xl font-bold text-yellow-700 dark:text-yellow-400">
-                  {pendingCount}
-                </p>
-              </div>
-              <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/10">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
-                <p className="mt-1 text-2xl font-bold text-green-700 dark:text-green-400">
-                  {completedCount}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       )}
     </div>
   )
 }
-

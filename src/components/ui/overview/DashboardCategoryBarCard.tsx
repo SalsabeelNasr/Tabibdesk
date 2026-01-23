@@ -50,8 +50,8 @@ export function CategoryBarCard({
               {data.map((item) => (
                 <div
                   key={item.title}
-                  className={cx(item.color, `h-1.5 rounded-full`)}
-                  style={{ width: `${item.percentage}%` }}
+                  className={cx(item.color, `h-1.5 rounded-full category-bar-item`)}
+                  style={{ "--category-bar-width": `${item.percentage}%` } as React.CSSProperties}
                 />
               ))}
             </div>

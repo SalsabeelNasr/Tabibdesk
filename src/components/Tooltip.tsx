@@ -72,9 +72,10 @@ export function Tooltip({
             "pointer-events-none fixed z-[70] whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs font-medium text-white shadow-lg dark:bg-gray-700",
             "animate-in fade-in-0 zoom-in-95 duration-150",
             transformClasses[side],
+            "tooltip-positioned",
             className
           )}
-          style={{ top: `${position.top}px`, left: `${position.left}px` }}
+          style={{ "--tooltip-top": `${position.top}px`, "--tooltip-left": `${position.left}px` } as React.CSSProperties}
           role="tooltip"
         >
           {content}

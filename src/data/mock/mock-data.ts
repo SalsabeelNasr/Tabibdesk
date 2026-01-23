@@ -63,6 +63,9 @@ interface Patient {
   history_of_operation: any | null
   doctor_id: string | null
   profile_id: string | null
+  status: "inactive" | "active" | "lost"
+  first_visit_at: string | null
+  last_visit_at: string | null
   created_at: string
   updated_at: string
 }
@@ -101,6 +104,9 @@ export const mockPatients: Patient[] = [
     history_of_operation: null,
     doctor_id: DEMO_DOCTOR_ID,
     profile_id: null,
+    status: "active",
+    first_visit_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+    last_visit_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -137,6 +143,9 @@ export const mockPatients: Patient[] = [
     history_of_operation: ["Appendectomy (2005)"],
     doctor_id: DEMO_DOCTOR_ID,
     profile_id: null,
+    status: "active",
+    first_visit_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+    last_visit_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -173,6 +182,9 @@ export const mockPatients: Patient[] = [
     history_of_operation: null,
     doctor_id: DEMO_DOCTOR_ID,
     profile_id: null,
+    status: "active",
+    first_visit_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+    last_visit_at: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -209,6 +221,9 @@ export const mockPatients: Patient[] = [
     history_of_operation: null,
     doctor_id: DEMO_DOCTOR_ID,
     profile_id: null,
+    status: "active",
+    first_visit_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    last_visit_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -245,6 +260,9 @@ export const mockPatients: Patient[] = [
     history_of_operation: null,
     doctor_id: DEMO_DOCTOR_ID,
     profile_id: null,
+    status: "inactive",
+    first_visit_at: null,
+    last_visit_at: null,
     created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -460,6 +478,102 @@ export const mockDoctorNotes: DoctorNote[] = [
     patient_id: "patient-003",
     note: "Thyroid levels improving. Continue levothyroxine. Iron supplementation showing results.",
     created_at: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-005",
+    patient_id: "patient-001",
+    note: "Follow-up visit. Blood pressure readings stable at 130/85. Patient reports no side effects from medication. Advised to continue current regimen and return in 3 months.",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-006",
+    patient_id: "patient-002",
+    note: "Routine diabetes checkup. Fasting glucose levels within target range. Patient maintaining good diet and exercise routine. No adjustments needed to medication.",
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-007",
+    patient_id: "patient-003",
+    note: "Thyroid function test results reviewed. TSH levels normalized. Patient feeling more energetic. Continue current levothyroxine dosage.",
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-008",
+    patient_id: "patient-004",
+    note: "Asthma management review. Patient reports improved breathing with current inhaler regimen. Peak flow measurements improved. Continue preventive medication.",
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-009",
+    patient_id: "patient-005",
+    note: "GERD follow-up. Patient reports significant improvement in symptoms with omeprazole. Dietary modifications discussed. Continue medication for another month.",
+    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-010",
+    patient_id: "patient-001",
+    note: "Initial consultation for hypertension. Comprehensive history taken. Ordered baseline labs including lipid panel and kidney function tests. Started on lifestyle modifications.",
+    created_at: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-011",
+    patient_id: "patient-002",
+    note: "Diabetes management plan established. Patient educated on glucose monitoring, diet, and exercise. Started on metformin 500mg twice daily. Follow-up scheduled in 2 weeks.",
+    created_at: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-012",
+    patient_id: "patient-003",
+    note: "Hypothyroidism diagnosis confirmed. Started on levothyroxine 50mcg daily. Patient counseled on importance of medication adherence. Recheck TSH in 6 weeks.",
+    created_at: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-013",
+    patient_id: "patient-004",
+    note: "Asthma assessment completed. Spirometry shows mild obstruction. Prescribed albuterol rescue inhaler and started on maintenance therapy. Peak flow meter provided.",
+    created_at: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-014",
+    patient_id: "patient-005",
+    note: "GERD evaluation. Patient reports frequent heartburn and acid reflux. Started on omeprazole 20mg daily. Advised to avoid trigger foods and elevate head of bed.",
+    created_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-015",
+    patient_id: "patient-001",
+    note: "Medication review. Patient tolerating amlodipine well. Blood pressure consistently below 140/90. Discussed importance of regular monitoring and lifestyle factors.",
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-016",
+    patient_id: "patient-002",
+    note: "Weight management discussion. Patient has lost 3kg since last visit. Encouraged continued progress. Reviewed meal planning strategies and exercise routine.",
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-017",
+    patient_id: "patient-003",
+    note: "Iron deficiency anemia follow-up. Hemoglobin levels improved from 9.5 to 11.2. Continue iron supplementation. Advised to take with vitamin C for better absorption.",
+    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-018",
+    patient_id: "patient-004",
+    note: "Asthma control assessment. Patient reports using rescue inhaler less frequently. Peak flow values stable. Continue current treatment plan. Review in 3 months.",
+    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-019",
+    patient_id: "patient-005",
+    note: "GERD symptoms improved significantly. Patient reports only occasional mild symptoms. Continue omeprazole. Discussed long-term management and potential for dose reduction.",
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "note-020",
+    patient_id: "patient-001",
+    note: "Annual physical examination. Overall health status good. Blood pressure well controlled. Lipid panel within normal limits. Patient encouraged to maintain healthy lifestyle.",
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ]
 
@@ -986,9 +1100,11 @@ interface Appointment {
   doctor_full_name: string | null
   clinic_id: string | null
   clinic_name: string | null
+  online_call_link?: string
 }
 
-export const mockAppointments: Appointment[] = [
+// Helper function to get fresh appointments with current timestamps
+const generateMockAppointments = (): Appointment[] => [
   {
     id: "apt-001",
     patient_id: "patient-001",
@@ -1002,6 +1118,7 @@ export const mockAppointments: Appointment[] = [
     doctor_full_name: "Dr. Ahmed Hassan",
     clinic_id: DEMO_CLINIC_ID,
     clinic_name: "TabibDesk Wellness Center",
+    online_call_link: "https://meet.google.com/abc-defg-hij",
   },
   {
     id: "apt-002",
@@ -1101,7 +1218,110 @@ export const mockAppointments: Appointment[] = [
     clinic_id: DEMO_CLINIC_ID,
     clinic_name: "TabibDesk Wellness Center",
   },
+  // Additional appointments for today - spread throughout the day
+  {
+    id: "apt-009",
+    patient_id: "patient-001",
+    patient_name: "Fatima Mohamed",
+    scheduled_at: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
+    status: "confirmed",
+    type: "Follow-up",
+    notes: "Blood pressure check",
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+  },
+  {
+    id: "apt-010",
+    patient_id: "patient-002",
+    patient_name: "Ahmed Abdullah",
+    scheduled_at: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+    status: "confirmed",
+    type: "Consultation",
+    notes: "Diabetes management review",
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+  },
+  {
+    id: "apt-011",
+    patient_id: "patient-004",
+    patient_name: "Omar Khalil",
+    scheduled_at: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+    status: "scheduled",
+    type: "Check-up",
+    notes: "Asthma follow-up",
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+    online_call_link: "https://zoom.us/j/123456789",
+  },
+  {
+    id: "apt-012",
+    patient_id: "patient-005",
+    patient_name: "Nour Amin",
+    scheduled_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+    status: "scheduled",
+    type: "Follow-up",
+    notes: "GERD management",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+  },
+  {
+    id: "apt-013",
+    patient_id: "patient-003",
+    patient_name: "Layla Ibrahim",
+    scheduled_at: new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString(),
+    status: "confirmed",
+    type: "Consultation",
+    notes: "Thyroid check-up",
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+  },
+  {
+    id: "apt-014",
+    patient_id: "patient-001",
+    patient_name: "Fatima Mohamed",
+    scheduled_at: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+    status: "scheduled",
+    type: "Check-up",
+    notes: "Blood pressure monitoring",
+    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+  },
+  {
+    id: "apt-015",
+    patient_id: "patient-002",
+    patient_name: "Ahmed Abdullah",
+    scheduled_at: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString(),
+    status: "confirmed",
+    type: "Procedure",
+    notes: "Physical therapy session",
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: DEMO_DOCTOR_ID,
+    doctor_full_name: "Dr. Ahmed Hassan",
+    clinic_id: DEMO_CLINIC_ID,
+    clinic_name: "TabibDesk Wellness Center",
+  },
 ]
+
+// Export fresh appointments
+export const mockAppointments: Appointment[] = generateMockAppointments()
 
 // Urgent Alerts
 interface UrgentAlert {
@@ -1318,6 +1538,95 @@ export const mockAttachments: Attachment[] = [
   },
 ]
 
+// Leads
+interface Lead {
+  id: string
+  name: string
+  phone: string
+  email: string | null
+  status: "new" | "contacted" | "qualified" | "converted" | "lost"
+  source: string
+  quality: "hot" | "warm" | "cold"
+  next_action_due: string | null
+  created_at: string
+  converted_at: string | null
+}
+
+export const mockLeads: Lead[] = [
+  {
+    id: "lead-001",
+    name: "Ahmed Mohamed",
+    phone: "+20 100 123 4567",
+    email: "ahmed@example.com",
+    status: "new",
+    source: "Website",
+    quality: "hot",
+    next_action_due: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    converted_at: null,
+  },
+  {
+    id: "lead-002",
+    name: "Fatima Ali",
+    phone: "+20 100 234 5678",
+    email: "fatima@example.com",
+    status: "contacted",
+    source: "Referral",
+    quality: "hot",
+    next_action_due: new Date().toISOString(),
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    converted_at: null,
+  },
+  {
+    id: "lead-003",
+    name: "Omar Hassan",
+    phone: "+20 100 345 6789",
+    email: null,
+    status: "qualified",
+    source: "Social Media",
+    quality: "warm",
+    next_action_due: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    converted_at: null,
+  },
+  {
+    id: "lead-004",
+    name: "Layla Ibrahim",
+    phone: "+20 100 456 7890",
+    email: "layla@example.com",
+    status: "converted",
+    source: "Website",
+    quality: "hot",
+    next_action_due: null,
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    converted_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "lead-005",
+    name: "Nour Khalil",
+    phone: "+20 100 567 8901",
+    email: "nour@example.com",
+    status: "new",
+    source: "Referral",
+    quality: "hot",
+    next_action_due: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    converted_at: null,
+  },
+  {
+    id: "lead-006",
+    name: "Mohamed Amin",
+    phone: "+20 100 678 9012",
+    email: "mohamed@example.com",
+    status: "contacted",
+    source: "Website",
+    quality: "warm",
+    next_action_due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    converted_at: null,
+  },
+]
+
 export const mockData = {
   doctors: mockDoctors,
   patients: mockPatients,
@@ -1333,4 +1642,5 @@ export const mockData = {
   urgentAlerts: mockUrgentAlerts,
   transcriptions: mockTranscriptions,
   attachments: mockAttachments,
+  leads: mockLeads,
 }

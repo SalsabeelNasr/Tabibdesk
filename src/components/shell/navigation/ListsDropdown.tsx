@@ -56,8 +56,8 @@ export function ListsDropdown({ isOpen, onClose, triggerRef }: ListsDropdownProp
     <div
       ref={dropdownRef}
       className={cx(
-        "absolute left-full top-0 z-[60] ml-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900",
-        "animate-in fade-in-0 slide-in-from-left-1 duration-150"
+        "absolute start-full top-0 z-[60] ms-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900",
+        "animate-in fade-in-0 slide-in-from-start-1 duration-150"
       )}
       role="menu"
       aria-orientation="vertical"
@@ -121,7 +121,7 @@ export function MobileLists({ isExpanded, onToggle }: MobileListsProps) {
       </button>
       
       {isExpanded && (
-        <div className="ml-6 mt-1 space-y-0.5">
+        <div className="ms-6 mt-1 space-y-0.5">
           {listItems.map((item) => {
             const isActive = pathname.startsWith(item.href)
             return (

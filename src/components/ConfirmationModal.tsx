@@ -3,7 +3,6 @@
 import { Button } from "@/components/Button"
 import {
   Dialog,
-  DialogBody,
   DialogClose,
   DialogContent,
   DialogDescription,

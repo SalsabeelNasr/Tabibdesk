@@ -43,7 +43,7 @@ export function WeightChart({ weightLogs }: WeightChartProps) {
         data={chartData}
         index="date"
         categories={["Weight"]}
-        colors={["primary"]}
+        colors={["blue"]}
         valueFormatter={(value) => `${value} kg`}
         className="h-64"
         showLegend={false}

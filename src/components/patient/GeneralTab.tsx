@@ -4,19 +4,20 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Badge } from "@/components/Badge"
 import { Checkbox } from "@/components/Checkbox"
-import { ClinicalNotes } from "./ClinicalNotes"
-import { VisitChecklist } from "./VisitChecklist"
+import { Textarea } from "@/components/Textarea"
 import { AIExtractionModal } from "./AIExtractionModal"
+import { WeightChart } from "./WeightChart"
+import { useToast } from "@/hooks/useToast"
 import {
-  RiUserLine,
-  RiPhoneLine,
   RiMailLine,
+  RiPhoneLine,
   RiMapPinLine,
   RiBriefcaseLine,
   RiRulerLine,
   RiCalendarLine,
   RiRobot2Line,
   RiHeartPulseLine,
+  RiLineChartLine,
 } from "@remixicon/react"
 
 interface Patient {
@@ -51,16 +52,28 @@ interface Patient {
   has_bronchial_asthma: boolean | null
   thyroid_status: string | null
   history_of_operation: any | null
+  ai_diagnosis?: string | null
+  ai_diagnosis_updated_at?: string | null
+}
+
+interface WeightLog {
+  id: string
+  patient_id: string
+  weight: number
+  recorded_date: string
+  notes: string | null
 }
 
 interface GeneralTabProps {
   patient: Patient
+  weightLogs?: WeightLog[]
 }
 
-export function GeneralTab({ patient }: GeneralTabProps) {
+export function GeneralTab({ patient, weightLogs = [] }: GeneralTabProps) {
+  const { showToast } = useToast()
   const [clinicalNotesText, setClinicalNotesText] = useState("")
   const [showAIModal, setShowAIModal] = useState(false)
-  const [showTranscription, setShowTranscription] = useState(false)
+  const [_showTranscription, setShowTranscription] = useState(false)
 
   const allMedicalConditions = [
     { id: "is_diabetic", label: "Diabetes", value: patient.is_diabetic },
@@ -88,84 +101,34 @@ export function GeneralTab({ patient }: GeneralTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Clinical Investigation & Medical Conditions Row */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-        {/* Clinical Investigation - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <div className="space-y-4 rounded-lg border border-primary-200 bg-primary-50/50 p-6 dark:border-primary-800 dark:bg-primary-900/10">
-            {/* Clinical Notes */}
-            <ClinicalNotes
-              title="Clinical Investigation"
-              onSave={(notesText) => {
-                console.log("Notes saved:", notesText)
-                setClinicalNotesText(notesText)
-                // TODO: Save to database
-              }}
-              onViewTranscription={() => {
-                setShowTranscription(true)
-                // TODO: Show transcription modal/view
-                console.log("View transcription")
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Medical Conditions - Takes 1 column */}
-        <div className="lg:col-span-1">
+      {/* Visit Checklist Row */}
+      <div className="flex flex-col space-y-6">
+        {/* AI Medical Summary */}
+        {aiDiagnosis && (
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <RiHeartPulseLine className="size-5 text-red-600 dark:text-red-400" />
-                <CardTitle>Medical Conditions</CardTitle>
+                <RiRobot2Line className="size-5 text-blue-600 dark:text-blue-400" />
+                <CardTitle>AI Medical Summary</CardTitle>
+                <Badge variant="default" className="text-xs">AI Generated</Badge>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="max-h-[500px] space-y-2 overflow-y-auto pr-2">
-                {allMedicalConditions.map((condition) => (
-                  <label
-                    key={condition.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900"
-                  >
-                    <Checkbox
-                      checked={condition.value === true}
-                      onCheckedChange={() => handleConditionToggle(condition.id)}
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{condition.label}</span>
-                  </label>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* AI Medical Summary */}
-      {aiDiagnosis && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <RiRobot2Line className="size-5 text-blue-600 dark:text-blue-400" />
-              <CardTitle>AI Medical Summary</CardTitle>
-              <Badge variant="default" className="text-xs">AI Generated</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/10">
-              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                {aiDiagnosis}
-              </p>
+              <Textarea
+                value={aiDiagnosis}
+                readOnly
+                className="min-h-[120px] resize-none bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 text-sm leading-relaxed text-gray-700 dark:text-gray-300"
+              />
               {patient.ai_diagnosis_updated_at && (
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
                   Last updated: {new Date(patient.ai_diagnosis_updated_at).toLocaleString()}
                 </p>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Visit Checklist */}
-      <VisitChecklist clinicalNotes={clinicalNotesText} />
+      </div>
 
       {/* AI Extraction Modal */}
       <AIExtractionModal
@@ -178,6 +141,60 @@ export function GeneralTab({ patient }: GeneralTabProps) {
         }}
       />
 
+      {/* Medical Conditions and Weight Progress Row */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Medical Conditions */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <RiHeartPulseLine className="size-5 text-red-600 dark:text-red-400" />
+              <CardTitle>Medical Conditions</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {allMedicalConditions.map((condition) => (
+                <div key={condition.id} className="flex items-center gap-3 space-x-2">
+                  <Checkbox
+                    id={condition.id}
+                    checked={condition.value || false}
+                    onCheckedChange={() => handleConditionToggle(condition.id)}
+                  />
+                  <label
+                    htmlFor={condition.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 dark:text-gray-300"
+                  >
+                    {condition.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Weight Progress */}
+        {weightLogs.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Weight Progress</CardTitle>
+            </CardHeader>
+            <CardContent className="py-12 text-center">
+              <RiLineChartLine className="mx-auto size-12 text-gray-400" />
+              <p className="mt-2 text-gray-600 dark:text-gray-400">No progress data yet</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Weight Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WeightChart weightLogs={weightLogs} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       {/* Additional Information */}
       <Card>
         <CardHeader>
@@ -185,6 +202,16 @@ export function GeneralTab({ patient }: GeneralTabProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {patient.phone && (
+              <div className="flex items-center gap-3">
+                <RiPhoneLine className="size-5 text-gray-400" />
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Phone</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-50">{patient.phone}</p>
+                </div>
+              </div>
+            )}
+
             {patient.email && (
               <div className="flex items-center gap-3">
                 <RiMailLine className="size-5 text-gray-400" />

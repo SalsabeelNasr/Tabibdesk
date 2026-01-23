@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
-import { RiSyringeLine, RiAddLine, RiCalendarLine, RiArrowRightLine } from "@remixicon/react"
+import { RiSyringeLine, RiAddLine, RiCalendarLine } from "@remixicon/react"
 
 interface Injection {
   id: string
@@ -113,7 +113,7 @@ export function InjectionsTab({ injections, onAddInjection }: InjectionsTabProps
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {sortedInjections.slice(0, 5).map((injection, index) => (
+              {sortedInjections.slice(0, 5).map((injection) => (
                 <div key={injection.id} className="flex items-center gap-3">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/20">
                     <RiSyringeLine className="size-4 text-primary-600 dark:text-primary-400" />
