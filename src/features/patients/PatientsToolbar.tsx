@@ -28,7 +28,7 @@ export function PatientsToolbar({
   onViewModeChange,
   statusFilter = "all",
   onStatusFilterChange,
-  role = "doctor",
+  role: _role = "doctor",
 }: PatientsToolbarProps) {
   return (
     <div className="space-y-3">

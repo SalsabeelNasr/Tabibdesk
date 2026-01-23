@@ -69,7 +69,6 @@ type ChatMessage = {
 export function ClinicalNotesTab({
   notes,
   transcriptions,
-  patient,
   onSaveNote,
 }: ClinicalNotesTabProps) {
   const [newNote, setNewNote] = useState("")
@@ -253,10 +252,6 @@ export function ClinicalNotesTab({
     })
   }
 
-  const handleCopy = (content: string) => {
-    navigator.clipboard.writeText(content)
-  }
-
   const handleSendNote = () => {
     if (newNote.trim()) {
       onSaveNote?.(newNote)
@@ -284,7 +279,7 @@ export function ClinicalNotesTab({
       {/* Left Sidebar: History */}
       <div className="flex w-80 flex-col border-r border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-950/30">
         <div className="flex-1 overflow-y-auto px-2 pt-4 pb-4">
-          {historyGroups.map((group, groupIndex) => (
+          {historyGroups.map((group) => (
             <div key={group.label} className="mt-4 first:mt-0">
               <h4 className="px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                 {group.label}

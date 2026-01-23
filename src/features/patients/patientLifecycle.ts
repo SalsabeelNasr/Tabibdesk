@@ -6,13 +6,13 @@
 
 import type { Patient, PatientStatus } from "./patients.types"
 
-export type AppointmentStatus = "scheduled" | "confirmed" | "arrived" | "completed" | "no_show" | "cancelled"
+export type AppointmentStatus = "scheduled" | "confirmed" | "in_progress" | "completed" | "no_show" | "cancelled"
 
 /**
  * Determines if an appointment status should trigger patient activation
  */
 export function shouldActivatePatientFromAppointment(status: AppointmentStatus): boolean {
-  return status === "arrived" || status === "completed"
+  return status === "in_progress" || status === "completed"
 }
 
 /**

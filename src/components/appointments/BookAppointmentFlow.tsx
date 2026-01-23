@@ -200,7 +200,7 @@ export function BookAppointmentFlow({
     e.preventDefault()
     
     // Create a temporary patient object
-    const emailValue = newPatientForm.email.trim()
+    const emailValue = newPatientForm.email?.trim() || ""
     const newPatient: Patient = {
       id: `temp-${Date.now()}`,
       first_name: newPatientForm.first_name,

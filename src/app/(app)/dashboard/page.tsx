@@ -25,7 +25,7 @@ import {
 } from "@remixicon/react"
 
 // Unified Types
-type QueueStatus = "now" | "next" | "waiting" | "online_now" | "no_show" | "arrived"
+type QueueStatus = "now" | "next" | "waiting" | "online_now" | "no_show" | "in_progress"
 
 interface DashboardAppointment {
   id: string
@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
       if (role === "doctor") {
 
-        const queueStatuses: QueueStatus[] = ["arrived", "next", "waiting", "online_now"]
+        const queueStatuses: QueueStatus[] = ["in_progress", "next", "waiting", "online_now"]
         const queueData = todayAppts
           .filter((apt) => !["completed", "cancelled", "no_show"].includes(apt.status))
           .map((apt, index) => {
@@ -151,10 +151,10 @@ export default function DashboardPage() {
   const updateQueueStatus = async (appointmentId: string, newStatus: QueueStatus | "scheduled") => {
     try {
       // Map queue status to appointment status
-      let appointmentStatus: "scheduled" | "confirmed" | "arrived" | "completed" | "no_show" | "cancelled" = "scheduled"
+      let appointmentStatus: "scheduled" | "confirmed" | "in_progress" | "completed" | "no_show" | "cancelled" = "scheduled"
       
-      if (newStatus === "arrived") {
-        appointmentStatus = "arrived"
+      if (newStatus === "in_progress") {
+        appointmentStatus = "in_progress"
       } else if (newStatus === "no_show") {
         appointmentStatus = "no_show"
       } else if (newStatus === "scheduled") {
@@ -162,7 +162,7 @@ export default function DashboardPage() {
       }
 
       // Update appointment status via API (triggers patient activation if needed)
-      if (newStatus === "arrived") {
+      if (newStatus === "in_progress") {
         await updateAppointmentStatus(appointmentId, appointmentStatus)
         showToast("Patient moved to Active", "success")
       } else if (newStatus !== "scheduled") {
@@ -200,7 +200,7 @@ export default function DashboardPage() {
         return "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
       case "no_show":
         return "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-      case "arrived":
+      case "in_progress":
         return "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
       default:
         return "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
@@ -211,7 +211,7 @@ export default function DashboardPage() {
     switch (status) {
       case "now":
         return <RiRadioButtonLine className="size-4 animate-pulse" />
-      case "arrived":
+      case "in_progress":
         return <RiCheckboxCircleLine className="size-4" />
       case "next":
         return <RiArrowRightLine className="size-4" />

@@ -6,7 +6,7 @@ import { Select } from "@/components/Select"
 import { ChatBox } from "./ChatBox"
 import { MetricCards } from "./MetricCards"
 import { askInsight } from "./insights.api"
-import type { InsightResponse, TimeRange, ChatMessage } from "./insights.types"
+import type { TimeRange, ChatMessage } from "./insights.types"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 
 const QUICK_PROMPTS = [

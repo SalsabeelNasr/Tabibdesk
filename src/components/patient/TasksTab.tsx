@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { cx } from "@/lib/utils"
-import { useUserClinic } from "@/contexts/user-clinic-context"
 import { Input } from "@/components/Input"
 import {
   RiTaskLine,
@@ -43,7 +42,6 @@ export function TasksTab({
   onToggleStatus,
 }: TasksTabProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("")
-  const { currentUser } = useUserClinic()
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && newTaskTitle.trim()) {

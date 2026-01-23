@@ -43,7 +43,7 @@ export async function updateStatus(appointmentId: string, status: AppointmentSta
 
   // Trigger patient activation if needed
   if (shouldActivatePatientFromAppointment(status)) {
-    const activationReason = status === "arrived" ? ("arrived" as const) : ("completed" as const)
+    const activationReason = status === "in_progress" ? ("in_progress" as const) : ("completed" as const)
     await activatePatient(appointment.patient_id, activationReason)
   }
 

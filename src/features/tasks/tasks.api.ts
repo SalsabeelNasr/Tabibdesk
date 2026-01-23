@@ -97,7 +97,7 @@ function initializeMockTasks() {
       },
     ]
 
-    function makeAlertTask(seed: {
+    const makeAlertTask = (seed: {
       id: string
       alertType: "question" | "lab"
       severity: "critical" | "warning" | "info"
@@ -108,7 +108,7 @@ function initializeMockTasks() {
       isReviewed: boolean
       labResultId?: string
       labTestName?: string
-    }): Task {
+    }): Task => {
       const priority = seed.severity === "critical" ? "high" : seed.severity === "warning" ? "normal" : "low"
       const type = seed.alertType === "lab" ? "labs" : "follow_up"
 
@@ -142,7 +142,7 @@ function initializeMockTasks() {
           labTestName: seed.labTestName,
         },
       }
-    }
+    };
 
     const alertSeeds = [
       // Critical - patient question

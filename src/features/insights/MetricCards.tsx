@@ -89,7 +89,7 @@ export function MetricCards() {
       change: noShowChange.value,
       changeType: noShowChange.type === "positive" ? "negative" : noShowChange.type === "negative" ? "positive" : "neutral",
       data: generateSparkline(noShowRate),
-      color: "red" as const,
+      color: "pink" as const,
     },
     {
       id: "lead-conversion",
@@ -160,7 +160,7 @@ export function MetricCards() {
                 data={metric.data}
                 index="date"
                 categories={["value"]}
-                colors={[metric.color]}
+                colors={[metric.color as "indigo" | "blue" | "emerald" | "violet" | "amber" | "gray" | "cyan" | "pink"]}
                 showXAxis={false}
                 showYAxis={false}
                 showTooltip={false}

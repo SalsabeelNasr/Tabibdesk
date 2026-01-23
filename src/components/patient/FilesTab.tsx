@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
+import { Card, CardContent } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { cx } from "@/lib/utils"
@@ -15,7 +15,6 @@ import {
   RiDeleteBinLine,
   RiArrowDownSLine,
   RiArrowRightSLine,
-  RiAttachmentLine,
   RiCloseFill,
   RiFileTextLine,
   RiFileImageLine,
@@ -67,8 +66,6 @@ export function FilesTab({
 }: FilesTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<Partial<LabResult>>({})
-  const [addingToDate, setAddingToDate] = useState<string | null>(null)
-  const [newRow, setNewRow] = useState<Partial<LabResult>>({})
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
   const [viewingFile, setViewingFile] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -132,21 +129,9 @@ export function FilesTab({
     console.log("Delete:", id)
   }
 
-  const handleAddRow = (date: string) => {
-    setAddingToDate(date)
-    setNewRow({ test_date: date, status: "normal" })
-  }
-
-  const handleSaveNewRow = () => {
-    // TODO: Save to backend
-    console.log("Save new row:", newRow)
-    setAddingToDate(null)
-    setNewRow({})
-  }
-
-  const handleCancelNewRow = () => {
-    setAddingToDate(null)
-    setNewRow({})
+  const handleAddRow = (_date: string) => {
+    // TODO: Implement add row functionality
+    console.log("Add row functionality not yet implemented")
   }
 
   const getStatusColor = (status: string) => {
@@ -182,15 +167,6 @@ export function FilesTab({
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
   }
 
   const handleDragOver = (e: React.DragEvent) => {

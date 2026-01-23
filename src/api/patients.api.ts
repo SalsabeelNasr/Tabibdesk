@@ -43,7 +43,7 @@ export interface CreatePatientPayload {
   age?: number
 }
 
-export type ActivationReason = "arrived" | "completed" | "visit_note"
+export type ActivationReason = "in_progress" | "completed" | "visit_note"
 
 /**
  * List patients with filtering and pagination

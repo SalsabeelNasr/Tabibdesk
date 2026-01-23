@@ -62,7 +62,7 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
   })
 }
 
-export function getPatientById(id: string): Patient | null {
+export function getPatientById(_id: string): Patient | null {
   // This is synchronous for backward compatibility
   // In real implementation, this would be async
   return null

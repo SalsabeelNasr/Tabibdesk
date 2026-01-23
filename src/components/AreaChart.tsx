@@ -72,8 +72,7 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
             {showXAxis && <XAxis dataKey={index} hide />}
             {showYAxis && <YAxis hide />}
             {showTooltip && <Tooltip />}
-            {categories.map((category, idx) => {
-              const color = colors[idx] || colors[0]
+            {categories.map((category) => {
               return (
                 <Area
                   key={category}

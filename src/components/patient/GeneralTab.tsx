@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/Checkbox"
 import { Textarea } from "@/components/Textarea"
 import { AIExtractionModal } from "./AIExtractionModal"
 import { WeightChart } from "./WeightChart"
-import { useToast } from "@/hooks/useToast"
 import {
   RiMailLine,
   RiPhoneLine,
@@ -70,10 +69,9 @@ interface GeneralTabProps {
 }
 
 export function GeneralTab({ patient, weightLogs = [] }: GeneralTabProps) {
-  const { showToast } = useToast()
-  const [clinicalNotesText, setClinicalNotesText] = useState("")
+  const [clinicalNotesText, _setClinicalNotesText] = useState("")
   const [showAIModal, setShowAIModal] = useState(false)
-  const [_showTranscription, setShowTranscription] = useState(false)
+  const [_showTranscription, _setShowTranscription] = useState(false)
 
   const allMedicalConditions = [
     { id: "is_diabetic", label: "Diabetes", value: patient.is_diabetic },

@@ -3,21 +3,21 @@
 import React from "react"
 import { cx } from "@/lib/utils"
 
-interface PageHeaderProps extends React.ComponentPropsWithoutRef<"div"> {
+interface PageHeaderProps {
   title: React.ReactNode
   subtitle?: React.ReactNode
   actions?: React.ReactNode
+  className?: string
 }
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ className, title, subtitle, actions, ...props }, forwardedRef) => (
+  ({ className, title, subtitle, actions }, forwardedRef) => (
     <div
       ref={forwardedRef}
       className={cx(
         "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
         className,
       )}
-      {...props}
     >
       <div className="flex-1">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">{title}</h1>

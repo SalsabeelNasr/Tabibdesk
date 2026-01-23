@@ -23,7 +23,6 @@ import type {
   ListBalancesParams,
   ListBalancesResponse,
 } from "@/features/accounting/accounting.types"
-import { getById as getPatient } from "./patients.api"
 
 // Mock data stores with seed data
 const paymentsStore: Payment[] = [

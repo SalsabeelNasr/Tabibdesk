@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect } from "react"
-import { Card, CardContent } from "@/components/Card"
+import { Card } from "@/components/Card"
 import { Input } from "@/components/Input"
 import { Button } from "@/components/Button"
 import { RiSendPlaneLine, RiExternalLinkLine, RiFileCopyLine, RiUserLine, RiRobotLine } from "@remixicon/react"
