@@ -71,7 +71,6 @@ export function InsightsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Insights"
-        subtitle="Ask TabibDesk anything about your clinic performance and get actionable insights"
         actions={
           <div className="flex items-center gap-2">
             <label htmlFor="time-range" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">

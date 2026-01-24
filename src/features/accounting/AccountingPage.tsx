@@ -26,7 +26,6 @@ export function AccountingPage() {
       {/* Page Header */}
       <PageHeader
         title="Accounting"
-        subtitle="Collect payments and track balances"
         actions={
           <Button
             variant="primary"

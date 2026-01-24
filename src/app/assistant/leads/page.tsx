@@ -76,7 +76,6 @@ export default function AssistantLeadsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Leads"
-        subtitle="Manage and track potential patients"
         actions={
           <Button>
             <RiUserAddLine className="mr-2 size-4" />

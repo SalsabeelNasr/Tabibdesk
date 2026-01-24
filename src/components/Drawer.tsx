@@ -65,8 +65,10 @@ DrawerOverlay.displayName = "DrawerOverlay"
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitives.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitives.Content>
->(({ className, ...props }, forwardedRef) => {
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitives.Content> & {
+    side?: "left" | "right"
+  }
+>(({ className, side = "right", ...props }, forwardedRef) => {
   return (
     <DrawerPortal>
       <DrawerOverlay>
@@ -74,13 +76,16 @@ const DrawerContent = React.forwardRef<
           ref={forwardedRef}
           className={cx(
             // base
-            "fixed inset-y-2 z-50 mx-auto flex w-[95vw] flex-1 flex-col overflow-y-auto rounded-md border p-4 shadow-lg focus:outline-none max-sm:inset-x-2 sm:inset-y-2 sm:right-2 sm:max-w-lg sm:p-6",
-            // border color
+            "fixed inset-y-0 z-50 flex flex-1 flex-col overflow-y-auto bg-white p-4 shadow-lg focus:outline-none dark:bg-[#090E1A] sm:p-6",
+            // position
+            side === "right" ? "right-0" : "left-0",
+            // border
+            side === "right" ? "border-l" : "border-r",
             "border-gray-200 dark:border-gray-900",
-            // background color
-            "bg-white dark:bg-[#090E1A]",
             // transition
-            "data-[state=closed]:animate-drawerSlideRightAndFade data-[state=open]:animate-drawerSlideLeftAndFade",
+            side === "right"
+              ? "data-[state=closed]:animate-drawerSlideRightAndFade data-[state=open]:animate-drawerSlideLeftAndFade"
+              : "data-[state=closed]:animate-drawerSlideLeftAndFade data-[state=open]:animate-drawerSlideRightAndFade",
             focusRing,
             className,
           )}

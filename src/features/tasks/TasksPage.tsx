@@ -30,7 +30,6 @@ interface TasksPageProps {
   clinicId: string
   defaultSourceFilter?: TaskSource | "all"
   pageTitle?: string
-  pageSubtitle?: string
 }
 
 export function TasksPage({
@@ -39,7 +38,6 @@ export function TasksPage({
   clinicId,
   defaultSourceFilter = "all",
   pageTitle,
-  pageSubtitle,
 }: TasksPageProps) {
   const [tasks, setTasks] = useState<TaskListItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -109,12 +107,6 @@ export function TasksPage({
     <div className="space-y-6">
       <PageHeader
         title={pageTitle || "Tasks"}
-        subtitle={
-          pageSubtitle ||
-          (searchQuery
-            ? `${filteredCount} task${filteredCount !== 1 ? "s" : ""} found`
-            : `${total} total task${total !== 1 ? "s" : ""}`)
-        }
       />
 
       <TasksToolbar

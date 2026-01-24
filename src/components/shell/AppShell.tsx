@@ -4,6 +4,7 @@ import { cx } from "@/lib/utils"
 import { SidebarProvider, useSidebar } from "@/contexts/sidebar-context"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { Sidebar } from "./Sidebar"
+import { Topbar } from "./Topbar"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -28,6 +29,8 @@ function AppShellContent({ children, role: propRole }: AppShellProps) {
           isCollapsed ? "lg:ps-20" : "lg:ps-72"
         )}
       >
+        <Topbar role={role as "doctor" | "assistant" | "manager"} />
+
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 lg:p-8">

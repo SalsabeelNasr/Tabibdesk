@@ -8,6 +8,7 @@ import { Label } from "@/components/Label"
 import { Switch } from "@/components/Switch"
 import { Badge } from "@/components/Badge"
 import { Tooltip } from "@/components/Tooltip"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useFeatures } from "@/features/settings/useFeatures"
 import * as settingsApi from "@/api/settings.api"
@@ -52,15 +53,9 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">Settings</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Manage your account, clinic, and feature preferences
-        </p>
-      </div>
+      <PageHeader title="Settings" />
 
-      {/* Horizontal Tab Navigation */}
+      {/* Tab Navigation */}
       <div className="border-b border-gray-200 dark:border-gray-800">
         <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Settings tabs">
           {tabs.map((tab) => {
@@ -72,8 +67,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`group inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
                   isActive
-                    ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
-                    : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200"
+                    ? "border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
                 }`}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -91,8 +86,8 @@ export default function SettingsPage() {
         </nav>
       </div>
 
-      {/* Main Content */}
-      <div>
+      {/* Tab Content */}
+      <div className="mt-6">
         {activeTab === "profile" && <ProfileTab />}
         {activeTab === "clinic" && <ClinicTab />}
         {activeTab === "team" && <TeamTab />}

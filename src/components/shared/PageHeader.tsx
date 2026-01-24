@@ -5,13 +5,12 @@ import { cx } from "@/lib/utils"
 
 interface PageHeaderProps {
   title: React.ReactNode
-  subtitle?: React.ReactNode
   actions?: React.ReactNode
   className?: string
 }
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ className, title, subtitle, actions }, forwardedRef) => (
+  ({ className, title, actions }, forwardedRef) => (
     <div
       ref={forwardedRef}
       className={cx(
@@ -21,9 +20,6 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
     >
       <div className="flex-1">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">{title}</h1>
-        {subtitle && (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>
-        )}
       </div>
       {actions && (
         <div className="flex shrink-0 items-center gap-2">{actions}</div>

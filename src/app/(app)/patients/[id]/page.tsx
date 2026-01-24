@@ -199,7 +199,6 @@ export default function PatientDetailPage() {
             </Badge>
           </div>
         }
-        subtitle={patient.ai_diagnosis || "No AI summary available"}
         actions={
           lastVisited && (
             <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">

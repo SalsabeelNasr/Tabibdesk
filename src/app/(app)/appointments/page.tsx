@@ -199,11 +199,6 @@ export default function AppointmentsPage() {
       {/* PageHeader */}
       <PageHeader
         title="Appointments"
-        subtitle={
-          searchQuery
-            ? `${filteredCount} appointment${filteredCount !== 1 ? "s" : ""} found`
-            : `${total} total appointment${total !== 1 ? "s" : ""}`
-        }
       />
 
       <AppointmentsToolbar

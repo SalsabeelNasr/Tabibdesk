@@ -93,11 +93,6 @@ export function PatientsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Patients"
-        subtitle={
-          searchQuery
-            ? `${filteredCount} patient${filteredCount !== 1 ? "s" : ""} found`
-            : `${total} total patient${total !== 1 ? "s" : ""}`
-        }
       />
 
       <PatientsToolbar
