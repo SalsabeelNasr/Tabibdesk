@@ -8,6 +8,7 @@ import { activate as activatePatient } from "@/api/patients.api"
 import { shouldActivatePatientFromAppointment } from "@/features/patients/patientLifecycle"
 import { isAppointmentArchived } from "@/features/archive/archive.rules"
 import { logActivity } from "@/api/activity.api"
+import { removeByPatientId as removeWaitlistByPatientId } from "./waitlist/waitingList.api"
 import type { AppointmentStatus } from "@/features/patients/patientLifecycle"
 import type { ListAppointmentsParams, ListAppointmentsResponse, AppointmentListItem } from "./appointments.types"
 import type { Appointment as AppointmentType, WaitlistEntry, Slot } from "./types"
@@ -468,6 +469,13 @@ export async function createAppointment(params: {
   
   appointmentsStore.push(appointmentForStore as typeof appointmentsStore[0])
 
+  // If patient is on waitlist, remove them
+  try {
+    await removeWaitlistByPatientId(patientId)
+  } catch (error) {
+    console.error("Failed to remove patient from waitlist:", error)
+  }
+
   // Log activity
   await logActivity({
     clinicId,
@@ -554,6 +562,13 @@ export async function createAppointmentFromWaitlist(params: {
   }
   
   appointmentsStore.push(appointmentForStore as typeof appointmentsStore[0])
+
+  // If patient is on waitlist, remove them
+  try {
+    await removeWaitlistByPatientId(waitlistEntry.patientId)
+  } catch (error) {
+    console.error("Failed to remove patient from waitlist:", error)
+  }
 
   // Log activity
   await logActivity({

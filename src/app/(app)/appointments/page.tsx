@@ -8,7 +8,7 @@ import { BookAppointmentDrawer } from "@/features/appointments/components/BookAp
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useDemo } from "@/contexts/demo-context"
 import { DEMO_CLINIC_ID, DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
-import type { Slot } from "@/features/appointments/types"
+import type { Slot, WaitlistEntry } from "@/features/appointments/types"
 
 export default function AppointmentsPage() {
   const { currentUser, currentClinic } = useUserClinic()
@@ -34,6 +34,7 @@ export default function AppointmentsPage() {
   const [selectedSlotForFill, setSelectedSlotForFill] = useState<Slot | null>(null)
   const [rescheduleSlot, setRescheduleSlot] = useState<Slot | null>(null)
   const [rescheduleAppointmentId, setRescheduleAppointmentId] = useState<string | null>(null)
+  const [waitlistEntryToBook, setWaitlistEntryToBook] = useState<WaitlistEntry | null>(null)
   
   // Use selected doctor ID, or fallback to current user if they're a doctor
   const effectiveDoctorId = selectedDoctorId || (currentUser.role === "doctor" ? currentUser.id : DEMO_DOCTOR_ID)
@@ -42,6 +43,7 @@ export default function AppointmentsPage() {
   const handleFillSlot = (slot: Slot) => {
     setSelectedSlotForFill(slot)
     setRescheduleSlot(null)
+    setWaitlistEntryToBook(null)
     setIsBookingDrawerOpen(true)
   }
   
@@ -49,6 +51,16 @@ export default function AppointmentsPage() {
   const handleReschedule = (slot: Slot) => {
     setRescheduleSlot(slot)
     setRescheduleAppointmentId(slot.appointmentId || null)
+    setSelectedSlotForFill(null)
+    setWaitlistEntryToBook(null)
+    setIsBookingDrawerOpen(true)
+  }
+
+  // Handle Waitlist Booking
+  const handleBookFromWaitlist = (entry: WaitlistEntry) => {
+    setWaitlistEntryToBook(entry)
+    setRescheduleSlot(null)
+    setRescheduleAppointmentId(null)
     setSelectedSlotForFill(null)
     setIsBookingDrawerOpen(true)
   }
@@ -63,6 +75,7 @@ export default function AppointmentsPage() {
     setSelectedSlotForFill(null)
     setRescheduleSlot(null)
     setRescheduleAppointmentId(null)
+    setWaitlistEntryToBook(null)
   }
   
   // Handle drawer close
@@ -71,6 +84,7 @@ export default function AppointmentsPage() {
     setSelectedSlotForFill(null)
     setRescheduleSlot(null)
     setRescheduleAppointmentId(null)
+    setWaitlistEntryToBook(null)
   }
   
   // Reset doctor selection when clinic changes (if user is not a doctor)
@@ -104,7 +118,11 @@ export default function AppointmentsPage() {
           onReschedule={handleReschedule}
         />
       ) : (
-        <WaitlistTab clinicId={clinicId} doctorId={effectiveDoctorId} />
+        <WaitlistTab 
+          clinicId={clinicId} 
+          doctorId={effectiveDoctorId} 
+          onBook={handleBookFromWaitlist}
+        />
       )}
       
       <BookAppointmentDrawer
@@ -118,14 +136,24 @@ export default function AppointmentsPage() {
           endAt: selectedSlotForFill.endAt,
           appointmentType: selectedSlotForFill.appointmentType,
         } : null}
-        initialPatient={rescheduleSlot && rescheduleSlot.patientId ? {
-          id: rescheduleSlot.patientId,
-          first_name: rescheduleSlot.patientName?.split(" ")[0] || "",
-          last_name: rescheduleSlot.patientName?.split(" ").slice(1).join(" ") || "",
-          phone: rescheduleSlot.patientPhone || "",
-          email: null,
-        } : null}
+        initialPatient={
+          waitlistEntryToBook ? {
+            id: waitlistEntryToBook.patientId,
+            first_name: waitlistEntryToBook.patientName.split(" ")[0] || "",
+            last_name: waitlistEntryToBook.patientName.split(" ").slice(1).join(" ") || "",
+            phone: waitlistEntryToBook.patientPhone,
+            email: null,
+          } :
+          rescheduleSlot && rescheduleSlot.patientId ? {
+            id: rescheduleSlot.patientId,
+            first_name: rescheduleSlot.patientName?.split(" ")[0] || "",
+            last_name: rescheduleSlot.patientName?.split(" ").slice(1).join(" ") || "",
+            phone: rescheduleSlot.patientPhone || "",
+            email: null,
+          } : null
+        }
         rescheduleAppointmentId={rescheduleAppointmentId}
+        waitlistEntry={waitlistEntryToBook}
         clinicId={rescheduleSlot?.clinicId || clinicId}
         doctorId={rescheduleSlot?.doctorId || effectiveDoctorId}
       />

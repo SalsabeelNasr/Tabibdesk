@@ -41,28 +41,29 @@ export function DayNavigation({ currentDate, onDateChange }: DayNavigationProps)
   const isToday = format(currentDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
   
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
+    <div className="flex items-center justify-between gap-1 sm:gap-4 rounded-lg border border-gray-200 bg-white p-2 sm:p-4 dark:border-gray-800 dark:bg-gray-950">
       {/* Previous Day */}
       <Button
         variant="ghost"
         size="sm"
         onClick={goToPreviousDay}
-        className="shrink-0"
+        className="shrink-0 h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3"
       >
         <RiArrowLeftSLine className="size-5" />
       </Button>
       
       {/* Date Display & Calendar Popup */}
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center min-w-0">
         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-50 dark:hover:bg-gray-800"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-md px-2 sm:px-3 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-50 dark:hover:bg-gray-800 truncate"
             >
-              <RiCalendarLine className="size-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                {format(currentDate, "EEEE, MMMM d, yyyy")}
+              <RiCalendarLine className="size-4 sm:size-5 text-gray-500 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
+                <span className="sm:hidden">{format(currentDate, "MMM d, yyyy")}</span>
+                <span className="hidden sm:inline">{format(currentDate, "EEEE, MMMM d, yyyy")}</span>
               </span>
             </button>
           </PopoverTrigger>
@@ -78,27 +79,29 @@ export function DayNavigation({ currentDate, onDateChange }: DayNavigationProps)
         </Popover>
       </div>
       
-      {/* Today Button */}
-      {!isToday && (
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        {/* Today Button */}
+        {!isToday && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={goToToday}
+            className="h-8 sm:h-9 px-2 sm:px-4 text-xs sm:text-sm"
+          >
+            Today
+          </Button>
+        )}
+        
+        {/* Next Day */}
         <Button
-          variant="secondary"
+          variant="ghost"
           size="sm"
-          onClick={goToToday}
-          className="shrink-0"
+          onClick={goToNextDay}
+          className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3"
         >
-          Today
+          <RiArrowRightSLine className="size-5" />
         </Button>
-      )}
-      
-      {/* Next Day */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={goToNextDay}
-        className="shrink-0"
-      >
-        <RiArrowRightSLine className="size-5" />
-      </Button>
+      </div>
     </div>
   )
 }

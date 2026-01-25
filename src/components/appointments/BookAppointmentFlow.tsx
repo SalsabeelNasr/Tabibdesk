@@ -20,6 +20,7 @@ import { PatientSelector, type Patient } from "@/components/shared/PatientSelect
 import { mockUsers, mockClinics } from "@/data/mock/users-clinics"
 import { createAppointment, updateAppointmentTime } from "@/features/appointments/appointments.api"
 import { getAvailableDates, getAvailableSlots } from "@/features/appointments/slots.api"
+import { format } from "date-fns"
 
 // Types
 export interface Patient {
@@ -59,6 +60,15 @@ interface PreSelectedSlot {
   appointmentType?: string
 }
 
+interface WaitlistEntry {
+  id: string
+  patientId: string
+  patientName: string
+  patientPhone: string
+  appointmentType?: string
+  notes?: string
+}
+
 interface BookAppointmentFlowProps {
   initialPatient?: Patient | null
   showBackButton?: boolean
@@ -67,6 +77,7 @@ interface BookAppointmentFlowProps {
   isEmbedded?: boolean
   preSelectedSlot?: PreSelectedSlot | null
   rescheduleAppointmentId?: string | null
+  waitlistEntry?: WaitlistEntry | null
   clinicId?: string
   doctorId?: string
   onBookingComplete?: () => void
@@ -81,6 +92,7 @@ export function BookAppointmentFlow({
   isEmbedded = false,
   preSelectedSlot = null,
   rescheduleAppointmentId = null,
+  waitlistEntry = null,
   clinicId,
   doctorId,
   onBookingComplete,
@@ -322,13 +334,20 @@ export function BookAppointmentFlow({
         }
       }
       // If we have a pre-selected slot, create appointment using TabibDesk API
-      else if (preSelectedSlot) {
+      else if (preSelectedSlot || waitlistEntry) {
+        const effectiveClinicId = preSelectedSlot?.clinicId || clinicId
+        const effectiveDoctorId = preSelectedSlot?.doctorId || doctorId
+
+        if (!effectiveClinicId || !effectiveDoctorId) {
+          throw new Error('Missing clinic or doctor ID')
+        }
+
         await createAppointment({
           patientId: selectedPatient.id,
           patientName: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
           patientPhone: selectedPatient.phone,
-          clinicId: preSelectedSlot.clinicId,
-          doctorId: preSelectedSlot.doctorId,
+          clinicId: effectiveClinicId,
+          doctorId: effectiveDoctorId,
           startAt: selectedSlot.starts_at,
           endAt: selectedSlot.ends_at,
           appointmentType: selectedService.app_appointment_type_name || selectedService.title,
@@ -382,58 +401,66 @@ export function BookAppointmentFlow({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Back Navigation */}
-      {showHeader && showBackButton && currentStep !== "success" && (
-        <div className="mb-3">
-          {onCancel ? (
-            <Button variant="ghost" onClick={onCancel} className="mb-2 -ml-2">
-              <RiArrowLeftLine className="mr-2 size-4" />
-              Cancel
-            </Button>
-          ) : (
-            <Link href="/appointments">
-              <Button variant="ghost" className="mb-2 -ml-2">
-                <RiArrowLeftLine className="mr-2 size-4" />
-                Back to Appointments
+    <div className="space-y-4">
+      {/* Back/Cancel Navigation */}
+      {currentStep !== "success" && (
+        <div className="flex items-center -ml-1 mb-2">
+          {currentStep === "patient" ? (
+            onCancel && (
+              <Button 
+                variant="link" 
+                onClick={onCancel} 
+                className="text-[11px] font-bold"
+              >
+                <RiArrowLeftLine className="mr-1 size-3.5" />
+                Cancel
               </Button>
-            </Link>
+            )
+          ) : (
+            <Button 
+              variant="link" 
+              onClick={handleBack} 
+              className="text-[11px] font-bold"
+            >
+              <RiArrowLeftLine className="mr-1 size-3.5" />
+              Back
+            </Button>
           )}
         </div>
       )}
 
       {/* Header */}
       {showTitle && (
-        <div className="mb-3">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">Book Appointment</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Book Appointment</h1>
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
             Schedule a new appointment for a patient
           </p>
         </div>
       )}
 
-      {/* Slot Context Banner - shown when filling a specific slot */}
+      {/* Slot Context Banner - redesigned to be professional and on-theme */}
       {preSelectedSlot && slotContextInfo && currentStep !== "success" && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 dark:bg-blue-900/10 dark:border-blue-800">
-          <div className="flex items-start gap-3">
-            <RiHospitalLine className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-900 dark:text-blue-100">
-              <p className="font-medium">
-                Filling slot for <span className="font-semibold">{slotContextInfo.doctorName}</span> at{" "}
-                <span className="font-semibold">{slotContextInfo.clinicName}</span>
+        <div className="rounded-xl bg-gray-50/50 border border-gray-100 p-3 dark:bg-gray-900/50 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <RiCalendarLine className="size-5 text-primary-600 dark:text-primary-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-50 flex items-center gap-1.5">
+                <span>{format(new Date(preSelectedSlot.startAt), "EEEE, MMM d")}</span>
+                <span className="text-gray-300">•</span>
+                <span>{formatTime(preSelectedSlot.startAt)} – {formatTime(preSelectedSlot.endAt)}</span>
               </p>
-              <p className="mt-1 text-blue-700 dark:text-blue-300">
-                {formatDate(preSelectedSlot.startAt.split('T')[0])} at{" "}
-                {formatTime(preSelectedSlot.startAt)} - {formatTime(preSelectedSlot.endAt)}
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                {slotContextInfo.clinicName} <span className="mx-1 text-gray-300">•</span> {slotContextInfo.doctorName}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      {/* Progress Steps - Compact Numbered Stepper */}
+      <div className="py-2">
+        <div className="flex items-center justify-center max-w-sm mx-auto">
           {[
             { key: "patient", label: "Patient" },
             { key: "service", label: "Service" },
@@ -446,22 +473,22 @@ export function BookAppointmentFlow({
             const isCompleted = index < stepIndex || currentStep === "success"
             
             return (
-              <div key={step.key} className="flex flex-1 items-center">
-                <div className="flex items-center">
+              <div key={step.key} className="flex flex-1 items-center last:flex-none">
+                <div className="flex flex-col items-center gap-1.5 min-w-[60px]">
                   <div
-                    className={`flex size-8 items-center justify-center rounded-full text-sm font-medium ${
+                    className={`flex size-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${
                       isCompleted
                         ? "bg-primary-600 text-white"
                         : isActive
                         ? "border-2 border-primary-600 bg-white text-primary-600 dark:bg-gray-950"
-                        : "border-2 border-gray-300 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-950"
+                        : "border border-gray-200 bg-white text-gray-400 dark:border-gray-800 dark:bg-gray-950"
                     }`}
                   >
-                    {isCompleted ? <RiCheckLine className="size-5" /> : index + 1}
+                    {isCompleted ? <RiCheckLine className="size-4" /> : index + 1}
                   </div>
                   <span
-                    className={`ml-2 text-sm font-medium ${
-                      isActive || isCompleted ? "text-gray-900 dark:text-gray-50" : "text-gray-400"
+                    className={`text-[10px] font-bold uppercase tracking-wider ${
+                      isActive || isCompleted ? "text-gray-700 dark:text-gray-300" : "text-gray-400"
                     }`}
                   >
                     {step.label}
@@ -469,8 +496,8 @@ export function BookAppointmentFlow({
                 </div>
                 {index < array.length - 1 && (
                   <div
-                    className={`mx-4 h-0.5 flex-1 ${
-                      isCompleted ? "bg-primary-600" : "bg-gray-300 dark:bg-gray-700"
+                    className={`h-px flex-1 -mt-4 mx-2 ${
+                      isCompleted ? "bg-primary-600" : "bg-gray-200 dark:bg-gray-800"
                     }`}
                   />
                 )}
@@ -481,33 +508,7 @@ export function BookAppointmentFlow({
       </div>
 
       {/* Step Content */}
-      <Card className={isEmbedded ? "border-0 shadow-none" : ""}>
-        <CardHeader className={isEmbedded ? "px-0 pt-0" : ""}>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>
-                {currentStep === "patient" && "Search Patient"}
-                {currentStep === "service" && "Select Service"}
-                {currentStep === "datetime" && "Choose Date & Time"}
-                {currentStep === "confirmation" && (rescheduleAppointmentId ? "Confirm Reschedule" : "Confirm Booking")}
-                {currentStep === "success" && (rescheduleAppointmentId ? "Appointment Rescheduled!" : "Booking Confirmed!")}
-              </CardTitle>
-              <CardDescription>
-                {currentStep === "patient" && "Search for the patient by name or phone"}
-                {currentStep === "service" && "Choose the type of appointment"}
-                {currentStep === "datetime" && "Pick an available date and time slot"}
-                {currentStep === "confirmation" && "Review and confirm the appointment details"}
-                {currentStep === "success" && (rescheduleAppointmentId ? "The appointment has been successfully rescheduled" : "The appointment has been successfully booked")}
-              </CardDescription>
-            </div>
-            {currentStep !== "patient" && currentStep !== "success" && (
-              <Button variant="ghost" onClick={handleBack}>
-                <RiArrowLeftLine className="mr-2 size-4" />
-                Back
-              </Button>
-            )}
-          </div>
-        </CardHeader>
+      <Card className={isEmbedded ? "border-0 shadow-none bg-transparent" : ""}>
         <CardContent className={isEmbedded ? "px-0" : ""}>
           {/* STEP 1: Patient Selection */}
           {currentStep === "patient" && (
@@ -524,31 +525,33 @@ export function BookAppointmentFlow({
           {/* STEP 2: Service Selection */}
           {currentStep === "service" && (
             <div className="space-y-4">
-              {selectedPatient && (
-                <Alert variant="success">
-                  <strong>Patient:</strong> {selectedPatient.first_name} {selectedPatient.last_name}
-                </Alert>
-              )}
-
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">
+                Choose Service Type
+              </Label>
               {isLoadingServices ? (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-32 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
+                    <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800"></div>
                   ))}
                 </div>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {services.map((service) => (
                     <button
                       key={service.id}
                       onClick={() => handleServiceSelect(service)}
-                      className="rounded-lg border border-gray-200 p-4 text-left transition hover:border-primary-600 hover:bg-primary-50 dark:border-gray-800 dark:hover:border-primary-600 dark:hover:bg-primary-900/20"
+                      className="group relative rounded-xl border border-gray-100 p-3 text-left transition-all hover:border-primary-200 hover:bg-primary-50/30 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-primary-800 shadow-sm"
                     >
-                      <h3 className="font-medium text-gray-900 dark:text-gray-50">{service.title}</h3>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{service.description}</p>
-                      <p className="mt-2 text-sm font-medium text-primary-600 dark:text-primary-400">
-                        {service.duration_minutes} minutes
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50">{service.title}</h3>
+                      <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                        {service.description}
                       </p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-primary-600 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/30 px-2 py-0.5 rounded-lg">
+                          {service.duration_minutes}m
+                        </span>
+                        <RiCheckLine className="size-4 text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -558,43 +561,37 @@ export function BookAppointmentFlow({
 
           {/* STEP 3: Date & Time Selection */}
           {currentStep === "datetime" && (
-            <div className="space-y-6">
-              {selectedService && (
-                <Alert variant="success">
-                  <strong>Service:</strong> {selectedService.title} ({selectedService.duration_minutes} min)
-                </Alert>
-              )}
-
+            <div className="space-y-4">
               {/* Date Selection */}
               <div>
-                <Label>Select Date</Label>
+                <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-400 ml-1">Select Date</Label>
                 {isLoadingDates ? (
-                  <div className="mt-2 grid gap-2 sm:grid-cols-7">
-                    {[...Array(14)].map((_, i) => (
-                      <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
+                  <div className="mt-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {[...Array(7)].map((_, i) => (
+                      <div key={i} className="h-16 w-14 shrink-0 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800"></div>
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-2 grid gap-2 sm:grid-cols-7">
-                    {availableDates.slice(0, 14).map((dateObj) => {
+                  <div className="mt-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {availableDates.map((dateObj) => {
                       const date = new Date(dateObj.date)
                       const isSelected = selectedDate === dateObj.date
                       return (
                         <button
                           key={dateObj.date}
                           onClick={() => handleDateSelect(dateObj.date)}
-                          className={`rounded-lg border p-3 text-center transition ${
+                          className={`flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-xl border transition-all ${
                             isSelected
-                              ? "border-primary-600 bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
-                              : "border-gray-200 hover:border-primary-600 dark:border-gray-800"
+                              ? "border-primary-600 bg-primary-600 text-white shadow-md shadow-primary-200"
+                              : "border-gray-100 bg-white hover:border-primary-200 dark:border-gray-800 dark:bg-gray-950"
                           }`}
                         >
-                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                          <span className={`text-[10px] font-bold uppercase ${isSelected ? "text-primary-100" : "text-gray-400"}`}>
                             {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                          </div>
-                          <div className="mt-1 text-lg font-medium text-gray-900 dark:text-gray-50">
+                          </span>
+                          <span className={`text-base font-bold ${isSelected ? "text-white" : "text-gray-900 dark:text-gray-50"}`}>
                             {date.getDate()}
-                          </div>
+                          </span>
                         </button>
                       )
                     })}
@@ -605,24 +602,24 @@ export function BookAppointmentFlow({
               {/* Time Slots */}
               {selectedDate && (
                 <div>
-                  <Label>Select Time</Label>
+                  <Label className="text-[11px] font-bold uppercase tracking-widest text-gray-400 ml-1">Select Time</Label>
                   {isLoadingSlots ? (
-                    <div className="mt-2 grid gap-2 sm:grid-cols-4">
-                      {[...Array(8)].map((_, i) => (
-                        <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
+                    <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-10 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800"></div>
                       ))}
                     </div>
                   ) : (
-                    <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
                       {timeSlots.map((slot) => (
                         <button
                           key={slot.starts_at}
                           onClick={() => handleSlotSelect(slot)}
-                          className="rounded-lg border border-gray-200 p-3 text-center transition hover:border-primary-600 hover:bg-primary-50 dark:border-gray-800 dark:hover:border-primary-600 dark:hover:bg-primary-900/20"
+                          className="rounded-xl border border-gray-100 bg-white p-2.5 text-center transition-all hover:border-primary-200 hover:bg-primary-50/30 dark:border-gray-800 dark:bg-gray-950 shadow-sm"
                         >
-                          <div className="font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-xs font-bold text-gray-900 dark:text-gray-50">
                             {formatTime(slot.starts_at)}
-                          </div>
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -634,55 +631,70 @@ export function BookAppointmentFlow({
 
           {/* STEP 4: Confirmation */}
           {currentStep === "confirmation" && (
-            <div className="space-y-6">
-              <Alert variant="default" title="Review Booking Details">
-                Please confirm all details are correct before booking
-              </Alert>
+            <div className="space-y-4">
+              <div className="rounded-xl bg-primary-50/50 border border-primary-100 p-3 dark:bg-primary-900/10 dark:border-primary-800">
+                <p className="text-xs font-semibold text-primary-700 dark:text-primary-300 flex items-center gap-1.5">
+                  <RiCheckLine className="size-4" />
+                  Review details before confirming
+                </p>
+              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-                  <RiUserLine className="mt-0.5 size-5 text-gray-600" />
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3 rounded-xl border border-gray-100 p-3 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                    <RiUserLine className="size-4.5 text-gray-500" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Patient</p>
-                    <p className="mt-1 font-medium text-gray-900 dark:text-gray-50">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Patient</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-gray-50">
                       {selectedPatient?.first_name} {selectedPatient?.last_name}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedPatient?.phone}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-                  <RiCalendarLine className="mt-0.5 size-5 text-gray-600" />
+                <div className="flex items-center gap-3 rounded-xl border border-gray-100 p-3 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                    <RiHospitalLine className="size-4.5 text-gray-500" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Service</p>
-                    <p className="mt-1 font-medium text-gray-900 dark:text-gray-50">
-                      {selectedService?.title}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedService?.duration_minutes} minutes
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Service</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-gray-50">
+                      {selectedService?.title} • {selectedService?.duration_minutes}m
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-                  <RiTimeLine className="mt-0.5 size-5 text-gray-600" />
+                <div className="flex items-center gap-3 rounded-xl border border-gray-100 p-3 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                    <RiTimeLine className="size-4.5 text-gray-500" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Date & Time</p>
-                    <p className="mt-1 font-medium text-gray-900 dark:text-gray-50">
-                      {selectedDate && formatDate(selectedDate)}
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Date & Time</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-gray-50">
+                      {selectedDate && format(new Date(selectedDate), "EEEE, MMMM d")}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedSlot && formatTime(selectedSlot.starts_at)} - {selectedSlot && formatTime(selectedSlot.ends_at)}
+                    <p className="text-xs text-primary-600 dark:text-primary-400 font-bold">
+                      {selectedSlot && formatTime(selectedSlot.starts_at)} – {selectedSlot && formatTime(selectedSlot.ends_at)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3">
-                <Button variant="secondary" onClick={handleBack} disabled={isSubmitting}>
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="secondary" 
+                  className="flex-1 text-[11px] h-11 px-2.5 font-bold border-gray-200 dark:border-gray-800" 
+                  onClick={handleBack} 
+                  disabled={isSubmitting}
+                >
                   Back
                 </Button>
-                <Button variant="primary" onClick={handleConfirmBooking} disabled={isSubmitting}>
+                <Button 
+                  variant="primary" 
+                  className="flex-[2] text-[11px] h-11 px-2.5 font-bold bg-gray-900 shadow-lg active:scale-[0.98] transition-all" 
+                  onClick={handleConfirmBooking} 
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? "Booking..." : "Confirm Booking"}
                 </Button>
               </div>
@@ -691,19 +703,16 @@ export function BookAppointmentFlow({
 
           {/* SUCCESS */}
           {currentStep === "success" && (
-            <div className="py-8 text-center">
-              <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
-                <RiCheckLine className="size-8 text-green-600 dark:text-green-400" />
+            <div className="py-12 text-center animate-in fade-in zoom-in duration-300">
+              <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/20 border-4 border-white dark:border-gray-900 shadow-sm">
+                <RiCheckLine className="size-12 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="mt-4 text-xl font-medium text-gray-900 dark:text-gray-50">
-                {rescheduleAppointmentId ? "Appointment Rescheduled Successfully!" : "Appointment Booked Successfully!"}
+              <h3 className="mt-6 text-xl font-bold text-gray-900 dark:text-gray-50">
+                {rescheduleAppointmentId ? "Rescheduled!" : "Booking Confirmed!"}
               </h3>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
-                The patient has been notified and will receive a confirmation.
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                The appointment has been successfully updated in the system.
               </p>
-              <Button variant="primary" onClick={handleNewBooking} className="mt-6">
-                {rescheduleAppointmentId ? "Done" : "Book Another Appointment"}
-              </Button>
             </div>
           )}
         </CardContent>

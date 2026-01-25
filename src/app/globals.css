@@ -71,12 +71,12 @@
 
   /* Widget Row Layout */
   .widget-row {
-    @apply flex items-end justify-between px-4 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50;
+    @apply flex items-center justify-between p-3 transition-colors bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 shadow-sm;
   }
 
   /* Widget Content Groups */
   .widget-content-stack {
-    @apply flex items-center gap-1.5 flex-1 min-w-0;
+    @apply flex items-center gap-3 flex-1 min-w-0;
   }
 
   /* Widget Text Styles */

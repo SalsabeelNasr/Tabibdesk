@@ -50,11 +50,13 @@ export interface SuggestCandidatesParams {
 
 // In-memory store for waiting list entries (demo mode only)
 let waitingListStore: WaitlistEntry[] = []
+let isStoreInitialized = false
 
 // Initialize store from mock data
 function initializeStore() {
-  if (waitingListStore.length === 0 && mockData.waitingListEntries) {
+  if (!isStoreInitialized && mockData.waitingListEntries) {
     waitingListStore = [...mockData.waitingListEntries]
+    isStoreInitialized = true
   }
 }
 
@@ -198,6 +200,14 @@ export async function remove(id: string): Promise<void> {
     throw new Error("Waiting list entry not found")
   }
   waitingListStore.splice(index, 1)
+}
+
+/**
+ * Remove all active waitlist entries for a patient
+ */
+export async function removeByPatientId(patientId: string): Promise<void> {
+  initializeStore()
+  waitingListStore = waitingListStore.filter((entry) => entry.patientId !== patientId)
 }
 
 /**

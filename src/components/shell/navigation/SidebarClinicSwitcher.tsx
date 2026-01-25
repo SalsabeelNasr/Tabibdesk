@@ -28,51 +28,57 @@ export function SidebarClinicSwitcher({ mode }: SidebarClinicSwitcherProps) {
 
   // Desktop modes (Expanded & Collapsed) use Dropdown
   if (mode === "dropdown" || mode === "collapsed") {
+    const triggerButton = (
+      <button
+        className={cx(
+          "group flex w-full items-center rounded-lg text-sm font-medium transition-colors",
+          mode === "collapsed" ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+          "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
+          focusRing
+        )}
+        aria-label="Switch clinic"
+      >
+        <RiHospitalLine className="size-5 shrink-0" aria-hidden="true" />
+        {mode === "dropdown" && (
+          <span className="flex-1 truncate text-start">{currentClinic.name}</span>
+        )}
+      </button>
+    )
+
     return (
-      <div className="w-full">
-        <DropdownMenu>
-          <Tooltip content={mode === "collapsed" ? "تبديل العيادة" : ""} side="right">
+      <DropdownMenu>
+        {mode === "collapsed" ? (
+          <Tooltip content="تبديل العيادة" side="right">
             <DropdownMenuTrigger asChild>
-              <button
-                className={cx(
-                  "group flex w-full items-center rounded-lg text-sm font-medium transition-colors",
-                  mode === "collapsed" ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                  "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
-                  focusRing
-                )}
-                aria-label="Switch clinic"
-              >
-                <RiHospitalLine className="size-5 shrink-0" aria-hidden="true" />
-                {mode === "dropdown" && (
-                  <>
-                    <span className="flex-1 truncate text-start">{currentClinic.name}</span>
-                    <RiArrowDownSLine className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300" />
-                  </>
-                )}
-              </button>
+              {triggerButton}
             </DropdownMenuTrigger>
           </Tooltip>
-          <DropdownMenuContent 
-            align={mode === "collapsed" ? "center" : "start"} 
-            side={mode === "collapsed" ? "right" : "top"} 
-            className="w-56"
-          >
-            <DropdownMenuLabel>العيادات</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {allClinics.map((clinic) => (
-              <DropdownMenuItem
-                key={clinic.id}
-                onClick={() => setCurrentClinic(clinic.id)}
-                className={cx(
-                  clinic.id === currentClinic.id && "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
-                )}
-              >
-                {clinic.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+        ) : (
+          <DropdownMenuTrigger asChild>
+            {triggerButton}
+          </DropdownMenuTrigger>
+        )}
+        <DropdownMenuContent 
+          align={mode === "collapsed" ? "center" : "start"} 
+          side={mode === "collapsed" ? "right" : "top"} 
+          className="w-56"
+        >
+          <DropdownMenuLabel>العيادات</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {allClinics.map((clinic) => (
+            <DropdownMenuItem
+              key={clinic.id}
+              onClick={() => setCurrentClinic(clinic.id)}
+              className={cx(
+                clinic.id === currentClinic.id && "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
+              )}
+            >
+              <RiHospitalLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+              {clinic.name}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     )
   }
 

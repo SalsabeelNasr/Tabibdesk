@@ -60,128 +60,136 @@ export function SidebarUserProfile({ mode, align = "start", children }: SidebarU
 
   // Desktop modes (Expanded & Collapsed) use Dropdown
   if (mode === "dropdown" || mode === "collapsed") {
+    const triggerButton = children ? children : (
+      <button
+        className={cx(
+          "group flex w-full items-center rounded-lg text-sm font-medium transition-colors",
+          mode === "collapsed" ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
+          "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
+          focusRing
+        )}
+        aria-label="User settings"
+      >
+        {mode === "dropdown" ? (
+          <>
+            <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
+              {currentUser.avatar_initials}
+            </div>
+            <div className="flex-1 min-w-0 text-start">
+              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
+                {currentUser.full_name}
+              </p>
+              <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                {roleLabel}
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="flex size-5 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
+            {currentUser.avatar_initials}
+          </div>
+        )}
+      </button>
+    )
+
     return (
-      <div className={cx(mode === "dropdown" ? "w-full" : "")}>
-        <DropdownMenu>
-          <Tooltip content={mode === "collapsed" ? currentUser.full_name : ""} side="right">
+      <DropdownMenu>
+        {mode === "collapsed" ? (
+          <Tooltip content={currentUser.full_name} side="right">
             <DropdownMenuTrigger asChild>
-              {children ? children : (
-                <button
-                  className={cx(
-                    "group flex w-full items-center rounded-lg text-sm font-medium transition-colors",
-                    mode === "collapsed" ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                    "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
-                    focusRing
-                  )}
-                  aria-label="User settings"
-                >
-                  {mode === "dropdown" ? (
-                    <>
-                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
-                        {currentUser.avatar_initials}
-                      </div>
-                      <div className="flex-1 min-w-0 text-start">
-                        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">
-                          {currentUser.full_name}
-                        </p>
-                        <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                          {roleLabel}
-                        </p>
-                      </div>
-                      <RiArrowDownSLine className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300" aria-hidden="true" />
-                    </>
-                  ) : (
-                    <div className="flex size-5 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
-                      {currentUser.avatar_initials}
-                    </div>
-                  )}
-                </button>
-              )}
+              {triggerButton}
             </DropdownMenuTrigger>
           </Tooltip>
-          <DropdownMenuContent 
-            align={align} 
-            side={mode === "collapsed" ? "right" : "bottom"} 
-            className="w-64"
-          >
-            <DropdownMenuLabel>
-              <div className="flex items-center gap-3 px-1 py-1.5">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
-                  {currentUser.avatar_initials}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{currentUser.full_name}</span>
-                  <span className="truncate text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</span>
-                </div>
+        ) : (
+          <DropdownMenuTrigger asChild>
+            {triggerButton}
+          </DropdownMenuTrigger>
+        )}
+        <DropdownMenuContent 
+          align={align} 
+          side={mode === "collapsed" ? "right" : "top"} 
+          className="w-64"
+        >
+          <DropdownMenuLabel>
+            <div className="flex items-center gap-3 px-1 py-1.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
+                {currentUser.avatar_initials}
               </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuSubMenu>
-                <DropdownMenuSubMenuTrigger>
-                  <RiUserSettingsLine className="size-4 shrink-0" aria-hidden="true" />
-                  Switch User
-                </DropdownMenuSubMenuTrigger>
-                <DropdownMenuSubMenuContent>
-                  {allUsers.map((user) => (
-                    <DropdownMenuItem
-                      key={user.id}
-                      onClick={() => setCurrentUser(user.id)}
-                      className={user.id === currentUser.id ? "bg-gray-100 dark:bg-gray-800" : ""}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex size-6 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
-                          {user.avatar_initials}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{user.full_name}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {user.role === "doctor" ? "طبيب" : "مساعد"}
-                          </span>
-                        </div>
+              <div className="flex flex-col min-w-0">
+                <span className="truncate text-sm font-medium text-gray-900 dark:text-gray-50">{currentUser.full_name}</span>
+                <span className="truncate text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</span>
+              </div>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuSubMenu>
+              <DropdownMenuSubMenuTrigger>
+                <RiUserSettingsLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+                Switch User
+              </DropdownMenuSubMenuTrigger>
+              <DropdownMenuSubMenuContent>
+                {allUsers.map((user) => (
+                  <DropdownMenuItem
+                    key={user.id}
+                    onClick={() => setCurrentUser(user.id)}
+                    className={user.id === currentUser.id ? "bg-gray-100 dark:bg-gray-800" : ""}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-700 dark:bg-primary-900/20 dark:text-primary-400">
+                        {user.avatar_initials}
                       </div>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubMenuContent>
-              </DropdownMenuSubMenu>
-              <DropdownMenuSubMenu>
-                <DropdownMenuSubMenuTrigger>Theme</DropdownMenuSubMenuTrigger>
-                <DropdownMenuSubMenuContent>
-                  <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                    <DropdownMenuRadioItem value="light" iconType="check">
-                      <RiSunLine className="size-4 shrink-0" aria-hidden="true" />
-                      Light
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="dark" iconType="check">
-                      <RiMoonLine className="size-4 shrink-0" aria-hidden="true" />
-                      Dark
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="system" iconType="check">
-                      <RiComputerLine className="size-4 shrink-0" aria-hidden="true" />
-                      System
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuSubMenuContent>
-              </DropdownMenuSubMenu>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => {
-                if (isDemoMode) disableDemoMode(); else enableDemoMode();
-                window.location.reload();
-              }}>
-                <RiFlaskLine className="size-4 shrink-0" aria-hidden="true" />
-                {isDemoMode ? "Disable Demo Mode" : "Enable Demo Mode"}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:bg-red-50 focus:dark:bg-red-900/10">
-              <RiLogoutBoxRLine className="size-4 shrink-0 me-2" />
-              Sign out
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{user.full_name}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {user.role === "doctor" ? "طبيب" : "مساعد"}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubMenuContent>
+            </DropdownMenuSubMenu>
+            <DropdownMenuSubMenu>
+              <DropdownMenuSubMenuTrigger>
+                <RiSunLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+                Theme
+              </DropdownMenuSubMenuTrigger>
+              <DropdownMenuSubMenuContent>
+                <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+                  <DropdownMenuRadioItem value="light" iconType="check">
+                    <RiSunLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+                    Light
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark" iconType="check">
+                    <RiMoonLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+                    Dark
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="system" iconType="check">
+                    <RiComputerLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+                    System
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubMenuContent>
+            </DropdownMenuSubMenu>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => {
+              if (isDemoMode) disableDemoMode(); else enableDemoMode();
+              window.location.reload();
+            }}>
+              <RiFlaskLine className="size-4 shrink-0 me-2" aria-hidden="true" />
+              {isDemoMode ? "Disable Demo Mode" : "Enable Demo Mode"}
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:bg-red-50 focus:dark:bg-red-900/10">
+            <RiLogoutBoxRLine className="size-4 shrink-0 me-2" />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     )
   }
 

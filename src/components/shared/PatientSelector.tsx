@@ -155,66 +155,60 @@ export function PatientSelector({
 
   return (
     <div className="space-y-4">
-      {/* Patient Mode Selection */}
-      <div>
-        <Label>Patient Type</Label>
-        <div className="mt-3 flex gap-4">
-          <label className="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border-2 border-gray-200 p-4 transition hover:border-primary-600 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50 dark:border-gray-800 dark:has-[:checked]:border-primary-600 dark:has-[:checked]:bg-primary-900/20">
-            <input
-              type="radio"
-              name="patient-mode"
-              value="existing"
-              checked={patientMode === "existing"}
-              onChange={() => {
-                setPatientMode("existing")
-                setSelectedPatient(null)
-              }}
-              className="size-4 text-primary-600 focus:ring-primary-500"
-            />
-            <div>
-              <p className="font-medium text-gray-900 dark:text-gray-50">Existing Patient</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Search from patient database</p>
-            </div>
-          </label>
-          
-          <label className="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border-2 border-gray-200 p-4 transition hover:border-primary-600 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50 dark:border-gray-800 dark:has-[:checked]:border-primary-600 dark:has-[:checked]:bg-primary-900/20">
-            <input
-              type="radio"
-              name="patient-mode"
-              value="new"
-              checked={patientMode === "new"}
-              onChange={() => {
-                setPatientMode("new")
-                setSelectedPatient(null)
-              }}
-              className="size-4 text-primary-600 focus:ring-primary-500"
-            />
-            <div>
-              <p className="font-medium text-gray-900 dark:text-gray-50">New Patient</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Create a new patient record</p>
-            </div>
-          </label>
+      {/* Patient Mode Selection - Redesigned as a segmented toggle */}
+      <div className="flex items-center justify-between gap-4">
+        <Label className="text-gray-500 text-sm font-medium">Patient</Label>
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit border border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={() => {
+              setPatientMode("existing")
+              setSelectedPatient(null)
+            }}
+            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
+              patientMode === "existing"
+                ? "bg-white text-primary-600 shadow-sm dark:bg-gray-700 dark:text-primary-400"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            }`}
+          >
+            Existing
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPatientMode("new")
+              setSelectedPatient(null)
+            }}
+            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
+              patientMode === "new"
+                ? "bg-white text-primary-600 shadow-sm dark:bg-gray-700 dark:text-primary-400"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            }`}
+          >
+            New
+          </button>
         </div>
       </div>
 
-      {/* Selected Patient Display */}
+      {/* Selected Patient Display - Redesigned to be compact */}
       {selectedPatient && (
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/20">
-              <RiUserLine className="size-5 text-primary-600 dark:text-primary-400" />
+        <div className="flex items-center justify-between rounded-xl border border-primary-100 bg-primary-50/30 p-2.5 dark:border-primary-900/30 dark:bg-primary-900/10">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/20">
+              <RiUserLine className="size-4 text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <p className="font-medium text-gray-900 dark:text-gray-50">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                 {selectedPatient.first_name} {selectedPatient.last_name}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{selectedPatient.phone}</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">{selectedPatient.phone}</p>
             </div>
           </div>
           <Button
             type="button"
-            variant="ghost"
+            variant="secondary"
             size="sm"
+            className="text-[11px] h-8 px-2.5"
             onClick={() => {
               setSelectedPatient(null)
               setSearchTerm("")
@@ -228,61 +222,51 @@ export function PatientSelector({
 
       {/* Existing Patient Search */}
       {patientMode === "existing" && !selectedPatient && (
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="patient-search">
-              Search Patient {required && <span className="text-red-500">*</span>}
-            </Label>
-            <div className="relative mt-2">
-              <Input
-                id="patient-search"
-                placeholder="Type patient name or phone number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10"
-              />
-              {isSearching && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="size-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600"></div>
-                </div>
-              )}
-              {!isSearching && searchTerm && (
-                <RiSearchLine className="absolute right-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-              )}
-            </div>
+        <div className="space-y-3">
+          <div className="relative w-full">
+            <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 z-10" />
+            <Input
+              id="patient-search"
+              placeholder="Search for the patient by name or phone"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 h-11 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 rounded-xl"
+            />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600"></div>
+              </div>
+            )}
           </div>
 
-          {searchResults.length > 0 && (
-            <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+          {searchResults.length > 0 ? (
+            <div className="max-h-48 space-y-2 overflow-y-auto pr-1 mt-2">
               {searchResults.map((patient) => (
                 <button
                   key={patient.id}
                   type="button"
                   onClick={() => handleExistingPatientSelect(patient)}
-                  className="w-full rounded-lg border border-transparent p-3 text-left transition hover:bg-gray-50 dark:hover:bg-gray-900"
+                  className="w-full rounded-xl border border-gray-100 bg-white p-2.5 text-left transition-all hover:border-primary-200 hover:bg-primary-50/30 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-primary-800"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/20">
-                      <RiUserLine className="size-5 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-50">
-                        {patient.first_name} {patient.last_name}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {patient.phone} {patient.email && `• ${patient.email}`}
-                      </p>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-bold text-gray-900 dark:text-gray-50">
+                      {patient.first_name} {patient.last_name}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                      <span>{patient.phone.slice(0, 4)}•••{patient.phone.slice(-3)}</span>
+                      <span className="text-gray-300">•</span>
+                      <span>Last visit: 2w ago</span>
                     </div>
                   </div>
                 </button>
               ))}
             </div>
-          )}
-
-          {searchTerm.length >= 2 && !isSearching && searchResults.length === 0 && (
-            <Alert variant="default">
-              No patients found matching &quot;{searchTerm}&quot;
-            </Alert>
+          ) : (
+            searchTerm.length >= 2 && !isSearching && (
+              <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center dark:border-gray-800 mt-2">
+                <p className="text-xs text-gray-500">No patients found</p>
+              </div>
+            )
           )}
         </div>
       )}

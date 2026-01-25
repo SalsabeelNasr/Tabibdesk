@@ -92,6 +92,22 @@ const buttonVariants = tv({
         "disabled:bg-red-300 disabled:text-white",
         "disabled:dark:bg-red-950 disabled:dark:text-red-400",
       ],
+      link: [
+        // base
+        "shadow-none",
+        // border
+        "border-transparent",
+        // text color
+        "text-primary-600 dark:text-primary-400",
+        // background color
+        "bg-transparent",
+        // hover color
+        "hover:text-primary-700 dark:hover:text-primary-300 hover:underline underline-offset-4",
+        // disabled
+        "disabled:text-gray-400 dark:disabled:text-gray-600",
+        // padding override
+        "p-0 h-auto",
+      ],
     },
     size: {
       default: "px-3 py-2",

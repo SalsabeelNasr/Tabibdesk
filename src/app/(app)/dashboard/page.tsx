@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -380,46 +379,37 @@ export default function DashboardPage() {
 
       {/* Appointments Section */}
       {role === "doctor" ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Now Queue</CardTitle>
-              <Link href="/appointments">
-                <Button variant="ghost" className="text-xs -ml-2 -mr-2 pr-2">
-                  View All
-                  <RiArrowRightLine className="ml-1 size-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Now Queue</h2>
+            <Link href="/appointments">
+              <Button variant="ghost" className="text-[11px] font-bold tracking-wider -mr-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50">
+                view all
+                <RiArrowRightLine className="ml-1 size-3.5" />
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
             {loading ? (
-              <div className="p-4 space-y-3">
+              <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="h-16 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
                 ))}
               </div>
             ) : appointments.length > 0 ? (
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="space-y-3">
                 {appointments.map((apt, index) => {
                   const isNow = index === 0
                   const isNext = index === 1
                   const badgeVariant = isNow ? "success" : isNext ? "default" : "neutral"
-                  const badgeText = isNow ? "Now" : isNext ? "Next" : null
+                  const badgeText = isNow ? "now" : isNext ? "next" : null
                   
                   return (
                   <div
                     key={apt.id}
                     className="widget-row"
                   >
-                    {/* Status Accent Line */}
-                    <div className={`widget-status-accent ${
-                      isNow || apt.queueStatus === "online_now" ? "bg-green-500" :
-                      isNext ? "bg-blue-500" :
-                      "bg-gray-200 dark:bg-gray-700"
-                    }`} />
-
-                    <div className="widget-content-stack ml-1">
+                    <div className="widget-content-stack">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -439,28 +429,28 @@ export default function DashboardPage() {
                       </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="font-medium text-gray-900 dark:text-white truncate">
+                          <p className="font-semibold text-gray-900 dark:text-white truncate">
                             {apt.patientName}
                           </p>
                           {(isNow || isNext) ? (
                             <Badge
                               variant={badgeVariant}
-                              className="h-4 px-1.5 text-xs font-bold tracking-tighter"
+                              className="h-4 px-1.5 text-[10px] font-bold uppercase tracking-wider"
                             >
                               {badgeText}
                             </Badge>
                           ) : (
-                            <span className="shrink-0 text-xs font-bold tracking-widest text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-sm">
+                            <span className="shrink-0 text-[10px] font-bold tracking-widest text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-sm lowercase">
                               {getTimeDisplay(apt.scheduled_at)}
                             </span>
                           )}
                         </div>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate lowercase font-medium">
                             {apt.type}
                           </p>
                           {(apt.queueStatus === "online_now" || apt.queueStatus === "now") && (
-                            <span className={`flex items-center gap-1 text-xs font-medium ${apt.queueStatus === "online_now" ? "text-purple-600 dark:text-purple-400" : "text-green-600 dark:text-green-400"}`}>
+                            <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${apt.queueStatus === "online_now" ? "text-purple-600 dark:text-purple-400" : "text-green-600 dark:text-green-400"}`}>
                               <span className={`size-1.5 rounded-full ${apt.queueStatus === "online_now" ? "bg-purple-500" : "bg-green-500"} animate-pulse`} />
                               live
                             </span>
@@ -474,14 +464,14 @@ export default function DashboardPage() {
                         <Button 
                           variant="primary" 
                           size="sm" 
-                          className="btn-primary-widget"
+                          className="btn-primary-widget shadow-sm"
                           onClick={() => window.open(apt.online_call_link, '_blank')}
                         >
                           join call
                         </Button>
                       ) : null}
                       <Link href={`/patients/${apt.patient_id}`}>
-                        <Button variant="outline" size="sm" className="btn-secondary-widget">
+                        <Button variant="secondary" size="sm" className="h-8 px-3 text-[11px] font-bold">
                           open profile
                         </Button>
                       </Link>
@@ -491,40 +481,38 @@ export default function DashboardPage() {
                 })}
               </div>
             ) : (
-              <div className="py-8 text-center text-gray-600 dark:text-gray-400">
+              <div className="py-12 text-center text-gray-600 dark:text-gray-400">
                 <RiCalendarLine className="mx-auto size-12 text-gray-400" />
-                <p className="mt-2 text-xs">No appointments in queue</p>
+                <p className="mt-2 text-sm">No appointments in queue</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Today&apos;s Appointments</CardTitle>
-              <Link href="/appointments">
-                <Button variant="ghost" className="text-xs -ml-2 -mr-2 pr-2">
-                  View All
-                  <RiArrowRightLine className="ml-1 size-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Today&apos;s Appointments</h2>
+            <Link href="/appointments">
+              <Button variant="ghost" className="text-[11px] font-bold tracking-wider -mr-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50">
+                view all
+                <RiArrowRightLine className="ml-1 size-3.5" />
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
             {loading ? (
-              <div className="p-4 space-y-3">
+              <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="h-16 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
                 ))}
               </div>
             ) : appointments.length > 0 ? (
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="space-y-3">
                 {appointments.map((apt, index) => {
                   const isNow = index === 0
                   const isNext = index === 1
                   const badgeVariant = isNow ? "success" : isNext ? "default" : "neutral"
-                  const badgeText = isNow ? "Now" : isNext ? "Next" : null
+                  const badgeText = isNow ? "now" : isNext ? "next" : null
                   
                   return (
                   <div
@@ -543,39 +531,31 @@ export default function DashboardPage() {
                         : ""
                     }`}
                   >
-                    {/* Status Accent Line */}
-                    <div className={`widget-status-accent ${
-                      isNow || apt.queueStatus === "online_now" ? "bg-green-500" :
-                      isNext ? "bg-blue-500" :
-                      apt.queueStatus === "no_show" ? "bg-red-500" :
-                      "bg-gray-200 dark:bg-gray-700"
-                    }`} />
-
-                    <div className="widget-content-stack ml-1">
+                    <div className="widget-content-stack">
                       <div className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors ${getIconBackgroundClass(index)}`}>
                         <RiMenuLine className={`size-4 ${getIconColorClass(index)}`} />
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="font-medium text-gray-900 dark:text-white truncate">
+                          <p className="font-semibold text-gray-900 dark:text-white truncate">
                             {apt.patientName}
                           </p>
                           {(isNow || isNext) ? (
                             <Badge
                               variant={badgeVariant}
-                              className="h-3.5 px-1 text-xs font-bold tracking-tighter"
+                              className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider"
                             >
                               {badgeText}
                             </Badge>
                           ) : (
-                            <span className="shrink-0 text-xs font-bold tracking-wider text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-sm">
+                            <span className="shrink-0 text-[10px] font-bold tracking-widest text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded-sm lowercase">
                               {getTimeDisplay(apt.scheduled_at)}
                             </span>
                           )}
                         </div>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate lowercase font-medium">
                             {apt.type}
                           </p>
                         </div>
@@ -586,19 +566,19 @@ export default function DashboardPage() {
                       {apt.queueStatus === "no_show" && (
                         <Badge
                           variant="error"
-                          className="h-3.5 px-1 text-xs font-bold tracking-tighter"
+                          className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider"
                         >
                           no show
                         </Badge>
                       )}
                       <Button
-                        variant="primary"
+                        variant="secondary"
                         size="sm"
                         onClick={(e) => { 
                           e.stopPropagation(); 
                           handleNoShowClick(apt.id); 
                         }}
-                        className="btn-primary-widget"
+                        className="h-8 px-3 text-[11px] font-bold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100"
                         title="Mark as No Show"
                       >
                         x no show
@@ -609,13 +589,13 @@ export default function DashboardPage() {
                 })}
               </div>
             ) : (
-              <div className="py-8 text-center text-gray-600 dark:text-gray-400">
+              <div className="py-12 text-center text-gray-600 dark:text-gray-400">
                 <RiCalendarLine className="mx-auto size-12 text-gray-400" />
-                <p className="mt-2 text-xs">No appointments scheduled for today</p>
+                <p className="mt-2 text-sm">No appointments scheduled for today</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* No Show Confirmation Modal */}

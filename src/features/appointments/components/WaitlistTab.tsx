@@ -6,8 +6,7 @@ import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { Badge } from "@/components/Badge"
 import { useWaitlist } from "../hooks/useWaitlist"
-import { AddToWaitlistModal } from "../waitlist/AddToWaitlistModal"
-import { SlotPickerModal } from "./SlotPickerModal"
+import { AddToWaitlistDrawer } from "../waitlist/AddToWaitlistDrawer"
 import { createAppointmentFromWaitlist } from "../appointments.api"
 import { remove as removeWaitlistEntry } from "../waitlist/waitingList.api"
 import { RiAddLine, RiUserLine, RiPhoneLine, RiCalendarLine } from "@remixicon/react"
@@ -18,16 +17,17 @@ import type { Slot } from "../types"
 interface WaitlistTabProps {
   clinicId: string
   doctorId?: string
+  onBook?: (entry: WaitlistEntry) => void
 }
 
 function WaitlistTable({
   entries,
   loading,
-  onOfferSlot,
+  onBook,
 }: {
   entries: WaitlistEntry[]
   loading: boolean
-  onOfferSlot: (entry: WaitlistEntry) => void
+  onBook: (entry: WaitlistEntry) => void
 }) {
   if (loading) {
     return (
@@ -54,13 +54,10 @@ function WaitlistTable({
         <div
           key={entry.id}
           className={cx(
-            "group relative flex items-center justify-between p-3 transition-colors bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 shadow-sm"
+            "group relative flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:p-3 transition-colors bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 shadow-sm"
           )}
         >
-          {/* Status Accent Line */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-blue-500" />
-          
-          <div className="flex items-center gap-3 flex-1 min-w-0 ml-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <Link
@@ -70,13 +67,13 @@ function WaitlistTable({
                   {entry.patientName}
                 </Link>
                 {entry.appointmentType && (
-                  <Badge variant="default" className="text-xs">
+                  <Badge variant="default" className="text-[10px] px-1.5 py-0 h-4 uppercase font-bold tracking-wider">
                     {entry.appointmentType}
                   </Badge>
                 )}
               </div>
               
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-600 dark:text-gray-400 font-medium">
                 <div className="flex items-center gap-1">
                   <RiPhoneLine className="size-3" />
                   {entry.patientPhone}
@@ -93,15 +90,22 @@ function WaitlistTable({
               </div>
               
               {entry.notes && (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                  {entry.notes}
+                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1 italic">
+                  &quot;{entry.notes}&quot;
                 </p>
               )}
             </div>
             
-            <Button variant="primary" size="sm" onClick={() => onOfferSlot(entry)}>
-              Book
-            </Button>
+            <div className="mt-2 sm:mt-0 flex justify-end">
+              <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={() => onBook(entry)} 
+                className="text-[11px] h-8 px-4 bg-primary-600 shadow-md shadow-primary-500/10 active:scale-[0.98] transition-all"
+              >
+                Book
+              </Button>
+            </div>
           </div>
         </div>
       ))}
@@ -109,11 +113,9 @@ function WaitlistTable({
   )
 }
 
-export function WaitlistTab({ clinicId, doctorId }: WaitlistTabProps) {
+export function WaitlistTab({ clinicId, doctorId, onBook }: WaitlistTabProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
-  const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(null)
-  const [showSlotPicker, setShowSlotPicker] = useState(false)
   
   const { entries, loading, refetch } = useWaitlist({
     clinicId,
@@ -121,79 +123,43 @@ export function WaitlistTab({ clinicId, doctorId }: WaitlistTabProps) {
     query: searchQuery,
   })
   
-  const handleOfferSlot = (entry: WaitlistEntry) => {
-    setSelectedEntry(entry)
-    setShowSlotPicker(true)
-  }
-  
-  const handleBookNow = async (slot: Slot) => {
-    if (!selectedEntry) return
-    
-    try {
-      // Create appointment
-      await createAppointmentFromWaitlist({
-        waitlistEntry: selectedEntry,
-        slot,
-        clinicId,
-        doctorId,
-      })
-      
-      // Remove waitlist entry (it becomes an appointment)
-      await removeWaitlistEntry(selectedEntry.id)
-      
-      // Refresh waitlist
-      await refetch?.()
-      
-      // Close modal
-      setShowSlotPicker(false)
-      setSelectedEntry(null)
-    } catch (error) {
-      console.error("Failed to book appointment:", error)
+  const handleBook = (entry: WaitlistEntry) => {
+    if (onBook) {
+      onBook(entry)
     }
-  }
-  
-  const handleOffer = async (slot: Slot) => {
-    // Same as Book Now - create appointment and remove from waitlist
-    await handleBookNow(slot)
   }
   
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1 w-full">
           <Input
             placeholder="Search by name or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
           />
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
+        <Button 
+          onClick={() => setShowAddModal(true)} 
+          className="w-full sm:w-auto bg-primary-600 shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
+        >
           <RiAddLine className="mr-2 size-4" />
           Add to Waitlist
         </Button>
       </div>
       
-      <WaitlistTable entries={entries} loading={loading} onOfferSlot={handleOfferSlot} />
-      
-      <AddToWaitlistModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
+      <WaitlistTable 
+        entries={entries} 
+        loading={loading} 
+        onBook={handleBook} 
       />
       
-      {selectedEntry && (
-        <SlotPickerModal
-          open={showSlotPicker}
-          onClose={() => {
-            setShowSlotPicker(false)
-            setSelectedEntry(null)
-          }}
-          waitlistEntry={selectedEntry}
-          clinicId={clinicId}
-          doctorId={doctorId}
-          onBookNow={handleBookNow}
-          onOffer={handleOffer}
-        />
-      )}
+      <AddToWaitlistDrawer
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onComplete={() => refetch?.()}
+      />
     </div>
   )
 }
