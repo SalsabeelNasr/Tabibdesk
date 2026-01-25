@@ -45,6 +45,10 @@ export function PatientSelector({
     last_name: "",
     phone: "",
     email: showEmail ? "" : undefined,
+    gender: undefined,
+    source: undefined,
+    source_other: undefined,
+    address: undefined,
   })
   const [isCreatingPatient, setIsCreatingPatient] = useState(false)
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof PatientFormData, string>>>({})
@@ -119,9 +123,11 @@ export function PatientSelector({
         first_name: newPatientForm.first_name,
         last_name: newPatientForm.last_name,
         phone: newPatientForm.phone,
+        email: newPatientForm.email || undefined,
         gender: newPatientForm.gender || undefined,
-        date_of_birth: newPatientForm.date_of_birth,
-        age: newPatientForm.age,
+        source: newPatientForm.source || undefined,
+        source_other: newPatientForm.source === "other" ? newPatientForm.source_other : undefined,
+        address: newPatientForm.address || undefined,
       }
       
       const createdPatient = await createPatient(submitData)
@@ -144,6 +150,10 @@ export function PatientSelector({
         last_name: "",
         phone: "",
         email: showEmail ? "" : undefined,
+        gender: undefined,
+        source: undefined,
+        source_other: undefined,
+        address: undefined,
       })
     } catch (error) {
       console.error('Failed to create patient:', error)

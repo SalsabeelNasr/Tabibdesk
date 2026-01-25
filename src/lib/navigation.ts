@@ -37,7 +37,6 @@ export const doctorNavigation: NavItem[] = [
 
 export const assistantNavigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: RiHomeLine },
-  { name: "Leads", href: "/assistant/leads", icon: RiUserSearchLine },
   { name: "Appointments", href: "/appointments", icon: RiCalendarLine, featureKey: "appointments" },
   { name: "Insights", href: "/insights", icon: RiBarChartLine, featureKey: "insights" },
   { name: "Tasks", href: "/tasks", icon: RiTaskLine, featureKey: "tasks" },

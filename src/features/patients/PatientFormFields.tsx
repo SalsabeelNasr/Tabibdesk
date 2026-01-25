@@ -10,8 +10,9 @@ export interface PatientFormData {
   phone: string
   email?: string
   gender?: string
-  date_of_birth?: string
-  age?: number
+  source?: string
+  source_other?: string
+  address?: string
 }
 
 interface PatientFormFieldsProps {
@@ -20,18 +21,14 @@ interface PatientFormFieldsProps {
   errors?: Partial<Record<keyof PatientFormData, string>>
   showEmail?: boolean
   showGender?: boolean
-  showDateOfBirth?: boolean
-  showAge?: boolean
 }
 
 export function PatientFormFields({
   formData,
   onChange,
   errors = {},
-  showEmail = false,
+  showEmail = true,
   showGender = false,
-  showDateOfBirth = false,
-  showAge = false,
 }: PatientFormFieldsProps) {
   const updateField = <K extends keyof PatientFormData>(
     field: K,
@@ -40,30 +37,12 @@ export function PatientFormFields({
     onChange({ ...formData, [field]: value })
   }
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value
-    if (value) {
-      updateField("date_of_birth", value)
-      if (showAge) {
-        updateField("age", undefined) // Clear age if DOB is set
-      }
-    } else {
-      updateField("date_of_birth", undefined)
-    }
-  }
-
-  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    if (value) {
-      const ageNum = parseInt(value, 10)
-      if (!isNaN(ageNum) && ageNum > 0) {
-        updateField("age", ageNum)
-        if (showDateOfBirth) {
-          updateField("date_of_birth", undefined) // Clear DOB if age is set
-        }
-      }
-    } else {
-      updateField("age", undefined)
+    updateField("source", value)
+    // Clear source_other if not "other"
+    if (value !== "other") {
+      updateField("source_other", undefined)
     }
   }
 
@@ -155,36 +134,51 @@ export function PatientFormFields({
         </div>
       )}
 
-      {(showDateOfBirth || showAge) && (
-        <div className="grid grid-cols-2 gap-4">
-          {showDateOfBirth && (
-            <div className="space-y-2">
-              <Label htmlFor="date_of_birth">Date of Birth</Label>
-              <Input
-                id="date_of_birth"
-                type="date"
-                value={formData.date_of_birth || ""}
-                onChange={handleDateChange}
-                max={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-          )}
-          {showAge && (
-            <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                type="number"
-                min="0"
-                max="150"
-                value={formData.age || ""}
-                onChange={handleAgeChange}
-                placeholder="Enter age"
-              />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="source">Source</Label>
+        <Select
+          id="source"
+          value={formData.source || ""}
+          onChange={handleSourceChange}
+        >
+          <option value="">Select source</option>
+          <option value="facebook">Facebook</option>
+          <option value="instagram">Instagram</option>
+          <option value="friend_recommendation">Friend Recommendation</option>
+          <option value="walk_in">Walk In</option>
+          <option value="other">Other</option>
+        </Select>
+      </div>
+
+      {formData.source === "other" && (
+        <div className="space-y-2">
+          <Label htmlFor="source_other">Specify Other Source</Label>
+          <Input
+            id="source_other"
+            value={formData.source_other || ""}
+            onChange={(e) => updateField("source_other", e.target.value)}
+            hasError={!!errors.source_other}
+            placeholder="Enter source"
+          />
+          {errors.source_other && (
+            <p className="text-sm text-red-600 dark:text-red-400">{errors.source_other}</p>
           )}
         </div>
       )}
+
+      <div className="space-y-2">
+        <Label htmlFor="address">Address (Optional)</Label>
+        <Input
+          id="address"
+          value={formData.address || ""}
+          onChange={(e) => updateField("address", e.target.value)}
+          hasError={!!errors.address}
+          placeholder="Enter address"
+        />
+        {errors.address && (
+          <p className="text-sm text-red-600 dark:text-red-400">{errors.address}</p>
+        )}
+      </div>
     </div>
   )
 }

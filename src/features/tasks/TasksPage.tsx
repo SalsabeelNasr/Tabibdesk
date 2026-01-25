@@ -10,7 +10,8 @@ import { useDebounce } from "@/lib/useDebounce"
 import { TasksToolbar } from "./TasksToolbar"
 import { TasksTable } from "./TasksTable"
 import { TasksCards } from "./TasksCards"
-import { NewTaskModal, AssignModal } from "./TaskModals"
+import { AddTaskDrawer } from "./AddTaskDrawer"
+import { AssignModal } from "./TaskModals"
 import {
   listTasks,
   createTask,
@@ -175,10 +176,10 @@ export function TasksPage({
         </>
       )}
 
-      {/* Modals */}
-      <NewTaskModal
-        isOpen={showNewTaskModal}
-        onClose={() => setShowNewTaskModal(false)}
+      {/* Drawers & Modals */}
+      <AddTaskDrawer
+        open={showNewTaskModal}
+        onOpenChange={setShowNewTaskModal}
         onSubmit={handleCreateTask}
         defaultAssignedToUserId={defaultAssignedTo}
         currentUserId={currentUserId}

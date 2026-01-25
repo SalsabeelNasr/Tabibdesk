@@ -2,31 +2,32 @@
 
 import { Button } from "@/components/Button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/Dialog"
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/Drawer"
 import { useState } from "react"
 import type { CreatePatientInput } from "./patients.types"
 import { PatientFormFields, type PatientFormData } from "./PatientFormFields"
 
-interface AddPatientModalProps {
+interface AddPatientDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: CreatePatientInput) => Promise<void>
 }
 
-export function AddPatientModal({ open, onOpenChange, onSubmit }: AddPatientModalProps) {
+export function AddPatientDrawer({ open, onOpenChange, onSubmit }: AddPatientDrawerProps) {
   const [formData, setFormData] = useState<PatientFormData>({
     first_name: "",
     last_name: "",
     phone: "",
+    email: undefined,
     gender: "",
-    date_of_birth: undefined,
-    age: undefined,
+    source: undefined,
+    source_other: undefined,
+    address: undefined,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof CreatePatientInput, string>>>({})
@@ -46,6 +47,9 @@ export function AddPatientModal({ open, onOpenChange, onSubmit }: AddPatientModa
     if (!formData.phone.trim()) {
       newErrors.phone = "Phone is required"
     }
+    if (formData.source === "other" && !formData.source_other?.trim()) {
+      newErrors.source_other = "Please specify the source"
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -59,9 +63,11 @@ export function AddPatientModal({ open, onOpenChange, onSubmit }: AddPatientModa
         first_name: formData.first_name,
         last_name: formData.last_name,
         phone: formData.phone,
+        email: formData.email || undefined,
         gender: formData.gender || undefined,
-        date_of_birth: formData.date_of_birth,
-        age: formData.age,
+        source: formData.source || undefined,
+        source_other: formData.source === "other" ? formData.source_other : undefined,
+        address: formData.address || undefined,
       }
       await onSubmit(submitData)
       // Reset form
@@ -69,9 +75,11 @@ export function AddPatientModal({ open, onOpenChange, onSubmit }: AddPatientModa
         first_name: "",
         last_name: "",
         phone: "",
+        email: undefined,
         gender: "",
-        date_of_birth: undefined,
-        age: undefined,
+        source: undefined,
+        source_other: undefined,
+        address: undefined,
       })
       setErrors({})
       onOpenChange(false)
@@ -83,38 +91,37 @@ export function AddPatientModal({ open, onOpenChange, onSubmit }: AddPatientModa
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Patient</DialogTitle>
-          <DialogDescription>Enter basic information for the new patient.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="py-4">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent side="right" className="w-full sm:max-w-2xl">
+        <DrawerHeader>
+          <DrawerTitle>Add New Patient</DrawerTitle>
+        </DrawerHeader>
+        <DrawerBody>
+          <form onSubmit={handleSubmit} className="space-y-6">
             <PatientFormFields
               formData={formData}
               onChange={setFormData}
               errors={errors}
+              showEmail={true}
               showGender={true}
-              showDateOfBirth={true}
-              showAge={true}
             />
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
-              Add Patient
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" isLoading={isSubmitting} className="flex-[2]">
+                Add Patient
+              </Button>
+            </div>
+          </form>
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
   )
 }

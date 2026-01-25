@@ -7,7 +7,7 @@ import { mockData } from "@/data/mock/mock-data"
  * This ensures UI components can continue using the existing interface
  */
 export async function listPatients(params: ListPatientsParams): Promise<ListPatientsResponse> {
-  const { page, pageSize, query, clinicId } = params
+  const { page, pageSize, query, clinicId, status } = params
 
   // Use the new API layer
   const response = await patientsApi.list({
@@ -15,6 +15,7 @@ export async function listPatients(params: ListPatientsParams): Promise<ListPati
     pageSize,
     query,
     clinicId,
+    status,
   })
 
   // Enrich with lastAppointmentDate for PatientListItem
@@ -56,9 +57,11 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
     firstName: input.first_name,
     lastName: input.last_name,
     phone: input.phone,
+    email: input.email,
     gender: input.gender,
-    dateOfBirth: input.date_of_birth,
-    age: input.age,
+    source: input.source,
+    sourceOther: input.source_other,
+    address: input.address,
   })
 }
 

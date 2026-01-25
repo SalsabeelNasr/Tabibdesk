@@ -39,8 +39,9 @@ export interface CreatePatientPayload {
   phone: string
   email?: string
   gender?: string
-  dateOfBirth?: string
-  age?: number
+  source?: string
+  sourceOther?: string
+  address?: string
 }
 
 export type ActivationReason = "in_progress" | "completed" | "visit_note"
@@ -100,8 +101,8 @@ export async function create(payload: CreatePatientPayload): Promise<Patient> {
     phone: payload.phone,
     email: payload.email || null,
     gender: payload.gender || "",
-    date_of_birth: payload.dateOfBirth || null,
-    age: payload.age || null,
+    date_of_birth: null,
+    age: null,
     complaint: null,
     job: null,
     doctor_id: null,

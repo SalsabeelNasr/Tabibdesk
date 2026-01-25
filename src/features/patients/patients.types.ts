@@ -43,7 +43,9 @@ export interface CreatePatientInput {
   first_name: string
   last_name: string
   phone: string
+  email?: string
   gender?: string
-  date_of_birth?: string
-  age?: number
+  source?: string
+  source_other?: string
+  address?: string
 }
