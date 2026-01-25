@@ -10,8 +10,11 @@ import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useDemo } from "@/contexts/demo-context"
 import { mockAppointments } from "@/data/mock/mock-data"
 import { updateStatus as updateAppointmentStatus, updateAppointmentTime } from "@/features/appointments/appointments.api"
-import { createPayment, deletePayment, listPayments } from "@/api/accounting.api"
+import { listPayments } from "@/api/payments.api"
+import { getInvoiceByAppointmentId, createInvoiceForArrivedAppointment, markInvoiceUnpaid } from "@/api/invoices.api"
+import { MarkPaidDrawer } from "@/features/accounting/components/MarkPaidDrawer"
 import { useToast } from "@/hooks/useToast"
+import type { Invoice } from "@/types/invoice"
 import {
   RiCalendarLine,
   RiArrowRightLine,
@@ -22,6 +25,7 @@ import {
   RiMenuLine,
   RiCheckLine,
   RiMoneyDollarCircleLine,
+  RiCloseLine,
 } from "@remixicon/react"
 
 // Unified Types
@@ -54,7 +58,6 @@ export default function DashboardPage() {
   const [appointmentToMarkNoShow, setAppointmentToMarkNoShow] = useState<string | null>(null)
   const [isMarkingNoShow, setIsMarkingNoShow] = useState(false)
   const [paidAppointments, setPaidAppointments] = useState<Set<string>>(new Set())
-  const [appointmentPaymentMap, setAppointmentPaymentMap] = useState<Map<string, string>>(new Map())
   const [markingArrived, setMarkingArrived] = useState<string | null>(null)
   const [markingPaid, setMarkingPaid] = useState<string | null>(null)
 
@@ -64,6 +67,8 @@ export default function DashboardPage() {
   const [showUnmarkArrivedModal, setShowUnmarkArrivedModal] = useState(false)
   const [showUnmarkPaidModal, setShowUnmarkPaidModal] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<DashboardAppointment | null>(null)
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
+  const [loadingInvoice, setLoadingInvoice] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
@@ -87,26 +92,29 @@ export default function DashboardPage() {
     if (!currentClinic) return
     
     try {
-      const today = new Date().toISOString().split("T")[0]
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const todayStr = today.toISOString().split("T")[0]
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowStr = tomorrow.toISOString().split("T")[0]
+      
       const payments = await listPayments({
         clinicId: currentClinic.id,
-        dateFrom: `${today}T00:00:00.000Z`,
-        dateTo: `${today}T23:59:59.999Z`,
+        from: todayStr,
+        to: tomorrowStr,
         page: 1,
         pageSize: 1000,
       })
       
       const paidSet = new Set<string>()
-      const paymentMap = new Map<string, string>()
       payments.payments.forEach((payment) => {
-        if (payment.appointmentId && payment.status === "paid") {
+        if (payment.appointmentId) {
           paidSet.add(payment.appointmentId)
-          paymentMap.set(payment.appointmentId, payment.id)
         }
       })
       
       setPaidAppointments(paidSet)
-      setAppointmentPaymentMap(paymentMap)
     } catch (error) {
       console.error("Failed to load payment status:", error)
     }
@@ -464,14 +472,14 @@ export default function DashboardPage() {
     if (!selectedAppointment) return
     setMarkingArrived(selectedAppointment.id)
     try {
-      await updateAppointmentStatus(selectedAppointment.id, "confirmed")
+      await updateAppointmentStatus(selectedAppointment.id, "arrived")
       showToast("Patient marked as arrived", "success")
       
       // Update local state
       setAppointments((prev) =>
         prev.map((apt) => {
           if (apt.id === selectedAppointment.id) {
-            return { ...apt, status: "confirmed" }
+            return { ...apt, status: "arrived" }
           }
           return apt
         })
@@ -509,49 +517,71 @@ export default function DashboardPage() {
     }
   }
 
-  const handleMarkPaid = async () => {
+  const handleMarkPaidClick = async () => {
     if (!selectedAppointment || !currentClinic) return
     
-    setMarkingPaid(selectedAppointment.id)
-    try {
-      // Default fee based on appointment type - using 500 as default
-      const defaultFee = 500
-      
-      const payment = await createPayment({
-        clinicId: currentClinic.id,
-        patientId: selectedAppointment.patient_id,
-        patientName: selectedAppointment.patientName,
-        appointmentId: selectedAppointment.id,
-        amount: defaultFee,
-        method: "cash",
-        status: "paid",
-        createdByUserId: currentUser.id,
-      })
-      
-      showToast("Payment recorded successfully", "success")
-      setPaidAppointments((prev) => new Set([...prev, selectedAppointment.id]))
-      setAppointmentPaymentMap((prev) => new Map(prev).set(selectedAppointment.id, payment.id))
-      setShowPaidModal(false)
-    } catch (error) {
-      console.error("Failed to mark as paid:", error)
-      showToast("Failed to record payment", "error")
-    } finally {
-      setMarkingPaid(null)
+    // Only allow marking as paid if appointment is arrived (invoice should exist)
+    if (selectedAppointment.status !== "arrived") {
+      showToast("Please mark appointment as 'Arrived' first", "error")
+      return
     }
+    
+    setLoadingInvoice(true)
+    try {
+      // Get existing invoice (should exist since appointment is arrived)
+      let invoice = await getInvoiceByAppointmentId(selectedAppointment.id)
+      
+      // If no invoice exists, try to create one (fallback for edge cases)
+      if (!invoice) {
+        try {
+          invoice = await createInvoiceForArrivedAppointment({
+            id: selectedAppointment.id,
+            clinic_id: currentClinic.id,
+            doctor_id: currentUser.id,
+            patient_id: selectedAppointment.patient_id,
+            type: selectedAppointment.type || "consultation",
+          })
+        } catch (error) {
+          showToast("Failed to create invoice. Please set pricing for this appointment type.", "error")
+          setLoadingInvoice(false)
+          return
+        }
+      }
+      
+      setSelectedInvoice(invoice)
+      setShowPaidModal(true)
+    } catch (error) {
+      console.error("Failed to load invoice:", error)
+      showToast("Failed to load invoice details", "error")
+    } finally {
+      setLoadingInvoice(false)
+    }
+  }
+
+  const handleMarkPaidSuccess = () => {
+    if (!selectedAppointment) return
+    setPaidAppointments((prev) => new Set([...prev, selectedAppointment.id]))
+    setShowPaidModal(false)
+    setSelectedInvoice(null)
+    setSelectedAppointment(null)
+    // Refresh dashboard data
+    fetchDashboardData()
   }
 
   const handleUnmarkPaid = async () => {
     if (!selectedAppointment) return
     
-    const paymentId = appointmentPaymentMap.get(selectedAppointment.id)
-    if (!paymentId) {
-      showToast("Could not find payment record to reverse", "error")
-      return
-    }
-
     setMarkingPaid(selectedAppointment.id)
     try {
-      await deletePayment(paymentId)
+      // Get invoice for this appointment
+      const invoice = await getInvoiceByAppointmentId(selectedAppointment.id)
+      if (!invoice) {
+        showToast("Could not find invoice to reverse", "error")
+        return
+      }
+
+      // Mark invoice as unpaid (this will also handle payment removal in the backend)
+      await markInvoiceUnpaid(invoice.id)
       
       showToast("Payment record removed", "success")
       setPaidAppointments((prev) => {
@@ -559,12 +589,9 @@ export default function DashboardPage() {
         next.delete(selectedAppointment.id)
         return next
       })
-      setAppointmentPaymentMap((prev) => {
-        const next = new Map(prev)
-        next.delete(selectedAppointment.id)
-        return next
-      })
       setShowUnmarkPaidModal(false)
+      // Refresh dashboard data
+      fetchDashboardData()
     } catch (error) {
       console.error("Failed to reverse payment:", error)
       showToast("Failed to remove payment record", "error")
@@ -771,7 +798,7 @@ export default function DashboardPage() {
                             no show
                           </Badge>
                         )}
-                        {apt.status === "confirmed" && (
+                        {apt.status === "arrived" && (
                           <Badge
                             variant="success"
                             className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/40"
@@ -801,7 +828,7 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1 flex-wrap">
-                        {apt.status !== "confirmed" && (
+                        {(apt.status === "scheduled" || apt.status === "confirmed" || apt.status === "in_progress") && (
                           <Button
                             variant="secondary"
                             onClick={(e) => { 
@@ -817,15 +844,15 @@ export default function DashboardPage() {
                             <span className="hidden sm:inline">arrived</span>
                           </Button>
                         )}
-                        {!paidAppointments.has(apt.id) && (
+                        {!paidAppointments.has(apt.id) && apt.status === "arrived" && (
                           <Button
                             variant="secondary"
                             onClick={(e) => { 
                               e.stopPropagation(); 
                               setSelectedAppointment(apt);
-                              setShowPaidModal(true); 
+                              handleMarkPaidClick(); 
                             }}
-                            disabled={markingPaid === apt.id}
+                            disabled={markingPaid === apt.id || loadingInvoice}
                             className="btn-secondary-widget text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100 shrink-0 whitespace-nowrap"
                             title="Mark as Paid"
                           >
@@ -842,7 +869,7 @@ export default function DashboardPage() {
                           className="btn-secondary-widget text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100 shrink-0 whitespace-nowrap"
                           title="Mark as No Show"
                         >
-                          <RiCheckLine className="size-3.5 rotate-45 sm:mr-1" />
+                          <RiCloseLine className="size-3.5 sm:mr-1" />
                           <span className="hidden sm:inline">no show</span>
                         </Button>
                       </div>
@@ -898,16 +925,17 @@ export default function DashboardPage() {
         isLoading={!!markingArrived}
       />
 
-      <ConfirmationModal
-        isOpen={showPaidModal}
-        onClose={() => setShowPaidModal(false)}
-        onConfirm={handleMarkPaid}
-        title="Confirm Payment"
-        description={`Record 500 EGP payment for ${selectedAppointment?.patientName}?`}
-        confirmText="Confirm Payment"
-        cancelText="Cancel"
-        variant="success"
-        isLoading={!!markingPaid}
+      <MarkPaidDrawer
+        open={showPaidModal}
+        onOpenChange={(open) => {
+          setShowPaidModal(open)
+          if (!open) {
+            setSelectedInvoice(null)
+            setSelectedAppointment(null)
+          }
+        }}
+        invoice={selectedInvoice}
+        onSuccess={handleMarkPaidSuccess}
       />
 
       <ConfirmationModal

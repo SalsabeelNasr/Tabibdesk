@@ -6,7 +6,7 @@
 
 import type { Patient, PatientStatus } from "./patients.types"
 
-export type AppointmentStatus = "scheduled" | "confirmed" | "in_progress" | "completed" | "no_show" | "cancelled"
+export type AppointmentStatus = "scheduled" | "confirmed" | "in_progress" | "completed" | "no_show" | "cancelled" | "arrived"
 
 /**
  * Determines if an appointment status should trigger patient activation

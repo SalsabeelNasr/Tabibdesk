@@ -9,6 +9,7 @@ import { shouldActivatePatientFromAppointment } from "@/features/patients/patien
 import { isAppointmentArchived } from "@/features/archive/archive.rules"
 import { logActivity } from "@/api/activity.api"
 import { removeByPatientId as removeWaitlistByPatientId } from "./waitlist/waitingList.api"
+import { createInvoiceForArrivedAppointment, getInvoiceByAppointmentId } from "@/api/invoices.api"
 import type { AppointmentStatus } from "@/features/patients/patientLifecycle"
 import type { ListAppointmentsParams, ListAppointmentsResponse, AppointmentListItem } from "./appointments.types"
 import type { Appointment as AppointmentType, WaitlistEntry, Slot } from "./types"
@@ -187,6 +188,28 @@ export async function updateStatus(appointmentId: string, status: AppointmentSta
   if (shouldActivatePatientFromAppointment(status)) {
     const activationReason = status === "in_progress" ? ("in_progress" as const) : ("completed" as const)
     await activatePatient(appointment.patient_id, activationReason)
+  }
+
+  // Create invoice when appointment is marked as "arrived"
+  if (status === "arrived") {
+    try {
+      // Check if invoice already exists
+      const existingInvoice = await getInvoiceByAppointmentId(appointmentId)
+      if (!existingInvoice) {
+        // Create invoice for arrived appointment
+        await createInvoiceForArrivedAppointment({
+          id: appointment.id,
+          clinic_id: appointment.clinic_id,
+          doctor_id: appointment.doctor_id || "",
+          patient_id: appointment.patient_id,
+          type: appointment.type,
+        })
+      }
+    } catch (error) {
+      // Log error but don't block status update
+      // Pricing might not be set, which is handled gracefully
+      console.warn("Failed to create invoice for arrived appointment:", error)
+    }
   }
 
   // Log activity

@@ -1593,8 +1593,115 @@ const generateMockAppointments = (): Appointment[] => {
   ]
 }
 
-// Export fresh appointments
-export const mockAppointments: Appointment[] = generateMockAppointments()
+// Generate fresh appointments
+const generatedAppointments = generateMockAppointments()
+
+// Add past appointments with "arrived" or "completed" status for accounting demo
+const now = new Date()
+const pastAppointments: Appointment[] = [
+  // Past appointments from last week - arrived/completed
+  {
+    id: "apt-past-001",
+    patient_id: "patient-001",
+    patient_name: "Fatima Mohamed",
+    scheduled_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+    status: "completed",
+    type: "Consultation",
+    notes: "Blood pressure check",
+    created_at: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-001",
+    doctor_full_name: "أحمد حسن",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+  {
+    id: "apt-past-002",
+    patient_id: "patient-002",
+    patient_name: "Ahmed Abdullah",
+    scheduled_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 days ago
+    status: "completed",
+    type: "Follow-up",
+    notes: "Diabetes follow-up",
+    created_at: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-001",
+    doctor_full_name: "أحمد حسن",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+  {
+    id: "apt-past-003",
+    patient_id: "patient-003",
+    patient_name: "Layla Ibrahim",
+    scheduled_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+    status: "arrived",
+    type: "Check-up",
+    notes: "Thyroid check",
+    created_at: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-002",
+    doctor_full_name: "فاطمة علي",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+  {
+    id: "apt-past-004",
+    patient_id: "patient-004",
+    patient_name: "Omar Khalil",
+    scheduled_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+    status: "completed",
+    type: "Consultation",
+    notes: "Asthma consultation",
+    created_at: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-001",
+    doctor_full_name: "أحمد حسن",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+  {
+    id: "apt-past-005",
+    patient_id: "patient-005",
+    patient_name: "Nour Amin",
+    scheduled_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    status: "arrived",
+    type: "Follow-up",
+    notes: "GERD follow-up",
+    created_at: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-002",
+    doctor_full_name: "فاطمة علي",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+  {
+    id: "apt-past-006",
+    patient_id: "patient-001",
+    patient_name: "Fatima Mohamed",
+    scheduled_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    status: "completed",
+    type: "Follow-up",
+    notes: "Hypertension follow-up",
+    created_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-001",
+    doctor_full_name: "أحمد حسن",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+  {
+    id: "apt-past-007",
+    patient_id: "patient-002",
+    patient_name: "Ahmed Abdullah",
+    scheduled_at: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+    status: "arrived",
+    type: "Consultation",
+    notes: "Diabetes consultation",
+    created_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    doctor_id: "user-001",
+    doctor_full_name: "أحمد حسن",
+    clinic_id: "clinic-001",
+    clinic_name: "المعادي",
+  },
+]
+
+// Export fresh appointments + past appointments
+export const mockAppointments: Appointment[] = [...generatedAppointments, ...pastAppointments]
 
 // Export all mock data
 // Transcriptions

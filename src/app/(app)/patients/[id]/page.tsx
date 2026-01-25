@@ -19,6 +19,7 @@ import { FilesTab } from "@/components/patient/FilesTab"
 import { AppointmentsTab } from "@/components/patient/AppointmentsTab"
 import { TasksTab } from "@/components/patient/TasksTab"
 import { ActivityFeed } from "@/features/activity/ActivityFeed"
+import { listInvoices } from "@/api/invoices.api"
 import {
   RiFileTextLine,
   RiUserLine,
@@ -34,7 +35,7 @@ export default function PatientDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { isDemoMode } = useDemo()
-  const { currentUser } = useUserClinic()
+  const { currentUser, currentClinic } = useUserClinic()
   const patientId = params.id as string
 
   const [loading, setLoading] = useState(true)
@@ -50,9 +51,11 @@ export default function PatientDetailPage() {
   const [notes, setNotes] = useState<any[]>([])
   const [attachments, setAttachments] = useState<any[]>([])
   const [transcriptions, setTranscriptions] = useState<any[]>([])
+  const [totalDue, setTotalDue] = useState<number>(0)
 
   useEffect(() => {
     fetchPatientData()
+    fetchUnpaidInvoices()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId, isDemoMode])
 
@@ -82,6 +85,23 @@ export default function PatientDetailPage() {
 
     // TODO: Fetch from Supabase when integrated
     setLoading(false)
+  }
+
+  const fetchUnpaidInvoices = async () => {
+    try {
+      const clinicId = currentClinic?.id || currentUser?.clinicId || "clinic-001"
+      const result = await listInvoices({
+        clinicId,
+        patientId,
+        status: "unpaid",
+        page: 1,
+        pageSize: 1000,
+      })
+      const total = result.invoices.reduce((sum, inv) => sum + inv.amount, 0)
+      setTotalDue(total)
+    } catch (error) {
+      console.error("Failed to fetch unpaid invoices:", error)
+    }
   }
 
   const handleAddTask = (title: string) => {
@@ -200,6 +220,14 @@ export default function PatientDetailPage() {
             >
               {patient.age ? `${patient.age}y` : "Age N/A"} • {patient.gender}
             </Badge>
+            {totalDue > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="text-xs font-medium"
+              >
+                Due: {totalDue.toFixed(2)} EGP
+              </Badge>
+            )}
           </div>
         }
         actions={

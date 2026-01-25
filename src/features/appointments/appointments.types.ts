@@ -6,7 +6,7 @@ export interface AppointmentListItem {
   appointment_date: string
   appointment_time: string
   duration_minutes: number
-  status: "scheduled" | "completed" | "cancelled" | "confirmed" | "in_progress" | "no_show"
+  status: "scheduled" | "completed" | "cancelled" | "confirmed" | "in_progress" | "no_show" | "arrived"
   type: string
   online_call_link?: string
   scheduled_at: string
@@ -22,7 +22,7 @@ export interface ListAppointmentsParams {
   page: number
   pageSize: number
   query?: string
-  status?: "all" | "scheduled" | "completed" | "cancelled" | "confirmed" | "in_progress" | "no_show"
+  status?: "all" | "scheduled" | "completed" | "cancelled" | "confirmed" | "in_progress" | "no_show" | "arrived"
   timeFilter?: "upcoming" | "past" | "all"
 }
 

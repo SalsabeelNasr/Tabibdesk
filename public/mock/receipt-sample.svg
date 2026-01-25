@@ -1,0 +1,27 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="600" fill="white" stroke="#000" stroke-width="2"/>
+  <text x="200" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold">RECEIPT</text>
+  <line x1="20" y1="60" x2="380" y2="60" stroke="#000" stroke-width="1"/>
+  
+  <text x="30" y="100" font-family="Arial, sans-serif" font-size="14">Clinic: TabibDesk Wellness Center</text>
+  <text x="30" y="125" font-family="Arial, sans-serif" font-size="14">Date: Nov 01, 2025</text>
+  <text x="30" y="150" font-family="Arial, sans-serif" font-size="14">Time: 12:52 AM</text>
+  
+  <line x1="20" y1="180" x2="380" y2="180" stroke="#000" stroke-width="1"/>
+  
+  <text x="30" y="220" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Payment Details:</text>
+  <text x="30" y="250" font-family="Arial, sans-serif" font-size="14">Method: Visa/InstaPay</text>
+  <text x="30" y="275" font-family="Arial, sans-serif" font-size="14">Amount: 500.00 EGP</text>
+  <text x="30" y="300" font-family="Arial, sans-serif" font-size="14">Reference: 927137206906</text>
+  
+  <line x1="20" y1="330" x2="380" y2="330" stroke="#000" stroke-width="1"/>
+  
+  <text x="200" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Thank You!</text>
+  <text x="200" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">This is a sample receipt</text>
+  <text x="200" y="450" text-anchor="middle" font-family="Arial, sans-serif" font-size="12">for proof of payment</text>
+  
+  <rect x="50" y="480" width="300" height="80" fill="#f0f0f0" stroke="#000" stroke-width="1"/>
+  <text x="200" y="510" text-anchor="middle" font-family="monospace" font-size="10">BARCODE</text>
+  <text x="200" y="530" text-anchor="middle" font-family="monospace" font-size="8">1234567890123</text>
+  <text x="200" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="10">Sample Receipt Image</text>
+</svg>
