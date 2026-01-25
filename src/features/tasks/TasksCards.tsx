@@ -11,8 +11,8 @@ import { Badge } from "@/components/Badge"
 import {
   formatTaskDate,
   isOverdue,
-  getSourceLabel,
-  getSourceBadgeVariant,
+  getStatusLabel,
+  getStatusBadgeVariant,
 } from "./tasks.utils"
 import type { TaskListItem } from "./tasks.types"
 import { cx } from "@/lib/utils"
@@ -57,94 +57,90 @@ export function TasksCards({
               "bg-gray-200 dark:bg-gray-700"
             )} />
 
-            <div className="flex items-start gap-3 ml-1">
-              {/* Status Circle / Mark Done Action */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!isDone) onMarkDone(task);
-                }}
-                disabled={isDone}
-                className={cx(
-                  "flex size-9 shrink-0 items-center justify-center rounded-full transition-all group/done cursor-pointer mt-0.5",
-                  isDone 
-                    ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" 
-                    : "bg-gray-50 text-gray-400 hover:bg-green-500 hover:text-white dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-green-600"
-                )}
-              >
-                <div className={cx(isDone ? "block" : "group-hover/done:hidden")}>
-                  {isDone ? (
-                    <RiCheckLine className="size-5" />
-                  ) : (
-                    <RiCheckboxBlankCircleLine className="size-5" />
+            <div className="flex items-start justify-between gap-3 ml-1">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                {/* Status Circle / Mark Done Action */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isDone) onMarkDone(task);
+                  }}
+                  disabled={isDone}
+                  className={cx(
+                    "flex size-9 shrink-0 items-center justify-center rounded-full transition-all group/done cursor-pointer mt-0.5",
+                    isDone 
+                      ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" 
+                      : "bg-gray-50 text-gray-400 hover:bg-green-500 hover:text-white dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-green-600"
                   )}
-                </div>
-                {!isDone && (
-                  <div className="hidden group-hover/done:block">
-                    <RiCheckLine className="size-5" />
+                >
+                  <div className={cx(isDone ? "block" : "group-hover/done:hidden")}>
+                    {isDone ? (
+                      <RiCheckLine className="size-5" />
+                    ) : (
+                      <RiCheckboxBlankCircleLine className="size-5" />
+                    )}
                   </div>
-                )}
-              </button>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className={cx(
-                      "text-sm text-gray-900 dark:text-white",
-                      isDone && "text-gray-400 line-through decoration-gray-400/50"
-                    )}>
-                      {task.description || task.title}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      {task.patientName && (
-                        <Link
-                          href={`/patients/${task.patientId}`}
-                          className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
-                        >
-                          <RiUserLine className="size-3" />
-                          {task.patientName}
-                        </Link>
-                      )}
-                      <Badge variant={getSourceBadgeVariant(task.source)} className="text-[10px] px-1.5 py-0">
-                        {getSourceLabel(task.source)}
-                      </Badge>
+                  {!isDone && (
+                    <div className="hidden group-hover/done:block">
+                      <RiCheckLine className="size-5" />
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {task.dueDate && (
-                      <span className={cx(
-                        "inline-block text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
-                        isDone ? "bg-gray-50 text-gray-400 dark:bg-gray-800/50" :
-                        overdue ? "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400" :
-                        "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-                      )}>
-                        {formatTaskDate(task.dueDate)}
-                      </span>
-                    )}
-                    {task.createdByName && (
-                      <span className="text-xs text-gray-400 dark:text-gray-500">
-                        by: {task.createdByName}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                  )}
+                </button>
 
-                <div className="mt-3 flex items-center gap-2">
-                  {waHref && (
-                    <Button asChild variant="secondary" size="sm" className="gap-2">
-                      <a href={waHref} target="_blank" rel="noreferrer">
-                        <RiWhatsappLine className="size-4" />
-                        WhatsApp
-                      </a>
-                    </Button>
-                  )}
-                  {canAssign && (
-                    <Button variant="secondary" size="sm" className="gap-2" onClick={() => onAssign(task)}>
-                      <RiUserSharedLine className="size-4" />
-                      Assign
-                    </Button>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <p className={cx(
+                    "text-sm text-gray-900 dark:text-white",
+                    isDone && "text-gray-400 line-through decoration-gray-400/50"
+                  )}>
+                    {task.patientName ? (
+                      <>
+                        Patient: <Link href={`/patients/${task.patientId}`} className="font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{task.patientName}</Link> → {task.description || task.title}
+                      </>
+                    ) : (
+                      task.description || task.title
+                    )}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    {task.createdByName && (
+                      <span>by: {task.createdByName}</span>
+                    )}
+                    <Badge variant={getStatusBadgeVariant(task.status)} className="text-[10px] px-1.5 py-0">
+                      {getStatusLabel(task.status)}
+                    </Badge>
+                    {task.dueDate && (
+                      <Badge 
+                        variant={isDone ? "neutral" : overdue ? "error" : "default"} 
+                        className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-widest"
+                      >
+                        {formatTaskDate(task.dueDate)}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Right Side - Actions Only */}
+              <div className="flex items-center gap-2 shrink-0">
+                {waHref && (
+                  <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0" title="Contact on WhatsApp">
+                    <a href={waHref} target="_blank" rel="noreferrer">
+                      <RiWhatsappLine className="size-4" />
+                      <span className="sr-only">Contact on WhatsApp</span>
+                    </a>
+                  </Button>
+                )}
+                {canAssign && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => onAssign(task)}
+                    title="Assign / Reassign"
+                  >
+                    <RiUserSharedLine className="size-4" />
+                    <span className="sr-only">Assign</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

@@ -9,7 +9,8 @@ import { ConfirmationModal } from "@/components/ConfirmationModal"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useDemo } from "@/contexts/demo-context"
 import { mockAppointments } from "@/data/mock/mock-data"
-import { updateStatus as updateAppointmentStatus } from "@/features/appointments/appointments.api"
+import { updateStatus as updateAppointmentStatus, updateAppointmentTime } from "@/features/appointments/appointments.api"
+import { createPayment, deletePayment, listPayments } from "@/api/accounting.api"
 import { useToast } from "@/hooks/useToast"
 import {
   RiCalendarLine,
@@ -20,6 +21,7 @@ import {
   RiWifiLine,
   RiMenuLine,
   RiCheckLine,
+  RiMoneyDollarCircleLine,
 } from "@remixicon/react"
 
 // Unified Types
@@ -38,7 +40,7 @@ interface DashboardAppointment {
 }
 
 export default function DashboardPage() {
-  const { currentUser } = useUserClinic()
+  const { currentUser, currentClinic } = useUserClinic()
   const { isDemoMode } = useDemo()
   const { showToast } = useToast()
   const role = currentUser.role
@@ -51,16 +53,64 @@ export default function DashboardPage() {
   const [showNoShowModal, setShowNoShowModal] = useState(false)
   const [appointmentToMarkNoShow, setAppointmentToMarkNoShow] = useState<string | null>(null)
   const [isMarkingNoShow, setIsMarkingNoShow] = useState(false)
+  const [paidAppointments, setPaidAppointments] = useState<Set<string>>(new Set())
+  const [appointmentPaymentMap, setAppointmentPaymentMap] = useState<Map<string, string>>(new Map())
+  const [markingArrived, setMarkingArrived] = useState<string | null>(null)
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null)
+
+  // Confirmation Modals State
+  const [showArrivedModal, setShowArrivedModal] = useState(false)
+  const [showPaidModal, setShowPaidModal] = useState(false)
+  const [showUnmarkArrivedModal, setShowUnmarkArrivedModal] = useState(false)
+  const [showUnmarkPaidModal, setShowUnmarkPaidModal] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState<DashboardAppointment | null>(null)
 
   useEffect(() => {
     fetchDashboardData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDemoMode, role])
 
+  // Load payment status for appointments
+  useEffect(() => {
+    if (isDemoMode && appointments.length > 0 && currentClinic) {
+      loadPaymentStatus()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointments, isDemoMode, currentClinic])
+
   // Debug: log when appointments change
   useEffect(() => {
     console.log("Dashboard appointments updated:", appointments.length)
   }, [appointments])
+
+  const loadPaymentStatus = async () => {
+    if (!currentClinic) return
+    
+    try {
+      const today = new Date().toISOString().split("T")[0]
+      const payments = await listPayments({
+        clinicId: currentClinic.id,
+        dateFrom: `${today}T00:00:00.000Z`,
+        dateTo: `${today}T23:59:59.999Z`,
+        page: 1,
+        pageSize: 1000,
+      })
+      
+      const paidSet = new Set<string>()
+      const paymentMap = new Map<string, string>()
+      payments.payments.forEach((payment) => {
+        if (payment.appointmentId && payment.status === "paid") {
+          paidSet.add(payment.appointmentId)
+          paymentMap.set(payment.appointmentId, payment.id)
+        }
+      })
+      
+      setPaidAppointments(paidSet)
+      setAppointmentPaymentMap(paymentMap)
+    } catch (error) {
+      console.error("Failed to load payment status:", error)
+    }
+  }
 
   // Unified Dashboard Data Fetching
   const fetchDashboardData = async () => {
@@ -259,7 +309,7 @@ export default function DashboardPage() {
     setDragOverIndex(null)
   }
 
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault()
     if (draggedIndex === null || draggedIndex === dropIndex) {
       setDraggedIndex(null)
@@ -267,30 +317,67 @@ export default function DashboardPage() {
       return
     }
 
-    const newAppointments = [...appointments]
-    const draggedItem = newAppointments[draggedIndex]
+    const draggedItem = appointments[draggedIndex]
+    const targetItem = appointments[dropIndex]
+    
+    // Calculate new scheduled_at time based on target position
+    // Use the target appointment's time as reference, or calculate from today's start
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // Get the target appointment's scheduled time
+    const targetTime = new Date(targetItem.scheduled_at)
+    
+    // Calculate new time: if moving forward, use target's time; if moving backward, use target's time minus duration
+    let newScheduledAt: string
+    const draggedTime = new Date(draggedItem.scheduled_at)
+    const durationMinutes = 30 // Default duration
+    
+    if (draggedIndex < dropIndex) {
+      // Moving forward: place after target
+      newScheduledAt = new Date(targetTime.getTime() + durationMinutes * 60 * 1000).toISOString()
+    } else {
+      // Moving backward: place at target's time
+      newScheduledAt = targetTime.toISOString()
+    }
+    
+    // Ensure we're still on the same day
+    const newDate = new Date(newScheduledAt)
+    if (newDate.toDateString() !== today.toDateString()) {
+      // Keep it on the same day, just adjust the time
+      const hours = targetTime.getHours()
+      const minutes = draggedIndex < dropIndex ? targetTime.getMinutes() + durationMinutes : targetTime.getMinutes()
+      newDate.setHours(hours, minutes, 0, 0)
+      newScheduledAt = newDate.toISOString()
+    }
+    
+    const newEndAt = new Date(new Date(newScheduledAt).getTime() + durationMinutes * 60 * 1000).toISOString()
 
-    newAppointments.splice(draggedIndex, 1)
-    newAppointments.splice(dropIndex, 0, draggedItem)
+    try {
+      // Reschedule the dragged appointment
+      await updateAppointmentTime(
+        draggedItem.id,
+        newScheduledAt,
+        newEndAt,
+        {
+          rescheduledBy: currentUser.id,
+          rescheduledByRole: currentUser.role,
+          rescheduledByName: currentUser.full_name,
+          reason: "Reorganized via drag-and-drop in Today's Appointments widget",
+        }
+      )
 
-    // Auto-assign queue status: first is "now", second is "next", rest are waiting or no_show
-    const updatedAppointments = newAppointments.map((apt, index) => {
-      if (apt.queueStatus === "no_show") {
-        // Keep no_show status
-        return apt
-      }
-      if (index === 0) {
-        return { ...apt, queueStatus: "now" as QueueStatus }
-      } else if (index === 1) {
-        return { ...apt, queueStatus: "next" as QueueStatus }
-      } else {
-        return { ...apt, queueStatus: "waiting" as QueueStatus }
-      }
-    })
-
-    setAppointments(updatedAppointments)
-    setDraggedIndex(null)
-    setDragOverIndex(null)
+      // Refresh appointments to get updated data
+      await fetchDashboardData()
+      
+      showToast(`Appointment rescheduled to ${new Date(newScheduledAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`, "success")
+    } catch (error) {
+      console.error("Failed to reschedule appointment:", error)
+      showToast("Failed to reschedule appointment", "error")
+      // Revert to original order on error
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+    }
   }
 
   const handleDragEnd = () => {
@@ -370,6 +457,119 @@ export default function DashboardPage() {
     if (!isMarkingNoShow) {
       setShowNoShowModal(false)
       setAppointmentToMarkNoShow(null)
+    }
+  }
+
+  const handleMarkArrived = async () => {
+    if (!selectedAppointment) return
+    setMarkingArrived(selectedAppointment.id)
+    try {
+      await updateAppointmentStatus(selectedAppointment.id, "confirmed")
+      showToast("Patient marked as arrived", "success")
+      
+      // Update local state
+      setAppointments((prev) =>
+        prev.map((apt) => {
+          if (apt.id === selectedAppointment.id) {
+            return { ...apt, status: "confirmed" }
+          }
+          return apt
+        })
+      )
+      setShowArrivedModal(false)
+    } catch (error) {
+      showToast("Failed to mark patient as arrived", "error")
+    } finally {
+      setMarkingArrived(null)
+    }
+  }
+
+  const handleUnmarkArrived = async () => {
+    if (!selectedAppointment) return
+    setMarkingArrived(selectedAppointment.id)
+    try {
+      // Revert status to scheduled
+      await updateAppointmentStatus(selectedAppointment.id, "scheduled")
+      showToast("Arrived status removed", "success")
+      
+      // Update local state
+      setAppointments((prev) =>
+        prev.map((apt) => {
+          if (apt.id === selectedAppointment.id) {
+            return { ...apt, status: "scheduled" }
+          }
+          return apt
+        })
+      )
+      setShowUnmarkArrivedModal(false)
+    } catch (error) {
+      showToast("Failed to unmark patient as arrived", "error")
+    } finally {
+      setMarkingArrived(null)
+    }
+  }
+
+  const handleMarkPaid = async () => {
+    if (!selectedAppointment || !currentClinic) return
+    
+    setMarkingPaid(selectedAppointment.id)
+    try {
+      // Default fee based on appointment type - using 500 as default
+      const defaultFee = 500
+      
+      const payment = await createPayment({
+        clinicId: currentClinic.id,
+        patientId: selectedAppointment.patient_id,
+        patientName: selectedAppointment.patientName,
+        appointmentId: selectedAppointment.id,
+        amount: defaultFee,
+        method: "cash",
+        status: "paid",
+        createdByUserId: currentUser.id,
+      })
+      
+      showToast("Payment recorded successfully", "success")
+      setPaidAppointments((prev) => new Set([...prev, selectedAppointment.id]))
+      setAppointmentPaymentMap((prev) => new Map(prev).set(selectedAppointment.id, payment.id))
+      setShowPaidModal(false)
+    } catch (error) {
+      console.error("Failed to mark as paid:", error)
+      showToast("Failed to record payment", "error")
+    } finally {
+      setMarkingPaid(null)
+    }
+  }
+
+  const handleUnmarkPaid = async () => {
+    if (!selectedAppointment) return
+    
+    const paymentId = appointmentPaymentMap.get(selectedAppointment.id)
+    if (!paymentId) {
+      showToast("Could not find payment record to reverse", "error")
+      return
+    }
+
+    setMarkingPaid(selectedAppointment.id)
+    try {
+      await deletePayment(paymentId)
+      
+      showToast("Payment record removed", "success")
+      setPaidAppointments((prev) => {
+        const next = new Set(prev)
+        next.delete(selectedAppointment.id)
+        return next
+      })
+      setAppointmentPaymentMap((prev) => {
+        const next = new Map(prev)
+        next.delete(selectedAppointment.id)
+        return next
+      })
+      setShowUnmarkPaidModal(false)
+    } catch (error) {
+      console.error("Failed to reverse payment:", error)
+      showToast("Failed to remove payment record", "error")
+    } finally {
+      setMarkingPaid(null)
     }
   }
 
@@ -463,7 +663,6 @@ export default function DashboardPage() {
                       {apt.online_call_link ? (
                         <Button 
                           variant="primary" 
-                          size="sm" 
                           className="btn-primary-widget shadow-sm"
                           onClick={() => window.open(apt.online_call_link, '_blank')}
                         >
@@ -471,7 +670,7 @@ export default function DashboardPage() {
                         </Button>
                       ) : null}
                       <Link href={`/patients/${apt.patient_id}`}>
-                        <Button variant="secondary" size="sm" className="h-8 px-3 text-[11px] font-bold">
+                        <Button variant="secondary" className="btn-secondary-widget">
                           open profile
                         </Button>
                       </Link>
@@ -562,27 +761,91 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 ml-4">
-                      {apt.queueStatus === "no_show" && (
-                        <Badge
-                          variant="error"
-                          className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider"
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-1.5 ml-2 sm:ml-4 shrink-0">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {apt.queueStatus === "no_show" && (
+                          <Badge
+                            variant="error"
+                            className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider shrink-0"
+                          >
+                            no show
+                          </Badge>
+                        )}
+                        {apt.status === "confirmed" && (
+                          <Badge
+                            variant="success"
+                            className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/40"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAppointment(apt);
+                              setShowUnmarkArrivedModal(true);
+                            }}
+                            title="Click to unmark arrived"
+                          >
+                            arrived
+                          </Badge>
+                        )}
+                        {paidAppointments.has(apt.id) && (
+                          <Badge
+                            variant="success"
+                            className="h-3.5 px-1 text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/40"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAppointment(apt);
+                              setShowUnmarkPaidModal(true);
+                            }}
+                            title="Click to unmark paid"
+                          >
+                            paid
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {apt.status !== "confirmed" && (
+                          <Button
+                            variant="secondary"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setSelectedAppointment(apt);
+                              setShowArrivedModal(true); 
+                            }}
+                            disabled={markingArrived === apt.id}
+                            className="btn-secondary-widget text-green-600 hover:text-green-700 hover:bg-green-50 border-green-100 shrink-0 whitespace-nowrap"
+                            title="Mark as Arrived"
+                          >
+                            <RiCheckboxCircleLine className="size-3.5 sm:mr-1" />
+                            <span className="hidden sm:inline">arrived</span>
+                          </Button>
+                        )}
+                        {!paidAppointments.has(apt.id) && (
+                          <Button
+                            variant="secondary"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setSelectedAppointment(apt);
+                              setShowPaidModal(true); 
+                            }}
+                            disabled={markingPaid === apt.id}
+                            className="btn-secondary-widget text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100 shrink-0 whitespace-nowrap"
+                            title="Mark as Paid"
+                          >
+                            <RiMoneyDollarCircleLine className="size-3.5 sm:mr-1" />
+                            <span className="hidden sm:inline">paid</span>
+                          </Button>
+                        )}
+                        <Button
+                          variant="secondary"
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            handleNoShowClick(apt.id); 
+                          }}
+                          className="btn-secondary-widget text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100 shrink-0 whitespace-nowrap"
+                          title="Mark as No Show"
                         >
-                          no show
-                        </Badge>
-                      )}
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          handleNoShowClick(apt.id); 
-                        }}
-                        className="h-8 px-3 text-[11px] font-bold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-100"
-                        title="Mark as No Show"
-                      >
-                        x no show
-                      </Button>
+                          <RiCheckLine className="size-3.5 rotate-45 sm:mr-1" />
+                          <span className="hidden sm:inline">no show</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   )
@@ -609,6 +872,54 @@ export default function DashboardPage() {
         cancelText="Cancel"
         variant="danger"
         isLoading={isMarkingNoShow}
+      />
+
+      <ConfirmationModal
+        isOpen={showArrivedModal}
+        onClose={() => setShowArrivedModal(false)}
+        onConfirm={handleMarkArrived}
+        title="Mark as Arrived"
+        description={`Mark ${selectedAppointment?.patientName} as arrived?`}
+        confirmText="Confirm Arrival"
+        cancelText="Cancel"
+        variant="success"
+        isLoading={!!markingArrived}
+      />
+
+      <ConfirmationModal
+        isOpen={showUnmarkArrivedModal}
+        onClose={() => setShowUnmarkArrivedModal(false)}
+        onConfirm={handleUnmarkArrived}
+        title="Undo Arrival"
+        description={`Are you sure you want to un-mark ${selectedAppointment?.patientName} as arrived? Status will return to scheduled.`}
+        confirmText="Yes, Undo"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={!!markingArrived}
+      />
+
+      <ConfirmationModal
+        isOpen={showPaidModal}
+        onClose={() => setShowPaidModal(false)}
+        onConfirm={handleMarkPaid}
+        title="Confirm Payment"
+        description={`Record 500 EGP payment for ${selectedAppointment?.patientName}?`}
+        confirmText="Confirm Payment"
+        cancelText="Cancel"
+        variant="success"
+        isLoading={!!markingPaid}
+      />
+
+      <ConfirmationModal
+        isOpen={showUnmarkPaidModal}
+        onClose={() => setShowUnmarkPaidModal(false)}
+        onConfirm={handleUnmarkPaid}
+        title="Undo Payment"
+        description={`Are you sure you want to delete the payment record for ${selectedAppointment?.patientName}?`}
+        confirmText="Yes, Delete Record"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={!!markingPaid}
       />
     </div>
   )

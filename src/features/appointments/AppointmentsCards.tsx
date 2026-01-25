@@ -13,6 +13,7 @@ import {
   RiVideoLine,
   RiCalendarEventLine,
   RiUserAddLine,
+  RiHistoryLine,
 } from "@remixicon/react"
 import Link from "next/link"
 import type { AppointmentListItem } from "./appointments.types"
@@ -73,6 +74,16 @@ export function AppointmentsCards({
                   day: "numeric",
                 })}
               </span>
+              {appointment.rescheduled && (
+                <Badge 
+                  variant="warning" 
+                  className="h-4 px-1.5 text-[10px] font-semibold"
+                  title={`Rescheduled ${appointment.reschedule_count || 1} time${(appointment.reschedule_count || 1) > 1 ? 's' : ''}`}
+                >
+                  <RiHistoryLine className="size-2.5 mr-0.5" />
+                  rescheduled
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <RiTimeLine className="size-4 shrink-0" />

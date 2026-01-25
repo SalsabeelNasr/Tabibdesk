@@ -222,6 +222,17 @@ export async function getPayment(paymentId: string): Promise<Payment> {
   return payment
 }
 
+export async function deletePayment(paymentId: string): Promise<void> {
+  await delay(200)
+
+  const index = paymentsStore.findIndex((p) => p.id === paymentId)
+  if (index === -1) {
+    throw new Error("Payment not found")
+  }
+
+  paymentsStore.splice(index, 1)
+}
+
 export async function listPayments(
   params: ListPaymentsParams
 ): Promise<ListPaymentsResponse> {

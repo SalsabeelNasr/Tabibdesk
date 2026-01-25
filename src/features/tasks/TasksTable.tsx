@@ -11,8 +11,8 @@ import { Badge } from "@/components/Badge"
 import {
   formatTaskDate,
   isOverdue,
-  getSourceLabel,
-  getSourceBadgeVariant,
+  getStatusLabel,
+  getStatusBadgeVariant,
 } from "./tasks.utils"
 import type { TaskListItem } from "./tasks.types"
 import { cx } from "@/lib/utils"
@@ -88,33 +88,39 @@ export function TasksTable({
               </button>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className={cx(
-                    "text-sm text-gray-900 dark:text-white truncate",
-                    isDone && "text-gray-400 line-through decoration-gray-400/50"
-                  )}>
-                    {task.description || task.title}
-                  </p>
-                </div>
+                <p className={cx(
+                  "text-sm text-gray-900 dark:text-white",
+                  isDone && "text-gray-400 line-through decoration-gray-400/50"
+                )}>
+                  {task.patientName ? (
+                    <>
+                      Patient: <Link href={`/patients/${task.patientId}`} className="font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{task.patientName}</Link> → {task.description || task.title}
+                    </>
+                  ) : (
+                    task.description || task.title
+                  )}
+                </p>
                 
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                  {task.patientName && (
-                    <Link
-                      href={`/patients/${task.patientId}`}
-                      className="flex items-center gap-1 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium"
-                    >
-                      <RiUserLine className="size-3" />
-                      {task.patientName}
-                    </Link>
+                  {task.createdByName && (
+                    <span>by: {task.createdByName}</span>
                   )}
-                  <Badge variant={getSourceBadgeVariant(task.source)} className="text-[10px] px-1.5 py-0">
-                    {getSourceLabel(task.source)}
+                  <Badge variant={getStatusBadgeVariant(task.status)} className="text-[10px] px-1.5 py-0">
+                    {getStatusLabel(task.status)}
                   </Badge>
+                  {task.dueDate && (
+                    <Badge 
+                      variant={isDone ? "neutral" : overdue ? "error" : "default"} 
+                      className="text-[9px] px-1.5 py-0 font-bold uppercase tracking-widest"
+                    >
+                      {formatTaskDate(task.dueDate)}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Right Side - Actions + Due Date */}
+            {/* Right Side - Actions Only */}
             <div className="flex items-center gap-2 ml-4 shrink-0">
               {waHref && (
                 <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0" title="Contact on WhatsApp">
@@ -136,28 +142,6 @@ export function TasksTable({
                   <span className="sr-only">Assign</span>
                 </Button>
               )}
-
-              <div className="flex flex-col items-end gap-1">
-                {task.dueDate && (
-                  <span
-                    className={cx(
-                      "inline-block text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
-                      isDone
-                        ? "bg-gray-50 text-gray-400 dark:bg-gray-800/50"
-                        : overdue
-                        ? "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                        : "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
-                    )}
-                  >
-                    {formatTaskDate(task.dueDate)}
-                  </span>
-                )}
-                {task.createdByName && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    by: {task.createdByName}
-                  </span>
-                )}
-              </div>
             </div>
           </div>
         )

@@ -1,7 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/Dialog"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/Dialog"
 import { Button } from "@/components/Button"
 import { Label } from "@/components/Label"
 import { Select } from "@/components/Select"
@@ -29,6 +37,10 @@ export function AssignModal({
   useEffect(() => {
     if (isOpen && task) {
       setAssignedToUserId(task.assignedToUserId || "")
+    } else if (!isOpen) {
+      // Reset form when modal closes
+      setAssignedToUserId("")
+      setIsSubmitting(false)
     }
   }, [isOpen, task])
 
@@ -39,8 +51,22 @@ export function AssignModal({
       onClose()
     } catch (error) {
       // Error handling would go here
+      console.error("Failed to assign task:", error)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "doctor":
+        return "Doctor"
+      case "assistant":
+        return "Assistant"
+      case "manager":
+        return "Manager"
+      default:
+        return role
     }
   }
 
@@ -49,20 +75,28 @@ export function AssignModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Assign Task</DialogTitle>
+          {task && (
+            <DialogDescription className="mt-1">
+              {task.patientName
+                ? `Assign "${task.description || task.title}" for ${task.patientName}`
+                : `Assign "${task.description || task.title}"`}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="assignedTo">Assign To</Label>
             <Select
               id="assignedTo"
               value={assignedToUserId}
               onChange={(e) => setAssignedToUserId(e.target.value)}
+              disabled={isSubmitting}
             >
               <option value="">Unassigned</option>
               {availableUsers.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.full_name} ({user.role === "doctor" ? "Doctor" : user.role === "assistant" ? "Assistant" : "Manager"})
+                  {user.full_name} ({getRoleLabel(user.role)})
                 </option>
               ))}
             </Select>
@@ -70,10 +104,17 @@ export function AssignModal({
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+          <DialogClose asChild>
+            <Button variant="secondary" disabled={isSubmitting}>
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+          >
             Assign
           </Button>
         </DialogFooter>

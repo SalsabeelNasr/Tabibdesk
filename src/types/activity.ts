@@ -17,6 +17,7 @@ export type ActivityAction =
   | "approve"
   | "offer"
   | "book"
+  | "reschedule"
   | "note_added"
   | "upload"
   | "export"

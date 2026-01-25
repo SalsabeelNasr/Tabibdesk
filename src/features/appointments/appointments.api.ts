@@ -19,6 +19,28 @@ let appointmentsStore = [...mockData.appointments]
 // In-memory store for created/updated appointments (demo mode only)
 let createdAppointments: AppointmentListItem[] = []
 
+// Reschedule history tracking
+export interface RescheduleHistory {
+  appointmentId: string
+  patientId: string
+  patientName: string
+  originalScheduledAt: string
+  newScheduledAt: string
+  rescheduledAt: string
+  rescheduledBy: string
+  rescheduledByRole: string
+  reason?: string
+}
+
+const rescheduleHistoryStore: RescheduleHistory[] = []
+
+export function getRescheduleHistory(appointmentId?: string): RescheduleHistory[] {
+  if (appointmentId) {
+    return rescheduleHistoryStore.filter(h => h.appointmentId === appointmentId)
+  }
+  return [...rescheduleHistoryStore]
+}
+
 export interface Appointment {
   id: string
   patientId: string
@@ -41,6 +63,13 @@ export async function listAppointments(params: ListAppointmentsParams): Promise<
     const date = new Date(apt.scheduled_at)
     const patient = mockData.patients.find((p) => p.id === apt.patient_id)
     
+    // Check if this appointment has been rescheduled
+    const rescheduleHistory = rescheduleHistoryStore.filter(h => h.appointmentId === apt.id)
+    const isRescheduled = rescheduleHistory.length > 0
+    const firstReschedule = rescheduleHistory.sort((a, b) => 
+      new Date(a.rescheduledAt).getTime() - new Date(b.rescheduledAt).getTime()
+    )[0]
+    
     return {
       id: apt.id,
       patient_id: apt.patient_id,
@@ -54,10 +83,13 @@ export async function listAppointments(params: ListAppointmentsParams): Promise<
       scheduled_at: apt.scheduled_at,
       notes: apt.notes,
       created_at: apt.created_at,
+      rescheduled: isRescheduled,
+      reschedule_count: rescheduleHistory.length,
+      original_scheduled_at: firstReschedule?.originalScheduledAt || apt.scheduled_at,
     }
   })
 
-  // Combine with created appointments
+  // Combine with created appointments (which already have reschedule data)
   const combinedAppointments = [...allAppointments, ...createdAppointments]
 
   // Filter by query if provided
@@ -314,20 +346,79 @@ export async function listByDay(params: {
 export async function updateAppointmentTime(
   appointmentId: string,
   newStartAt: string,
-  newEndAt: string
+  newEndAt: string,
+  options?: {
+    rescheduledBy?: string
+    rescheduledByRole?: string
+    rescheduledByName?: string
+    reason?: string
+  }
 ): Promise<AppointmentType> {
   const appointment = appointmentsStore.find((apt) => apt.id === appointmentId)
   if (!appointment) {
     throw new Error("Appointment not found")
   }
   
+  const originalScheduledAt = appointment.scheduled_at
+  const isReschedule = originalScheduledAt !== newStartAt
+  
   // Calculate duration from original appointment
-  const originalStart = new Date(appointment.scheduled_at)
+  const originalStart = new Date(originalScheduledAt)
   const originalEnd = new Date(originalStart.getTime() + 30 * 60 * 1000) // Default 30 min
   const durationMinutes = Math.round((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60))
   
   // Use provided endAt or calculate from startAt + duration
   const calculatedEndAt = newEndAt || new Date(new Date(newStartAt).getTime() + durationMinutes * 60 * 1000).toISOString()
+  
+  // Track reschedule history if this is a reschedule
+  if (isReschedule) {
+    const rescheduleHistory: RescheduleHistory = {
+      appointmentId,
+      patientId: appointment.patient_id,
+      patientName: appointment.patient_name,
+      originalScheduledAt,
+      newScheduledAt: newStartAt,
+      rescheduledAt: new Date().toISOString(),
+      rescheduledBy: options?.rescheduledBy || "user-001",
+      rescheduledByRole: options?.rescheduledByRole || "assistant",
+      reason: options?.reason,
+    }
+    rescheduleHistoryStore.push(rescheduleHistory)
+    
+    // Log reschedule activity
+    await logActivity({
+      clinicId: appointment.clinic_id,
+      actorUserId: options?.rescheduledBy || "user-001",
+      actorName: options?.rescheduledByName || "Assistant",
+      actorRole: options?.rescheduledByRole || "assistant",
+      action: "reschedule",
+      entityType: "appointment",
+      entityId: appointmentId,
+      entityLabel: `Appt: ${appointment.patient_name}`,
+      message: `Rescheduled appointment from ${new Date(originalScheduledAt).toLocaleString()} to ${new Date(newStartAt).toLocaleString()}`,
+      meta: {
+        originalScheduledAt,
+        newScheduledAt: newStartAt,
+        reason: options?.reason,
+      },
+    })
+  } else {
+    // Log regular update activity
+    await logActivity({
+      clinicId: appointment.clinic_id,
+      actorUserId: options?.rescheduledBy || "user-001",
+      actorName: options?.rescheduledByName || "Assistant",
+      actorRole: options?.rescheduledByRole || "assistant",
+      action: "update",
+      entityType: "appointment",
+      entityId: appointmentId,
+      entityLabel: `Appt: ${appointment.patient_name}`,
+      message: `Updated appointment time to ${new Date(newStartAt).toLocaleString()}`,
+    })
+  }
+  
+  // Get reschedule count for this appointment
+  const rescheduleCount = rescheduleHistoryStore.filter(h => h.appointmentId === appointmentId).length
   
   // Update appointment
   const updated = {
@@ -335,19 +426,6 @@ export async function updateAppointmentTime(
     scheduled_at: newStartAt,
     updated_at: new Date().toISOString(),
   }
-
-  // Log activity
-  await logActivity({
-    clinicId: appointment.clinic_id,
-    actorUserId: "user-001",
-    actorName: "Dr. Ahmed Hassan",
-    actorRole: "doctor",
-    action: "update",
-    entityType: "appointment",
-    entityId: appointmentId,
-    entityLabel: `Appt: ${appointment.patient_name}`,
-    message: `Rescheduled appointment to ${new Date(newStartAt).toLocaleString()}`,
-  });
 
   const index = appointmentsStore.findIndex((apt) => apt.id === appointmentId)
   appointmentsStore[index] = updated
@@ -357,6 +435,12 @@ export async function updateAppointmentTime(
   const date = new Date(newStartAt)
   const patient = mockData.patients.find((p) => p.id === appointment.patient_id)
   
+  // Determine original scheduled_at (first time it was scheduled, before any reschedules)
+  const firstReschedule = rescheduleHistoryStore
+    .filter(h => h.appointmentId === appointmentId)
+    .sort((a, b) => new Date(a.rescheduledAt).getTime() - new Date(b.rescheduledAt).getTime())[0]
+  const originalScheduledAtForTracking = firstReschedule?.originalScheduledAt || originalScheduledAt
+  
   if (createdIndex !== -1) {
     // Update existing entry
     createdAppointments[createdIndex] = {
@@ -364,6 +448,9 @@ export async function updateAppointmentTime(
       appointment_date: date.toISOString().split("T")[0],
       appointment_time: date.toTimeString().slice(0, 5),
       scheduled_at: newStartAt,
+      rescheduled: isReschedule,
+      reschedule_count: rescheduleCount,
+      original_scheduled_at: originalScheduledAtForTracking,
     }
   } else {
     // Add new entry to createdAppointments for tracking
@@ -381,6 +468,9 @@ export async function updateAppointmentTime(
       scheduled_at: newStartAt,
       notes: appointment.notes || null,
       created_at: appointment.created_at,
+      rescheduled: isReschedule,
+      reschedule_count: rescheduleCount,
+      original_scheduled_at: originalScheduledAtForTracking,
     })
   }
   

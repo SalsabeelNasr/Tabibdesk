@@ -18,6 +18,7 @@ import {
   RiVideoLine,
   RiEyeLine,
   RiUserAddLine,
+  RiHistoryLine,
 } from "@remixicon/react"
 import Link from "next/link"
 import type { AppointmentListItem } from "./appointments.types"
@@ -93,6 +94,16 @@ export function AppointmentsTable({
                     <span>
                       {formatAppointmentDate(appointment.appointment_date)} • {formatTime(appointment.appointment_time)}
                     </span>
+                    {appointment.rescheduled && (
+                      <Badge 
+                        variant="warning" 
+                        className="ml-1.5 h-4 px-1.5 text-[10px] font-semibold"
+                        title={`Rescheduled ${appointment.reschedule_count || 1} time${(appointment.reschedule_count || 1) > 1 ? 's' : ''}`}
+                      >
+                        <RiHistoryLine className="size-2.5 mr-0.5" />
+                        rescheduled
+                      </Badge>
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">

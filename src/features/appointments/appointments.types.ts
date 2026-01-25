@@ -12,6 +12,9 @@ export interface AppointmentListItem {
   scheduled_at: string
   notes: string | null
   created_at: string
+  rescheduled?: boolean
+  reschedule_count?: number
+  original_scheduled_at?: string
 }
 
 export interface ListAppointmentsParams {

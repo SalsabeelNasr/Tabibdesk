@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { Label } from "@/components/Label"
@@ -508,9 +507,7 @@ export function BookAppointmentFlow({
       </div>
 
       {/* Step Content */}
-      <Card className={isEmbedded ? "border-0 shadow-none bg-transparent" : ""}>
-        <CardContent className={isEmbedded ? "px-0" : ""}>
-          {/* STEP 1: Patient Selection */}
+      {/* STEP 1: Patient Selection */}
           {currentStep === "patient" && (
             <div className="space-y-6">
               <PatientSelector
@@ -715,8 +712,6 @@ export function BookAppointmentFlow({
               </p>
             </div>
           )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
