@@ -13,6 +13,11 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+  
+  // Image optimization for Netlify deployment
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

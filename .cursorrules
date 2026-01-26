@@ -63,6 +63,8 @@ Before pushing to production:
 - Node version: 18.x
 - TypeScript checking is ENABLED in build
 - ESLint is ENABLED in build
+- Images: `unoptimized: true` in next.config.mjs (required for Netlify)
+- Public folder images are served from root (e.g., `/landing/image.jpg`)
 
 ## Font Hierarchy
 
