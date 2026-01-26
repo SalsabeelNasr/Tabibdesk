@@ -28,6 +28,7 @@ export function AddPatientDrawer({ open, onOpenChange, onSubmit }: AddPatientDra
     source: undefined,
     source_other: undefined,
     address: undefined,
+    complaint: undefined,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof CreatePatientInput, string>>>({})
@@ -68,6 +69,7 @@ export function AddPatientDrawer({ open, onOpenChange, onSubmit }: AddPatientDra
         source: formData.source || undefined,
         source_other: formData.source === "other" ? formData.source_other : undefined,
         address: formData.address || undefined,
+        complaint: formData.complaint || undefined,
       }
       await onSubmit(submitData)
       // Reset form
@@ -80,6 +82,7 @@ export function AddPatientDrawer({ open, onOpenChange, onSubmit }: AddPatientDra
         source: undefined,
         source_other: undefined,
         address: undefined,
+        complaint: undefined,
       })
       setErrors({})
       onOpenChange(false)

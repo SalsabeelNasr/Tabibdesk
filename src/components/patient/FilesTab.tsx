@@ -198,6 +198,33 @@ export function FilesTab({
 
   return (
     <div className="space-y-4">
+      {/* Upload Section - Top Row */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cx(
+          "relative rounded-xl border-2 border-dashed p-6 text-center transition-all",
+          isDragging
+            ? "border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/10"
+            : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20"
+        )}
+      >
+        <RiUploadLine className="mx-auto size-8 text-gray-400" />
+        <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+          Drop files here to upload
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+          Or click to browse
+        </p>
+        <input
+          type="file"
+          multiple
+          onChange={handleFileInput}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </div>
+
       {!hasFiles ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -209,11 +236,7 @@ export function FilesTab({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 items-start">
-          {/* Files Section - Left Column */}
-          <div className="lg:col-span-2">
-            <div className="p-4">
-              <div className="space-y-2">
+        <div className="space-y-2">
                 {sortedDates.map((date) => {
                   const dateData = groupedResults[date]
                   const hasLabResults = dateData.labResults.length > 0
@@ -462,36 +485,6 @@ export function FilesTab({
                     </div>
                   )
                 })}
-              </div>
-            </div>
-          </div>
-
-          {/* Upload Section - Right Column */}
-          <div>
-            {/* Drag & Drop Area - Compact */}
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={cx(
-                "relative rounded-xl border-2 border-dashed p-4 text-center transition-all",
-                isDragging
-                  ? "border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/10"
-                  : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20"
-              )}
-            >
-              <RiUploadLine className="mx-auto size-7 text-gray-400" />
-              <p className="mt-1 text-xs font-medium text-gray-700 dark:text-gray-300">
-                Drop files here to upload
-              </p>
-              <input
-                type="file"
-                multiple
-                onChange={handleFileInput}
-                className="absolute inset-0 cursor-pointer opacity-0"
-              />
-            </div>
-          </div>
         </div>
       )}
 

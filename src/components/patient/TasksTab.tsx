@@ -1,13 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { cx } from "@/lib/utils"
-import { Input } from "@/components/Input"
 import {
   RiTaskLine,
   RiCheckLine,
   RiCheckboxBlankCircleLine,
-  RiAddLine,
 } from "@remixicon/react"
 import { formatTaskDate, isOverdue } from "@/features/tasks/tasks.utils"
 
@@ -29,7 +26,6 @@ interface Task {
 interface TasksTabProps {
   tasks: Task[]
   patientId: string
-  onAddTask: (title: string) => void
   onToggleStatus: (taskId: string) => void
   onEditTask?: (taskId: string) => void
   onDeleteTask?: (taskId: string) => void
@@ -38,17 +34,8 @@ interface TasksTabProps {
 export function TasksTab({
   tasks,
   patientId: _patientId,
-  onAddTask,
   onToggleStatus,
 }: TasksTabProps) {
-  const [newTaskTitle, setNewTaskTitle] = useState("")
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && newTaskTitle.trim()) {
-      onAddTask(newTaskTitle.trim())
-      setNewTaskTitle("")
-    }
-  }
 
   // Sort tasks: pending first, then by date
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -63,20 +50,6 @@ export function TasksTab({
 
   return (
     <div className="space-y-4">
-      {/* Quick Add Input */}
-      <div className="relative group">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors">
-          <RiAddLine className="size-5" />
-        </div>
-        <Input
-          placeholder="Write a task and press Enter..."
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="pl-10 h-12 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 focus:ring-primary-500/20 focus:border-primary-500 rounded-xl shadow-sm"
-        />
-      </div>
-
       {sortedTasks.length === 0 ? (
         <div className="py-12 text-center bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
           <RiTaskLine className="mx-auto size-12 text-gray-300" />

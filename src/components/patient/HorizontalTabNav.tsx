@@ -8,8 +8,6 @@ import {
   RiFileTextLine,
   RiCapsuleLine,
   RiTaskLine,
-  RiFlaskLine,
-  RiCalendarLine,
   RiAttachmentLine,
 } from "@remixicon/react"
 
@@ -27,9 +25,7 @@ interface HorizontalTabNavProps {
   onAddNote?: () => void
   onAddMedication?: () => void
   onAddTask?: () => void
-  onAddLabFile?: () => void
-  onAddAppointment?: () => void
-  onAddAttachment?: () => void
+  onAddFile?: () => void
 }
 
 export function HorizontalTabNav({
@@ -39,9 +35,7 @@ export function HorizontalTabNav({
   onAddNote,
   onAddMedication,
   onAddTask,
-  onAddLabFile,
-  onAddAppointment,
-  onAddAttachment,
+  onAddFile,
 }: HorizontalTabNavProps) {
   const [showActionsMenu, setShowActionsMenu] = useState(false)
 
@@ -62,19 +56,9 @@ export function HorizontalTabNav({
       onClick: onAddTask,
     },
     {
-      label: "Lab File",
-      icon: RiFlaskLine,
-      onClick: onAddLabFile,
-    },
-    {
-      label: "Appointment",
-      icon: RiCalendarLine,
-      onClick: onAddAppointment,
-    },
-    {
-      label: "Attachment",
+      label: "File",
       icon: RiAttachmentLine,
-      onClick: onAddAttachment,
+      onClick: onAddFile,
     },
   ]
 
@@ -121,7 +105,7 @@ export function HorizontalTabNav({
               "inline-flex items-center justify-center rounded-lg border p-2 transition-colors",
               showActionsMenu
                 ? "border-primary-600 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-400"
-                : "border-gray-900 bg-gray-900 text-white hover:bg-gray-800 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                : "border-primary-600 bg-primary-600 text-white hover:bg-primary-700 dark:border-primary-500 dark:bg-primary-500 dark:text-white dark:hover:bg-primary-600"
             )}
             aria-label="Add Record"
           >

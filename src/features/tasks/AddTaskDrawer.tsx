@@ -16,13 +16,14 @@ import { Textarea } from "@/components/Textarea"
 import { DatePicker } from "@/components/DatePicker"
 import { mockUsers } from "@/data/mock/users-clinics"
 import { mockData } from "@/data/mock/mock-data"
-import type { CreateTaskPayload, TaskType, TaskPriority } from "./tasks.types"
+import type { CreateTaskPayload, TaskType } from "./tasks.types"
 
 interface AddTaskDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (payload: CreateTaskPayload) => Promise<void>
   defaultAssignedToUserId?: string
+  defaultPatientId?: string
   currentUserId: string
   clinicId: string
 }
@@ -32,16 +33,16 @@ export function AddTaskDrawer({
   onOpenChange,
   onSubmit,
   defaultAssignedToUserId,
+  defaultPatientId,
   currentUserId,
   clinicId,
 }: AddTaskDrawerProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [type, setType] = useState<TaskType>("follow_up")
-  const [priority, setPriority] = useState<TaskPriority>("normal")
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined)
   const [assignedToUserId, setAssignedToUserId] = useState<string>(defaultAssignedToUserId || "")
-  const [patientId, setPatientId] = useState<string>("")
+  const [patientId, setPatientId] = useState<string>(defaultPatientId || "")
   const [patientSearch, setPatientSearch] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -60,13 +61,12 @@ export function AddTaskDrawer({
       setTitle("")
       setDescription("")
       setType("follow_up")
-      setPriority("normal")
       setDueDate(undefined)
       setAssignedToUserId(defaultAssignedToUserId || "")
-      setPatientId("")
+      setPatientId(defaultPatientId || "")
       setPatientSearch("")
     }
-  }, [open, defaultAssignedToUserId])
+  }, [open, defaultAssignedToUserId, defaultPatientId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,7 +78,6 @@ export function AddTaskDrawer({
         title: title.trim(),
         description: description.trim() || undefined,
         type,
-        priority,
         dueDate: dueDate?.toISOString(),
         assignedToUserId: assignedToUserId || undefined,
         patientId: patientId || undefined,
@@ -126,31 +125,16 @@ export function AddTaskDrawer({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type</Label>
-                  <Select id="type" value={type} onChange={(e) => setType(e.target.value as TaskType)}>
-                    <option value="follow_up">Follow Up</option>
-                    <option value="appointment">Appointment</option>
-                    <option value="labs">Labs</option>
-                    <option value="scan">Scan</option>
-                    <option value="billing">Billing</option>
-                    <option value="other">Other</option>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select
-                    id="priority"
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                  >
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Select id="type" value={type} onChange={(e) => setType(e.target.value as TaskType)}>
+                  <option value="follow_up">Follow Up</option>
+                  <option value="appointment">Appointment</option>
+                  <option value="labs">Labs</option>
+                  <option value="scan">Scan</option>
+                  <option value="billing">Billing</option>
+                  <option value="other">Other</option>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -170,29 +154,46 @@ export function AddTaskDrawer({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="patient">Patient (Optional)</Label>
+                <Label htmlFor="patient">Patient {defaultPatientId ? "(Pre-filled)" : "(Optional)"}</Label>
                 <div className="space-y-2">
-                  <Input
-                    id="patient"
-                    value={patientSearch}
-                    onChange={(e) => setPatientSearch(e.target.value)}
-                    placeholder="Search by name or phone"
-                  />
-                  {patientSearch && filteredPatients.length > 0 && (
-                    <Select
-                      value={patientId}
-                      onChange={(e) => {
-                        setPatientId(e.target.value)
-                        setPatientSearch("")
-                      }}
-                    >
-                      <option value="">Select patient</option>
-                      {filteredPatients.map((patient) => (
-                        <option key={patient.id} value={patient.id}>
-                          {patient.first_name} {patient.last_name} - {patient.phone}
-                        </option>
-                      ))}
-                    </Select>
+                  {defaultPatientId ? (
+                    <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      {(() => {
+                        const patient = mockData.patients.find((p) => p.id === defaultPatientId)
+                        return patient ? (
+                          <p className="text-sm text-gray-900 dark:text-gray-100">
+                            {patient.first_name} {patient.last_name} - {patient.phone}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-500">Patient selected</p>
+                        )
+                      })()}
+                    </div>
+                  ) : (
+                    <>
+                      <Input
+                        id="patient"
+                        value={patientSearch}
+                        onChange={(e) => setPatientSearch(e.target.value)}
+                        placeholder="Search by name or phone"
+                      />
+                      {patientSearch && filteredPatients.length > 0 && (
+                        <Select
+                          value={patientId}
+                          onChange={(e) => {
+                            setPatientId(e.target.value)
+                            setPatientSearch("")
+                          }}
+                        >
+                          <option value="">Select patient</option>
+                          {filteredPatients.map((patient) => (
+                            <option key={patient.id} value={patient.id}>
+                              {patient.first_name} {patient.last_name} - {patient.phone}
+                            </option>
+                          ))}
+                        </Select>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

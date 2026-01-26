@@ -62,6 +62,7 @@ export async function createPatient(input: CreatePatientInput): Promise<Patient>
     source: input.source,
     sourceOther: input.source_other,
     address: input.address,
+    complaint: input.complaint,
   })
 }
 

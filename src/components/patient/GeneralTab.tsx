@@ -7,17 +7,13 @@ import { Checkbox } from "@/components/Checkbox"
 import { Textarea } from "@/components/Textarea"
 import { AIExtractionModal } from "./AIExtractionModal"
 import { WeightChart } from "./WeightChart"
+import { PastMedications } from "./PastMedications"
 import {
-  RiMailLine,
-  RiPhoneLine,
-  RiMapPinLine,
-  RiBriefcaseLine,
-  RiRulerLine,
-  RiCalendarLine,
   RiRobot2Line,
   RiHeartPulseLine,
   RiLineChartLine,
 } from "@remixicon/react"
+import type { PastMedication } from "@/features/prescriptions/prescriptions.types"
 
 interface Patient {
   id: string
@@ -66,9 +62,11 @@ interface WeightLog {
 interface GeneralTabProps {
   patient: Patient
   weightLogs?: WeightLog[]
+  pastMedications?: PastMedication[]
+  onAddPastMedication?: () => void
 }
 
-export function GeneralTab({ patient, weightLogs = [] }: GeneralTabProps) {
+export function GeneralTab({ patient, weightLogs = [], pastMedications = [], onAddPastMedication }: GeneralTabProps) {
   const [clinicalNotesText, _setClinicalNotesText] = useState("")
   const [showAIModal, setShowAIModal] = useState(false)
   const [_showTranscription, _setShowTranscription] = useState(false)
@@ -193,101 +191,8 @@ export function GeneralTab({ patient, weightLogs = [] }: GeneralTabProps) {
         )}
       </div>
 
-      {/* Additional Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {patient.phone && (
-              <div className="flex items-center gap-3">
-                <RiPhoneLine className="size-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Phone</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-50">{patient.phone}</p>
-                </div>
-              </div>
-            )}
-
-            {patient.email && (
-              <div className="flex items-center gap-3">
-                <RiMailLine className="size-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-50">{patient.email}</p>
-                </div>
-              </div>
-            )}
-
-            {patient.address && (
-              <div className="flex items-center gap-3">
-                <RiMapPinLine className="size-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Address</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-50">{patient.address}</p>
-                </div>
-              </div>
-            )}
-
-            {patient.job && (
-              <div className="flex items-center gap-3">
-                <RiBriefcaseLine className="size-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Occupation</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-50">{patient.job}</p>
-                </div>
-              </div>
-            )}
-
-            {patient.height && (
-              <div className="flex items-center gap-3">
-                <RiRulerLine className="size-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Height</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-50">{patient.height} cm</p>
-                </div>
-              </div>
-            )}
-
-            {patient.date_of_birth && (
-              <div className="flex items-center gap-3">
-                <RiCalendarLine className="size-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Date of Birth</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-50">
-                    {new Date(patient.date_of_birth).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3">
-              <RiCalendarLine className="size-5 text-gray-400" />
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Registration Date</p>
-                <p className="font-medium text-gray-900 dark:text-gray-50">
-                  {new Date(patient.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <RiCalendarLine className="size-5 text-gray-400" />
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Last Updated</p>
-                <p className="font-medium text-gray-900 dark:text-gray-50">
-                  {new Date(patient.updated_at).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Past Medications */}
+      <PastMedications medications={pastMedications} onAddMedication={onAddPastMedication} />
     </div>
   )
 }

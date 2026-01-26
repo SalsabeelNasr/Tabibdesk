@@ -9,8 +9,12 @@ export interface Patient {
   gender: string
   phone: string
   email: string | null
+  address: string | null
+  height: number | null
   complaint: string | null
   job: string | null
+  source?: string | null
+  source_other?: string | null
   doctor_id: string | null
   status: PatientStatus
   first_visit_at: string | null
@@ -50,4 +54,5 @@ export interface CreatePatientInput {
   source?: string
   source_other?: string
   address?: string
+  complaint?: string
 }

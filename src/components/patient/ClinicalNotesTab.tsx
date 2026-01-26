@@ -167,7 +167,7 @@ export function ClinicalNotesTab({
       }
     })
 
-    if (todayMsgs.length > 0) groups.push({ label: "Today", messages: todayMsgs })
+    if (todayMsgs.length > 0) groups.push({ label: "new clinical investigation", messages: todayMsgs })
     if (yesterdayMsgs.length > 0)
       groups.push({ label: "Yesterday", messages: yesterdayMsgs })
     if (olderMsgs.length > 0) groups.push({ label: "Older", messages: olderMsgs })
@@ -281,9 +281,11 @@ export function ClinicalNotesTab({
         <div className="flex-1 overflow-y-auto px-2 pt-4 pb-4">
           {historyGroups.map((group) => (
             <div key={group.label} className="mt-4 first:mt-0">
-              <h4 className="px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                {group.label}
-              </h4>
+              {group.label !== "new clinical investigation" && (
+                <h4 className="px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                  {group.label}
+                </h4>
+              )}
               <div className="mt-2 space-y-0.5">
                 {group.messages.map((msg) => (
                   <button
@@ -321,8 +323,8 @@ export function ClinicalNotesTab({
                 ))}
               </div>
               
-              {/* Progress Card - Show below Today section, before Older sections */}
-              {group.label === "Today" && (
+              {/* Progress Card - Show below new clinical investigation section, before Older sections */}
+              {group.label === "new clinical investigation" && (
                 <div className="mt-4 px-2">
                   <Card className="shadow-sm border-gray-200 dark:border-gray-800">
                     <CardHeader className="pb-3">
@@ -499,7 +501,7 @@ export function ClinicalNotesTab({
                         )}
                       </div>
                       <div>
-                        <h3 className="text-base font-bold text-gray-900 dark:text-gray-50">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-50">
                           {formatDate(selectedMessage.created_at)}
                         </h3>
                         <div className="mt-1 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">

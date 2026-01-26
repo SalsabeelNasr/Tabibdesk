@@ -15,21 +15,29 @@ import { mockData } from "@/data/mock/mock-data"
 import { HorizontalTabNav, Tab } from "@/components/patient/HorizontalTabNav"
 import { ClinicalNotesTab } from "@/components/patient/ClinicalNotesTab"
 import { GeneralTab } from "@/components/patient/GeneralTab"
-import { MedicationsTab } from "@/components/patient/MedicationsTab"
+import { BasicTab } from "@/components/patient/BasicTab"
+import { PrescriptionsTab } from "@/components/patient/PrescriptionsTab"
 import { FilesTab } from "@/components/patient/FilesTab"
-import { AppointmentsTab } from "@/components/patient/AppointmentsTab"
 import { TasksTab } from "@/components/patient/TasksTab"
-import { ActivityFeed } from "@/features/activity/ActivityFeed"
+import { PatientHistoryTab } from "@/components/patient/PatientHistoryTab"
+import { AddTaskDrawer } from "@/features/tasks/AddTaskDrawer"
+import { createTask, listTasks, updateTaskStatus } from "@/features/tasks/tasks.api"
 import { listInvoices } from "@/api/invoices.api"
+import { update as updatePatient } from "@/api/patients.api"
+import { useToast } from "@/hooks/useToast"
+import type { CreateTaskPayload } from "@/features/tasks/tasks.types"
+import { AddPrescriptionDrawer } from "@/features/prescriptions/AddPrescriptionDrawer"
+import { createPrescription, getPastMedicationsByPatient } from "@/features/prescriptions/prescriptions.api"
+import type { CreatePrescriptionPayload } from "@/features/prescriptions/prescriptions.types"
 import {
   RiFileTextLine,
   RiUserLine,
   RiCapsuleLine,
   RiFolderLine,
   RiTaskLine,
-  RiCalendarLine,
   RiTimeLine,
   RiHistoryLine,
+  RiInformationLine,
 } from "@remixicon/react"
 
 export default function PatientDetailPage() {
@@ -42,21 +50,33 @@ export default function PatientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [patient, setPatient] = useState<any | null>(null)
   const [activeTab, setActiveTab] = useState<string>("clinicalNotes")
+  const [showAddTaskDrawer, setShowAddTaskDrawer] = useState(false)
+  const [showAddPrescriptionDrawer, setShowAddPrescriptionDrawer] = useState(false)
 
   // Data for tabs
   const [weightLogs, setWeightLogs] = useState<any[]>([])
   const [medications, setMedications] = useState<any[]>([])
+  const [prescriptions, setPrescriptions] = useState<any[]>([])
   const [labResults, setLabResults] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
   const [tasks, setTasks] = useState<any[]>([])
   const [notes, setNotes] = useState<any[]>([])
   const [attachments, setAttachments] = useState<any[]>([])
   const [transcriptions, setTranscriptions] = useState<any[]>([])
+  const [pastMedications, setPastMedications] = useState<any[]>([])
   const [totalDue, setTotalDue] = useState<number>(0)
+  const { showToast } = useToast()
 
   useEffect(() => {
     fetchPatientData()
     fetchUnpaidInvoices()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId, isDemoMode])
+
+  useEffect(() => {
+    if (patientId && !isDemoMode) {
+      fetchTasks()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId, isDemoMode])
 
@@ -71,12 +91,14 @@ export default function PatientDetailPage() {
         // Load all related data
         setWeightLogs(mockData.weightLogs.filter((w) => w.patient_id === patientId))
         setMedications(mockData.medications.filter((m) => m.patient_id === patientId))
+        setPrescriptions(mockData.prescriptions.filter((p) => p.patientId === patientId))
         setLabResults(mockData.labResults.filter((l) => l.patient_id === patientId))
         setAppointments(mockData.appointments.filter((a) => a.patient_id === patientId))
         setTasks(mockData.tasks.filter((t) => t.patient_id === patientId))
         setNotes(mockData.doctorNotes.filter((n) => n.patient_id === patientId))
         setAttachments(mockData.attachments.filter((a) => a.patient_id === patientId))
         setTranscriptions(mockData.transcriptions.filter((t) => t.patient_id === patientId))
+        setPastMedications(mockData.pastMedications.filter((m) => m.patientId === patientId))
       } else {
         router.push("/patients")
       }
@@ -105,38 +127,108 @@ export default function PatientDetailPage() {
     }
   }
 
-  const handleAddTask = (title: string) => {
-    const newTask = {
-      id: `task-${Date.now()}`,
-      patient_id: patientId,
-      title,
-      description: null,
-      type: "other",
-      status: "pending",
-      due_date: new Date().toISOString(),
-      completed_at: null,
-      ignored_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: null,
-      created_by_name: currentUser?.full_name || "Doctor",
+  const handleCreateTask = async (payload: CreateTaskPayload) => {
+    try {
+      await createTask(payload)
+      // Refresh tasks
+      await fetchTasks()
+      showToast("Task created successfully", "success")
+    } catch (error) {
+      console.error("Failed to create task:", error)
+      showToast("Failed to create task", "error")
+      throw error
     }
-    setTasks([newTask, ...tasks])
   }
 
-  const handleToggleTaskStatus = (taskId: string) => {
-    setTasks(
-      tasks.map((t) => {
-        if (t.id === taskId) {
-          const isDone = t.status === "completed" || t.status === "done"
-          return {
-            ...t,
-            status: isDone ? "pending" : "done",
-            completed_at: isDone ? null : new Date().toISOString(),
-          }
-        }
-        return t
+  const fetchTasks = async () => {
+    if (isDemoMode) {
+      // In demo mode, use mockData directly
+      const patientTasks = mockData.tasks.filter((t) => t.patient_id === patientId)
+      setTasks(patientTasks)
+      return
+    }
+
+    try {
+      const clinicId = currentClinic?.id || currentUser?.clinicId || "clinic-001"
+      const response = await listTasks({
+        clinicId,
+        status: "all",
+        page: 1,
+        pageSize: 1000,
       })
-    )
+      // Filter tasks for this patient
+      const patientTasks = response.tasks.filter((t) => t.patientId === patientId)
+      // Convert to the format expected by TasksTab
+      setTasks(
+        patientTasks.map((t) => ({
+          id: t.id,
+          patient_id: t.patientId || patientId,
+          title: t.title,
+          description: t.description || null,
+          type: t.type,
+          status: t.status,
+          due_date: t.dueDate || new Date().toISOString(),
+          completed_at: t.status === "done" ? new Date().toISOString() : null,
+          ignored_at: null,
+          created_at: t.createdAt,
+          updated_at: null,
+          created_by_name: t.createdByName,
+        }))
+      )
+    } catch (error) {
+      console.error("Failed to fetch tasks:", error)
+    }
+  }
+
+  const handleToggleTaskStatus = async (taskId: string) => {
+    if (isDemoMode) {
+      // In demo mode, update local state
+      setTasks(
+        tasks.map((t) => {
+          if (t.id === taskId) {
+            const isDone = t.status === "completed" || t.status === "done"
+            return {
+              ...t,
+              status: isDone ? "pending" : "done",
+              completed_at: isDone ? null : new Date().toISOString(),
+            }
+          }
+          return t
+        })
+      )
+      return
+    }
+
+    try {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return
+
+      const isDone = task.status === "completed" || task.status === "done"
+      const newStatus = isDone ? "pending" : "done"
+      
+      await updateTaskStatus({ id: taskId, status: newStatus })
+      await fetchTasks()
+    } catch (error) {
+      console.error("Failed to toggle task status:", error)
+      showToast("Failed to update task status", "error")
+    }
+  }
+
+  const handleUpdatePatient = async (updates: Partial<any>) => {
+    try {
+      const updatedPatient = await updatePatient(patientId, updates)
+      setPatient(updatedPatient)
+      // Also update in mockData if patient exists there
+      const mockIndex = mockData.patients.findIndex((p) => p.id === patientId)
+      if (mockIndex !== -1) {
+        mockData.patients[mockIndex] = updatedPatient as any
+      }
+      showToast("Patient information updated successfully", "success")
+    } catch (error) {
+      console.error("Failed to update patient:", error)
+      showToast("Failed to update patient information", "error")
+      throw error
+    }
   }
 
 
@@ -201,10 +293,10 @@ export default function PatientDetailPage() {
   const tabs: Tab[] = [
     { id: "clinicalNotes", label: "Notes", icon: RiFileTextLine },
     { id: "general", label: "General", icon: RiUserLine },
-    { id: "medications", label: "Medications", icon: RiCapsuleLine },
-    { id: "files", label: "Files", icon: RiFolderLine },
+    { id: "basic", label: "Basic", icon: RiInformationLine },
+    { id: "medications", label: "Prescription", icon: RiCapsuleLine },
     { id: "tasks", label: "Tasks", icon: RiTaskLine },
-    { id: "appointments", label: "Appointments", icon: RiCalendarLine },
+    { id: "files", label: "Files", icon: RiFolderLine },
     { id: "history", label: "History", icon: RiHistoryLine },
   ]
 
@@ -247,25 +339,15 @@ export default function PatientDetailPage() {
         onTabChange={setActiveTab}
         tabs={tabs}
         onAddNote={() => {
-          // TODO: Open note modal
-          console.log("Add note")
+          setActiveTab("clinicalNotes")
         }}
         onAddMedication={() => {
-          // TODO: Open medication modal
-          console.log("Add medication")
+          setShowAddPrescriptionDrawer(true)
         }}
         onAddTask={() => {
-          // TODO: Open task modal
-          console.log("Add task")
+          setShowAddTaskDrawer(true)
         }}
-        onAddLabFile={() => {
-          // TODO: Open lab file upload modal
-          console.log("Upload lab file")
-        }}
-        onAddAppointment={() => {
-          router.push("/appointments/book")
-        }}
-        onAddAttachment={() => {
+        onAddFile={() => {
           setActiveTab("files")
         }}
       />
@@ -283,8 +365,21 @@ export default function PatientDetailPage() {
             }}
           />
         )}
-        {activeTab === "general" && <GeneralTab patient={patient} weightLogs={weightLogs} />}
-        {activeTab === "medications" && <MedicationsTab medications={medications} />}
+        {activeTab === "general" && (
+          <GeneralTab
+            patient={patient}
+            weightLogs={weightLogs}
+            pastMedications={pastMedications}
+            onAddPastMedication={() => {
+              // TODO: Open add past medication modal
+              console.log("Add past medication")
+            }}
+          />
+        )}
+        {activeTab === "basic" && (
+          <BasicTab patient={patient} onUpdate={handleUpdatePatient} />
+        )}
+        {activeTab === "medications" && <PrescriptionsTab prescriptions={prescriptions} />}
         {activeTab === "files" && (
           <FilesTab
             labResults={labResults}
@@ -300,30 +395,60 @@ export default function PatientDetailPage() {
           />
         )}
         {activeTab === "tasks" && (
-          <TasksTab
-            tasks={tasks}
-            patientId={patientId}
-            onAddTask={handleAddTask}
-            onToggleStatus={handleToggleTaskStatus}
-            onEditTask={(taskId) => {
-              // TODO: Open edit task modal
-              console.log("Edit task:", taskId)
-            }}
-            onDeleteTask={(taskId) => {
-              // TODO: Open delete confirmation modal
-              console.log("Delete task:", taskId)
-            }}
-          />
+          <>
+            <TasksTab
+              tasks={tasks}
+              patientId={patientId}
+              onToggleStatus={handleToggleTaskStatus}
+              onEditTask={(taskId) => {
+                // TODO: Open edit task modal
+                console.log("Edit task:", taskId)
+              }}
+              onDeleteTask={(taskId) => {
+                // TODO: Open delete confirmation modal
+                console.log("Delete task:", taskId)
+              }}
+            />
+            <AddTaskDrawer
+              open={showAddTaskDrawer}
+              onOpenChange={setShowAddTaskDrawer}
+              onSubmit={handleCreateTask}
+              defaultPatientId={patientId}
+              currentUserId={currentUser?.id || "user-001"}
+              clinicId={currentClinic?.id || currentUser?.clinicId || "clinic-001"}
+            />
+          </>
         )}
-        {activeTab === "appointments" && <AppointmentsTab appointments={appointments} />}
+        <AddPrescriptionDrawer
+          open={showAddPrescriptionDrawer}
+          onOpenChange={setShowAddPrescriptionDrawer}
+          onSubmit={async (payload: CreatePrescriptionPayload) => {
+            try {
+              await createPrescription(payload)
+              // Refresh prescriptions
+              if (isDemoMode) {
+                setPrescriptions(mockData.prescriptions.filter((p) => p.patientId === patientId))
+              } else {
+                // TODO: Fetch from API when integrated
+              }
+              showToast("Prescription created successfully", "success")
+            } catch (error) {
+              console.error("Failed to create prescription:", error)
+              showToast("Failed to create prescription", "error")
+              throw error
+            }
+          }}
+          patientId={patientId}
+          clinicId={currentClinic?.id || currentUser?.clinicId || "clinic-001"}
+          doctorId={currentUser?.id}
+        />
         {activeTab === "history" && (
           <Card>
             <CardContent className="p-6">
-              <ActivityFeed
+              <PatientHistoryTab
                 clinicId={patient.clinic_id || "clinic-001"}
-                entityId={patientId}
-                entityType="patient"
-                title="Patient Audit Trail"
+                patientId={patientId}
+                appointments={appointments}
               />
             </CardContent>
           </Card>

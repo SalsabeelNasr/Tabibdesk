@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
-import { RiFileTextLine, RiTimeLine, RiArrowDownSLine, RiArrowUpSLine } from "@remixicon/react"
+import { RiFileTextLine, RiTimeLine } from "@remixicon/react"
 
 interface DoctorNote {
   id: string
@@ -17,8 +16,6 @@ interface NotesTabProps {
 }
 
 export function NotesTab({ notes, patient: _patient }: NotesTabProps) {
-  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
-
   // Sort notes by date (newest first)
   const sortedNotes = [...notes].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -30,30 +27,12 @@ export function NotesTab({ notes, patient: _patient }: NotesTabProps) {
     const diffTime = Math.abs(now.getTime() - date.getTime())
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
-    if (diffDays === 0) return "Today"
+    if (diffDays === 0) return "new clinical investigation"
     if (diffDays === 1) return "Yesterday"
     if (diffDays < 7) return `${diffDays} days ago`
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
     if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
     return date.toLocaleDateString()
-  }
-
-  const toggleNoteExpansion = (noteId: string) => {
-    setExpandedNotes((prev) => {
-      const next = new Set(prev)
-      if (next.has(noteId)) {
-        next.delete(noteId)
-      } else {
-        next.add(noteId)
-      }
-      return next
-    })
-  }
-
-  const truncateText = (text: string, maxLines: number = 3) => {
-    const lines = text.split('\n')
-    if (lines.length <= maxLines) return text
-    return lines.slice(0, maxLines).join('\n')
   }
 
   return (
@@ -69,16 +48,11 @@ export function NotesTab({ notes, patient: _patient }: NotesTabProps) {
       ) : (
         <div className="space-y-4">
           {sortedNotes.map((note) => {
-            const isExpanded = expandedNotes.has(note.id)
-            const noteLines = note.note.split('\n')
-            const shouldTruncate = noteLines.length > 3
-            const displayText = isExpanded ? note.note : truncateText(note.note, 3)
-
             return (
               <Card key={note.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-base">
+                    <CardTitle className="text-sm">
                       {new Date(note.created_at).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
@@ -94,27 +68,9 @@ export function NotesTab({ notes, patient: _patient }: NotesTabProps) {
                 <CardContent>
                   <div className="prose prose-sm max-w-none dark:prose-invert">
                     <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                      {displayText}
+                      {note.note}
                     </p>
                   </div>
-                  {shouldTruncate && (
-                    <button
-                      onClick={() => toggleNoteExpansion(note.id)}
-                      className="mt-3 flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                    >
-                      {isExpanded ? (
-                        <>
-                          <span>Show less</span>
-                          <RiArrowUpSLine className="size-4" />
-                        </>
-                      ) : (
-                        <>
-                          <span>Show more</span>
-                          <RiArrowDownSLine className="size-4" />
-                        </>
-                      )}
-                    </button>
-                  )}
                 </CardContent>
               </Card>
             )

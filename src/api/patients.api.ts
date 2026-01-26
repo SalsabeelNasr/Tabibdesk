@@ -45,6 +45,10 @@ export interface CreatePatientPayload {
   source?: string
   sourceOther?: string
   address?: string
+  age?: number
+  height?: number
+  job?: string
+  complaint?: string
 }
 
 export type ActivationReason = "in_progress" | "completed" | "visit_note"
@@ -104,10 +108,14 @@ export async function create(payload: CreatePatientPayload): Promise<Patient> {
     phone: payload.phone,
     email: payload.email || null,
     gender: payload.gender || "",
+    address: payload.address || null,
+    height: payload.height || null,
+    age: payload.age || null,
     date_of_birth: null,
-    age: null,
-    complaint: null,
-    job: null,
+    complaint: payload.complaint || null,
+    job: payload.job || null,
+    source: payload.source || null,
+    source_other: payload.sourceOther || null,
     doctor_id: null,
     status: "inactive",
     first_visit_at: null,
@@ -220,6 +228,34 @@ export async function updateLastActivity(patientId: string): Promise<Patient> {
 
   const index = patientsStore.findIndex((p) => p.id === patientId)
   patientsStore[index] = updated
+
+  return updated
+}
+
+/**
+ * Update patient information
+ */
+export async function update(patientId: string, updates: Partial<Patient>): Promise<Patient> {
+  initializeStore()
+  const patient = patientsStore.find((p) => p.id === patientId)
+  if (!patient) {
+    throw new Error("Patient not found")
+  }
+
+  const updated = {
+    ...patient,
+    ...updates,
+    updated_at: new Date().toISOString(),
+  }
+
+  const index = patientsStore.findIndex((p) => p.id === patientId)
+  patientsStore[index] = updated
+
+  // Also update in mockData if patient exists there
+  const mockIndex = mockData.patients.findIndex((p) => p.id === patientId)
+  if (mockIndex !== -1) {
+    mockData.patients[mockIndex] = updated as any
+  }
 
   return updated
 }

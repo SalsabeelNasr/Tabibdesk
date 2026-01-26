@@ -3,6 +3,8 @@
 import { Input } from "@/components/Input"
 import { Label } from "@/components/Label"
 import { Select } from "@/components/Select"
+import { Textarea } from "@/components/Textarea"
+import { RiFileTextLine } from "@remixicon/react"
 
 export interface PatientFormData {
   first_name: string
@@ -13,6 +15,7 @@ export interface PatientFormData {
   source?: string
   source_other?: string
   address?: string
+  complaint?: string
 }
 
 interface PatientFormFieldsProps {
@@ -178,6 +181,20 @@ export function PatientFormFields({
         {errors.address && (
           <p className="text-sm text-red-600 dark:text-red-400">{errors.address}</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="complaint" className="flex items-center gap-2">
+          <RiFileTextLine className="size-4 text-gray-400" />
+          <span>Complaint (Optional)</span>
+        </Label>
+        <Textarea
+          id="complaint"
+          value={formData.complaint || ""}
+          onChange={(e) => updateField("complaint", e.target.value)}
+          placeholder="Enter complaint"
+          rows={3}
+        />
       </div>
     </div>
   )
