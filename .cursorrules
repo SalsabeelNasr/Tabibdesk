@@ -1,5 +1,69 @@
 # TabibDesk Project Rules
 
+## Deployment & Build Requirements
+
+### Critical Build Rules
+1. **Type Checking Must Be Enabled**
+   - Never disable TypeScript type checking in `next.config.mjs`
+   - Keep `typescript.ignoreBuildErrors: false` at all times
+   - Keep `eslint.ignoreDuringBuilds: false` at all times
+   - If build fails with type errors, FIX the errors - don't disable checking
+
+2. **Remove Dead Code, Don't Ignore Errors**
+   - If components/files reference non-existent types or translation keys, DELETE them
+   - Don't import components that aren't used in the page
+   - Run `npm run typecheck` locally before committing
+   - Build must succeed with full type checking enabled
+
+3. **Dependency Management**
+   - This project uses `npm`, NOT `pnpm` (despite pnpm-lock.yaml existing)
+   - Always use `npm install` to add/update dependencies
+   - If `pnpm-lock.yaml` exists and gets out of sync, either:
+     - Update it with `pnpm install --no-frozen-lockfile` OR
+     - Delete it and use npm exclusively
+   - Netlify CI expects lockfiles to be in sync with package.json
+
+4. **Registry Configuration**
+   - Project `.npmrc` should only contain: `legacy-peer-deps=true`
+   - For public packages like @dnd-kit, ensure they're fetched from public npm registry
+   - If global `.npmrc` has private registry config, override in project `.npmrc`:
+     ```
+     @dnd-kit:registry=https://registry.npmjs.org/
+     ```
+
+### Type Safety Rules
+1. **Null Safety**
+   - Mock data fields like `clinic_id`, `doctor_id` can be `null`
+   - Always handle with `|| ""` fallback when passing to APIs
+   - Example: `appointment.clinic_id || ""`
+
+2. **Type Consistency**
+   - Badge component uses: `error`, `warning`, `success`, `neutral`, `default`
+   - Button component uses: `primary`, `secondary`, `destructive`, `ghost`, `light`, `outline`
+   - Never use `variant="error"` on Button - use `variant="destructive"`
+   - Keep "arrived" status in all Appointment type definitions
+
+3. **Component Props**
+   - All required props must be provided
+   - Check component interfaces before using them
+   - Example: `SidebarUserProfile` requires `mode` prop
+
+### Pre-Deployment Checklist
+Before pushing to production:
+- [ ] Run `npm run build` locally and ensure it succeeds
+- [ ] Run `npm run typecheck` and fix all errors
+- [ ] Check that all imports are actually used
+- [ ] Verify no dead code exists (unused components/functions)
+- [ ] Ensure lockfile matches package.json
+- [ ] Test that landing page works (only active components should exist)
+
+### Netlify Specific
+- Build command: `npm run build`
+- Publish directory: `.next`
+- Node version: 18.x
+- TypeScript checking is ENABLED in build
+- ESLint is ENABLED in build
+
 ## Font Hierarchy
 
 When creating new components, always follow the font hierarchy established in `src/features/patients/PatientsPage.tsx`:
