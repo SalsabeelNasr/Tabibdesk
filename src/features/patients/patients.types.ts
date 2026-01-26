@@ -15,6 +15,8 @@ export interface Patient {
   status: PatientStatus
   first_visit_at: string | null
   last_visit_at: string | null
+  last_activity_at?: string | null
+  is_cold?: boolean
   created_at: string
   updated_at: string
 }

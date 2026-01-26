@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react"
 import { Select } from "@/components/Select"
+import { Button } from "@/components/Button"
+import { RiAddLine } from "@remixicon/react"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { listDoctorsByClinic } from "../availability.api"
 import { DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
@@ -12,6 +14,7 @@ interface AppointmentsHeaderProps {
   clinicId: string
   selectedDoctorId: string
   onDoctorChange: (doctorId: string) => void
+  onAddToWaitlist?: () => void
 }
 
 export function AppointmentsHeader({
@@ -20,6 +23,7 @@ export function AppointmentsHeader({
   clinicId,
   selectedDoctorId,
   onDoctorChange,
+  onAddToWaitlist,
 }: AppointmentsHeaderProps) {
   const { currentUser, allUsers } = useUserClinic()
   const [doctorsAtClinic, setDoctorsAtClinic] = useState<string[]>([])
@@ -81,58 +85,86 @@ export function AppointmentsHeader({
       {/* Tabs Row with Doctor Selector */}
       <div className="border-b border-gray-200 dark:border-gray-800">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-          {/* Tabs */}
-          <nav className="-mb-px flex space-x-4 sm:space-x-8">
-            <button
-              onClick={() => onTabChange("appointments")}
-              className={`border-b-2 px-1 py-3 sm:py-4 text-sm font-medium ${
-                activeTab === "appointments"
-                  ? "border-primary-500 text-primary-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300"
-              }`}
-            >
-              Appointments
-            </button>
-            <button
-              onClick={() => onTabChange("waitlist")}
-              className={`border-b-2 px-1 py-3 sm:py-4 text-sm font-medium ${
-                activeTab === "waitlist"
-                  ? "border-primary-500 text-primary-600"
-                  : "border-transparent text-gray-500 hover:border-gray-300"
-              }`}
-            >
-              Waitlist
-            </button>
-          </nav>
+          {/* Tabs and Add Button (mobile: inline, desktop: tabs only) */}
+          <div className="flex items-center gap-2 sm:gap-0">
+            <nav className="-mb-px flex space-x-4 sm:space-x-8">
+              <button
+                onClick={() => onTabChange("appointments")}
+                className={`border-b-2 px-1 py-3 sm:py-4 text-sm font-medium ${
+                  activeTab === "appointments"
+                    ? "border-primary-500 text-primary-600"
+                    : "border-transparent text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                Appointments
+              </button>
+              <button
+                onClick={() => onTabChange("waitlist")}
+                className={`border-b-2 px-1 py-3 sm:py-4 text-sm font-medium ${
+                  activeTab === "waitlist"
+                    ? "border-primary-500 text-primary-600"
+                    : "border-transparent text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                Waitlist
+              </button>
+            </nav>
+            
+            {/* Add Button on mobile: next to tabs */}
+            {activeTab === "waitlist" && onAddToWaitlist && (
+              <Button 
+                onClick={onAddToWaitlist} 
+                variant="primary"
+                className="sm:hidden flex-shrink-0 ml-auto"
+              >
+                <span>+</span>
+              </Button>
+            )}
+          </div>
           
-          {/* Doctor Selector (on same row as tabs on desktop, below on mobile) */}
-          {showDoctorSelector && (
-            <div className="flex items-center gap-2 pb-3 sm:pb-0 my-2 sm:my-0">
-              <label htmlFor="doctor-select" className="shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Doctor:
-              </label>
-              {loadingDoctors ? (
-                <span className="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
-              ) : availableDoctors.length > 0 ? (
-                <Select
-                  id="doctor-select"
-                  value={selectedDoctorId || availableDoctors[0]?.id || DEMO_DOCTOR_ID}
-                  onChange={(e) => onDoctorChange(e.target.value)}
-                  className="w-full sm:min-w-[200px]"
-                >
-                  {availableDoctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.full_name} {doctor.specialization ? `- ${doctor.specialization}` : ""}
-                    </option>
-                  ))}
-                </Select>
-              ) : (
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  No doctors available
-                </span>
-              )}
-            </div>
-          )}
+          {/* Right side: Add to Waitlist button (desktop) and Doctor Selector */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pb-3 sm:pb-0">
+            {/* Add Button on desktop: before doctor selector */}
+            {activeTab === "waitlist" && onAddToWaitlist && (
+              <Button 
+                onClick={onAddToWaitlist} 
+                variant="primary"
+                className="hidden sm:flex flex-shrink-0"
+              >
+                <RiAddLine className="mr-2 size-4" />
+                <span>Add to Waitlist</span>
+              </Button>
+            )}
+            
+            {/* Doctor Selector */}
+            {showDoctorSelector && (
+              <div className="flex items-center gap-2 my-2 sm:my-0">
+                <label htmlFor="doctor-select" className="shrink-0 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Doctor:
+                </label>
+                {loadingDoctors ? (
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
+                ) : availableDoctors.length > 0 ? (
+                  <Select
+                    id="doctor-select"
+                    value={selectedDoctorId || availableDoctors[0]?.id || DEMO_DOCTOR_ID}
+                    onChange={(e) => onDoctorChange(e.target.value)}
+                    className="w-full sm:min-w-[200px]"
+                  >
+                    {availableDoctors.map((doctor) => (
+                      <option key={doctor.id} value={doctor.id}>
+                        {doctor.full_name} {doctor.specialization ? `- ${doctor.specialization}` : ""}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    No doctors available
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

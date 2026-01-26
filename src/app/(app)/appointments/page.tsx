@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { AppointmentsHeader } from "@/features/appointments/components/AppointmentsHeader"
 import { DailyScheduleView, type DailyScheduleViewRef } from "@/features/appointments/components/DailyScheduleView"
 import { WaitlistTab } from "@/features/appointments/components/WaitlistTab"
 import { BookAppointmentDrawer } from "@/features/appointments/components/BookAppointmentDrawer"
+import { AddToWaitlistDrawer } from "@/features/appointments/waitlist/AddToWaitlistDrawer"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useDemo } from "@/contexts/demo-context"
 import { DEMO_CLINIC_ID, DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
@@ -35,6 +37,7 @@ export default function AppointmentsPage() {
   const [rescheduleSlot, setRescheduleSlot] = useState<Slot | null>(null)
   const [rescheduleAppointmentId, setRescheduleAppointmentId] = useState<string | null>(null)
   const [waitlistEntryToBook, setWaitlistEntryToBook] = useState<WaitlistEntry | null>(null)
+  const [showAddToWaitlistDrawer, setShowAddToWaitlistDrawer] = useState(false)
   
   // Use selected doctor ID, or fallback to current user if they're a doctor
   const effectiveDoctorId = selectedDoctorId || (currentUser.role === "doctor" ? currentUser.id : DEMO_DOCTOR_ID)
@@ -100,13 +103,15 @@ export default function AppointmentsPage() {
   }, [clinicId, currentUser])
   
   return (
-    <div className="space-y-6">
+    <div className="page-content">
+      <PageHeader title="Appointments" />
       <AppointmentsHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}
         clinicId={clinicId}
         selectedDoctorId={effectiveDoctorId}
         onDoctorChange={setSelectedDoctorId}
+        onAddToWaitlist={() => setShowAddToWaitlistDrawer(true)}
       />
       
       {activeTab === "appointments" ? (
@@ -156,6 +161,15 @@ export default function AppointmentsPage() {
         waitlistEntry={waitlistEntryToBook}
         clinicId={rescheduleSlot?.clinicId || clinicId}
         doctorId={rescheduleSlot?.doctorId || effectiveDoctorId}
+      />
+      
+      <AddToWaitlistDrawer
+        open={showAddToWaitlistDrawer}
+        onClose={() => setShowAddToWaitlistDrawer(false)}
+        onComplete={() => {
+          setShowAddToWaitlistDrawer(false)
+          // The waitlist will refetch automatically via the useWaitlist hook
+        }}
       />
     </div>
   )

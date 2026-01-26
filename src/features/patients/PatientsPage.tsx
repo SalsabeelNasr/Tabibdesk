@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/Button"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { useDebounce } from "@/lib/useDebounce"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -86,7 +87,8 @@ export function PatientsPage() {
   const filteredCount = searchQuery ? patients.length : total
 
   return (
-    <div className="space-y-6">
+    <div className="page-content">
+      <PageHeader title="Patients" />
       <PatientsHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}

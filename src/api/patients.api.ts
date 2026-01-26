@@ -6,6 +6,9 @@
 import { mockData } from "@/data/mock/mock-data"
 import type { Patient, PatientStatus } from "@/features/patients/patients.types"
 import { applyPatientActivation } from "@/features/patients/patientLifecycle"
+import { getFollowUpRules } from "@/api/settings.api"
+import { listTasks } from "@/features/tasks/tasks.api"
+import { listAppointments } from "@/features/appointments/appointments.api"
 
 // In-memory store for created/updated patients (demo mode only)
 let patientsStore: Patient[] = []
@@ -175,4 +178,124 @@ export async function activate(patientId: string, _reason: ActivationReason): Pr
 export async function getById(patientId: string): Promise<Patient | null> {
   initializeStore()
   return patientsStore.find((p) => p.id === patientId) || null
+}
+
+/**
+ * Mark patient as Cold (after max follow-up attempts)
+ */
+export async function markPatientCold(patientId: string): Promise<Patient> {
+  initializeStore()
+  const patient = patientsStore.find((p) => p.id === patientId)
+  if (!patient) {
+    throw new Error("Patient not found")
+  }
+
+  const updated = {
+    ...patient,
+    is_cold: true,
+    updated_at: new Date().toISOString(),
+  }
+
+  const index = patientsStore.findIndex((p) => p.id === patientId)
+  patientsStore[index] = updated
+
+  return updated
+}
+
+/**
+ * Update patient's last activity timestamp
+ */
+export async function updateLastActivity(patientId: string): Promise<Patient> {
+  initializeStore()
+  const patient = patientsStore.find((p) => p.id === patientId)
+  if (!patient) {
+    throw new Error("Patient not found")
+  }
+
+  const updated = {
+    ...patient,
+    last_activity_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
+  const index = patientsStore.findIndex((p) => p.id === patientId)
+  patientsStore[index] = updated
+
+  return updated
+}
+
+/**
+ * Check if patient is inactive based on follow-up rules
+ * Patient is inactive if:
+ * - last_activity_at older than inactivityDaysThreshold
+ * - AND no upcoming appointments
+ * - AND no open tasks
+ */
+export async function isPatientInactive(
+  patientId: string,
+  clinicId: string
+): Promise<boolean> {
+  initializeStore()
+  const patient = patientsStore.find((p) => p.id === patientId)
+  if (!patient) {
+    return false
+  }
+
+  // Get follow-up rules for inactivity threshold
+  const rules = await getFollowUpRules(clinicId)
+  const thresholdDays = rules.inactivityDaysThreshold
+
+  // Check last_activity_at
+  const lastActivity = patient.last_activity_at || patient.last_visit_at || patient.created_at
+  const daysSinceActivity = Math.floor(
+    (Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24)
+  )
+
+  if (daysSinceActivity < thresholdDays) {
+    return false // Recently active
+  }
+
+  // Check for upcoming appointments
+  try {
+    const now = new Date()
+    const appointments = await listAppointments({
+      clinicId,
+      page: 1,
+      pageSize: 100,
+      query: "",
+      status: "all",
+      timeFilter: "upcoming",
+    })
+
+    const hasUpcomingAppointment = appointments.appointments.some(
+      (apt) => apt.patient_id === patientId && new Date(apt.scheduled_at) > now
+    )
+
+    if (hasUpcomingAppointment) {
+      return false // Has upcoming appointment
+    }
+  } catch (error) {
+    console.warn("Failed to check appointments for inactivity:", error)
+  }
+
+  // Check for open tasks
+  try {
+    const tasks = await listTasks({
+      clinicId,
+      page: 1,
+      pageSize: 100,
+      status: "pending",
+    })
+
+    const hasOpenTask = tasks.tasks.some((task) => task.patientId === patientId)
+
+    if (hasOpenTask) {
+      return false // Has open task
+    }
+  } catch (error) {
+    console.warn("Failed to check tasks for inactivity:", error)
+  }
+
+  // All conditions met - patient is inactive
+  return true
 }

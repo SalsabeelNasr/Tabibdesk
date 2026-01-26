@@ -10,6 +10,8 @@ import { isAppointmentArchived } from "@/features/archive/archive.rules"
 import { logActivity } from "@/api/activity.api"
 import { removeByPatientId as removeWaitlistByPatientId } from "./waitlist/waitingList.api"
 import { createInvoiceForArrivedAppointment, getInvoiceByAppointmentId } from "@/api/invoices.api"
+import { getFollowUpRules } from "@/api/settings.api"
+import { createFollowUpTask, hasOpenFollowUpTask } from "@/features/tasks/tasks.api"
 import type { AppointmentStatus } from "@/features/patients/patientLifecycle"
 import type { ListAppointmentsParams, ListAppointmentsResponse, AppointmentListItem } from "./appointments.types"
 import type { Appointment as AppointmentType, WaitlistEntry, Slot } from "./types"
@@ -209,6 +211,46 @@ export async function updateStatus(appointmentId: string, status: AppointmentSta
       // Log error but don't block status update
       // Pricing might not be set, which is handled gracefully
       console.warn("Failed to create invoice for arrived appointment:", error)
+    }
+  }
+
+  // Create follow-up task when appointment is cancelled or no-show
+  if (status === "cancelled" || status === "no_show") {
+    try {
+      const rules = await getFollowUpRules(appointment.clinic_id)
+      const shouldCreateTask =
+        (status === "cancelled" && rules.followUpOnCancelled) ||
+        (status === "no_show" && rules.followUpOnNoShow)
+
+      if (shouldCreateTask) {
+        // Check if an open follow-up task already exists
+        const hasExisting = await hasOpenFollowUpTask(
+          appointment.clinic_id,
+          appointmentId,
+          status === "cancelled" ? "cancelled" : "no_show"
+        )
+
+        if (!hasExisting) {
+          // Calculate due date based on delay hours
+          const delayHours =
+            status === "cancelled" ? rules.cancelFollowUpDelayHours : rules.noShowFollowUpDelayHours
+          const dueDate = new Date()
+          dueDate.setHours(dueDate.getHours() + delayHours)
+
+          // Create follow-up task
+          await createFollowUpTask({
+            clinicId: appointment.clinic_id,
+            patientId: appointment.patient_id,
+            appointmentId,
+            kind: status === "cancelled" ? "cancelled" : "no_show",
+            dueAt: dueDate.toISOString(),
+            attempt: 1,
+          })
+        }
+      }
+    } catch (error) {
+      // Log error but don't block status update
+      console.warn("Failed to create follow-up task:", error)
     }
   }
 

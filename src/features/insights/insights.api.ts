@@ -1,6 +1,7 @@
-import { mockData } from "@/data/mock/mock-data"
+import { mockData, DEMO_CLINIC_ID } from "@/data/mock/mock-data"
 import type { AskInsightParams, InsightResponse } from "./insights.types"
 import { getTimeRangeDates, formatRecordCount } from "./insights.utils"
+import { listPayments } from "@/api/payments.api"
 
 export async function askInsight({ question, clinicId: _clinicId, timeRange }: AskInsightParams): Promise<InsightResponse> {
   const { start, end } = getTimeRangeDates(timeRange)
@@ -10,8 +11,28 @@ export async function askInsight({ question, clinicId: _clinicId, timeRange }: A
   
   const lowerQuestion = question.toLowerCase()
   
+  if (lowerQuestion.includes("slot fill") || lowerQuestion.includes("utilization") || lowerQuestion.includes("fill rate")) {
+    return handleSlotFillRateQuestion(start, end, timeRange)
+  }
+  
   if (lowerQuestion.includes("no-show") || lowerQuestion.includes("no show")) {
     return handleNoShowsQuestion(start, end, timeRange)
+  }
+  
+  if (lowerQuestion.includes("cancellation") || lowerQuestion.includes("cancel") || lowerQuestion.includes("last minute")) {
+    return handleCancellationRateQuestion(start, end, timeRange)
+  }
+  
+  if (lowerQuestion.includes("revenue") || lowerQuestion.includes("money collected") || lowerQuestion.includes("earnings")) {
+    return await handleRevenueQuestion(start, end, timeRange)
+  }
+  
+  if (lowerQuestion.includes("new patient") || lowerQuestion.includes("first-time") || lowerQuestion.includes("first time")) {
+    return handleNewPatientsQuestion(start, end, timeRange)
+  }
+  
+  if (lowerQuestion.includes("return rate") || lowerQuestion.includes("follow-up compliance") || lowerQuestion.includes("returned")) {
+    return handleReturnRateQuestion(start, end, timeRange)
   }
   
   if (lowerQuestion.includes("empty slot") || lowerQuestion.includes("losing money") || lowerQuestion.includes("empty slots")) {
@@ -27,7 +48,7 @@ export async function askInsight({ question, clinicId: _clinicId, timeRange }: A
   }
   
   return {
-    summary: "I can help you analyze appointments, leads, and performance metrics. Try asking about no-shows, empty slots, lead sources, or follow-ups.",
+    summary: "I can help you analyze appointments, leads, and performance metrics. Try asking about slot fill rate, no-shows, cancellations, revenue, new patients, return rate, empty slots, lead sources, or follow-ups.",
     metrics: [],
     actions: [],
     basedOn: formatRecordCount(0),
@@ -195,5 +216,338 @@ function handleFollowUpQuestion(_start: Date, _end: Date, _timeRange: string): I
       },
     ],
     basedOn: formatRecordCount(hotLeads.length + unconfirmedAppointments.length),
+  }
+}
+
+function handleSlotFillRateQuestion(start: Date, end: Date, timeRange: string): InsightResponse {
+  const appointmentsInRange = mockData.appointments.filter(
+    (apt) => new Date(apt.scheduled_at) >= start && new Date(apt.scheduled_at) <= end
+  )
+  
+  // Calculate available slots (assume 8 slots per day)
+  const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const availableSlots = daysDiff * 8
+  
+  const bookedSlots = appointmentsInRange.filter((apt) =>
+    ["scheduled", "confirmed", "completed", "cancelled", "no_show"].includes(apt.status)
+  ).length
+  
+  const slotFillRate = availableSlots > 0 ? ((bookedSlots / availableSlots) * 100).toFixed(1) : "0"
+  
+  const previousStart = new Date(start)
+  previousStart.setDate(previousStart.getDate() - (timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 1))
+  const previousEnd = new Date(start)
+  
+  const previousAppointments = mockData.appointments.filter(
+    (apt) => new Date(apt.scheduled_at) >= previousStart && new Date(apt.scheduled_at) < previousEnd
+  )
+  const previousBookedSlots = previousAppointments.filter((apt) =>
+    ["scheduled", "confirmed", "completed", "cancelled", "no_show"].includes(apt.status)
+  ).length
+  const previousSlotFillRate = availableSlots > 0 ? ((previousBookedSlots / availableSlots) * 100).toFixed(1) : "0"
+  
+  const isHigher = parseFloat(slotFillRate) > parseFloat(previousSlotFillRate)
+  
+  return {
+    summary: isHigher
+      ? `Slot fill rate is ${slotFillRate}% this period, up from ${previousSlotFillRate}% last period. Great utilization of your available appointment slots.`
+      : `Slot fill rate is ${slotFillRate}% this period, down from ${previousSlotFillRate}% last period. Consider improving marketing or outreach to fill more slots.`,
+    metrics: [
+      { label: "Booked slots", value: bookedSlots },
+      { label: "Available slots", value: availableSlots },
+      { label: "Fill rate", value: `${slotFillRate}%` },
+    ],
+    actions: [
+      {
+        label: "View appointments",
+        route: `/app/appointments?range=${timeRange}`,
+        type: "primary",
+      },
+    ],
+    basedOn: formatRecordCount(bookedSlots),
+  }
+}
+
+function handleCancellationRateQuestion(start: Date, end: Date, timeRange: string): InsightResponse {
+  const appointmentsInRange = mockData.appointments.filter(
+    (apt) => new Date(apt.scheduled_at) >= start && new Date(apt.scheduled_at) <= end
+  )
+  
+  const bookedAppointments = appointmentsInRange.filter((apt) =>
+    ["scheduled", "confirmed", "completed", "cancelled", "no_show"].includes(apt.status)
+  )
+  
+  const lastMinuteCancellations = appointmentsInRange.filter((apt) => {
+    if (apt.status !== "cancelled") return false
+    const scheduledDate = new Date(apt.scheduled_at)
+    const cancelledDate = new Date(apt.created_at)
+    const hoursDiff = (scheduledDate.getTime() - cancelledDate.getTime()) / (1000 * 60 * 60)
+    return hoursDiff <= 24 && hoursDiff >= 0
+  })
+  
+  const cancellationRate = bookedAppointments.length > 0
+    ? ((lastMinuteCancellations.length / bookedAppointments.length) * 100).toFixed(1)
+    : "0"
+  
+  const previousStart = new Date(start)
+  previousStart.setDate(previousStart.getDate() - (timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 1))
+  const previousEnd = new Date(start)
+  
+  const previousAppointments = mockData.appointments.filter(
+    (apt) => new Date(apt.scheduled_at) >= previousStart && new Date(apt.scheduled_at) < previousEnd
+  )
+  const previousBookedAppointments = previousAppointments.filter((apt) =>
+    ["scheduled", "confirmed", "completed", "cancelled", "no_show"].includes(apt.status)
+  )
+  const previousLastMinuteCancellations = previousAppointments.filter((apt) => {
+    if (apt.status !== "cancelled") return false
+    const scheduledDate = new Date(apt.scheduled_at)
+    const cancelledDate = new Date(apt.created_at)
+    const hoursDiff = (scheduledDate.getTime() - cancelledDate.getTime()) / (1000 * 60 * 60)
+    return hoursDiff <= 24 && hoursDiff >= 0
+  })
+  const previousCancellationRate = previousBookedAppointments.length > 0
+    ? ((previousLastMinuteCancellations.length / previousBookedAppointments.length) * 100).toFixed(1)
+    : "0"
+  
+  const isHigher = parseFloat(cancellationRate) > parseFloat(previousCancellationRate)
+  
+  return {
+    summary: isHigher
+      ? `Last-minute cancellation rate is ${cancellationRate}% this period, up from ${previousCancellationRate}% last period. Consider implementing a cancellation policy or reminder system to reduce last-minute cancellations.`
+      : `Last-minute cancellation rate is ${cancellationRate}% this period, down from ${previousCancellationRate}% last period. Your scheduling stability is improving.`,
+    metrics: [
+      { label: "Last-minute cancellations", value: lastMinuteCancellations.length },
+      { label: "Total booked", value: bookedAppointments.length },
+      { label: "Cancellation rate", value: `${cancellationRate}%` },
+    ],
+    actions: [
+      {
+        label: "View cancellations",
+        route: `/app/appointments?status=cancelled&range=${timeRange}`,
+        type: "primary",
+      },
+    ],
+    basedOn: formatRecordCount(bookedAppointments.length),
+  }
+}
+
+async function handleRevenueQuestion(start: Date, end: Date, timeRange: string): Promise<InsightResponse> {
+  try {
+    const paymentsResponse = await listPayments({
+      clinicId: DEMO_CLINIC_ID,
+      from: start.toISOString(),
+      to: end.toISOString(),
+      pageSize: 1000,
+    })
+    
+    const revenue = paymentsResponse.payments.reduce((sum, p) => sum + p.amount, 0)
+    
+    const previousStart = new Date(start)
+    previousStart.setDate(previousStart.getDate() - (timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 1))
+    const previousEnd = new Date(start)
+    
+    const previousPaymentsResponse = await listPayments({
+      clinicId: DEMO_CLINIC_ID,
+      from: previousStart.toISOString(),
+      to: previousEnd.toISOString(),
+      pageSize: 1000,
+    })
+    
+    const previousRevenue = previousPaymentsResponse.payments.reduce((sum, p) => sum + p.amount, 0)
+    
+    const revenueChange = previousRevenue > 0 ? (((revenue - previousRevenue) / previousRevenue) * 100).toFixed(1) : "0"
+    const isHigher = revenue > previousRevenue
+    
+    return {
+      summary: isHigher
+        ? `Revenue collected is ${revenue.toLocaleString()} EGP this period, up ${revenueChange}% from ${previousRevenue.toLocaleString()} EGP last period. Strong financial performance.`
+        : `Revenue collected is ${revenue.toLocaleString()} EGP this period, down ${revenueChange}% from ${previousRevenue.toLocaleString()} EGP last period. Review appointment completion rates and payment collection.`,
+      metrics: [
+        { label: "Revenue collected", value: `${revenue.toLocaleString()} EGP` },
+        { label: "Total payments", value: paymentsResponse.payments.length },
+        { label: "Change", value: `${isHigher ? "+" : ""}${revenueChange}%` },
+      ],
+      actions: [
+        {
+          label: "View payments",
+          route: `/app/accounting/payments?range=${timeRange}`,
+          type: "primary",
+        },
+      ],
+      basedOn: formatRecordCount(paymentsResponse.payments.length),
+    }
+  } catch (error) {
+    return {
+      summary: "Unable to fetch revenue data at this time. Please try again later.",
+      metrics: [],
+      actions: [],
+      basedOn: formatRecordCount(0),
+    }
+  }
+}
+
+function handleNewPatientsQuestion(start: Date, end: Date, timeRange: string): InsightResponse {
+  const newPatients = mockData.patients.filter((patient) => {
+    if (!patient.first_visit_at) return false
+    const firstVisitDate = new Date(patient.first_visit_at)
+    return firstVisitDate >= start && firstVisitDate <= end
+  })
+  
+  // Group by source from leads
+  const patientSources: Record<string, number> = {}
+  newPatients.forEach((patient) => {
+    const lead = mockData.leads.find((l) => l.patient_id === patient.id)
+    const source = lead?.source || "Unknown"
+    patientSources[source] = (patientSources[source] || 0) + 1
+  })
+  
+  const topSource = Object.entries(patientSources).sort((a, b) => b[1] - a[1])[0]
+  
+  const previousStart = new Date(start)
+  previousStart.setDate(previousStart.getDate() - (timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 1))
+  const previousEnd = new Date(start)
+  
+  const previousNewPatients = mockData.patients.filter((patient) => {
+    if (!patient.first_visit_at) return false
+    const firstVisitDate = new Date(patient.first_visit_at)
+    return firstVisitDate >= previousStart && firstVisitDate < previousEnd
+  })
+  
+  const isHigher = newPatients.length > previousNewPatients.length
+  
+  return {
+    summary: `You have ${newPatients.length} new patients this period${previousNewPatients.length > 0 ? `, ${isHigher ? "up" : "down"} from ${previousNewPatients.length} last period` : ""}. ${topSource ? `Most came from ${topSource[0]} (${topSource[1]} patients).` : ""} Focus on retaining these new patients for long-term value.`,
+    metrics: [
+      { label: "New patients", value: newPatients.length },
+      { label: "Top source", value: topSource ? topSource[0] : "N/A" },
+      { label: "From top source", value: topSource ? topSource[1] : 0 },
+    ],
+    actions: [
+      {
+        label: "View new patients",
+        route: `/app/patients?new=true&range=${timeRange}`,
+        type: "primary",
+      },
+    ],
+    basedOn: formatRecordCount(newPatients.length),
+  }
+}
+
+function handleReturnRateQuestion(start: Date, end: Date, timeRange: string): InsightResponse {
+  const patientsWithFollowUp = new Set<string>()
+  const patientsEligibleForFollowUp = new Set<string>()
+  
+  // Get all appointments in the period
+  const allAppointmentsInPeriod = mockData.appointments.filter(
+    (apt) => {
+      const aptDate = new Date(apt.scheduled_at)
+      return aptDate >= start && aptDate <= end
+    }
+  )
+  
+  // Group appointments by patient
+  const patientAppointments = new Map<string, typeof allAppointmentsInPeriod>()
+  allAppointmentsInPeriod.forEach((apt) => {
+    if (!patientAppointments.has(apt.patient_id)) {
+      patientAppointments.set(apt.patient_id, [])
+    }
+    patientAppointments.get(apt.patient_id)!.push(apt)
+  })
+  
+  // Check for follow-ups within 30 days
+  patientAppointments.forEach((appointments, patientId) => {
+    if (appointments.length < 2) return
+    
+    // Sort by date
+    appointments.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+    
+    // Check if patient had a follow-up within 30 days
+    for (let i = 0; i < appointments.length - 1; i++) {
+      const firstApt = appointments[i]
+      const secondApt = appointments[i + 1]
+      
+      // Only count if first appointment was in the current period
+      if (new Date(firstApt.scheduled_at) >= start && new Date(firstApt.scheduled_at) <= end) {
+        patientsEligibleForFollowUp.add(patientId)
+        
+        const daysDiff = (new Date(secondApt.scheduled_at).getTime() - new Date(firstApt.scheduled_at).getTime()) / (1000 * 60 * 60 * 24)
+        if (daysDiff <= 30) {
+          patientsWithFollowUp.add(patientId)
+        }
+      }
+    }
+  })
+  
+  const returnRate = patientsEligibleForFollowUp.size > 0
+    ? ((patientsWithFollowUp.size / patientsEligibleForFollowUp.size) * 100).toFixed(1)
+    : "0"
+  
+  // Calculate previous period return rate
+  const previousStart = new Date(start)
+  previousStart.setDate(previousStart.getDate() - (timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 1))
+  const previousEnd = new Date(start)
+  
+  const previousPatientsWithFollowUp = new Set<string>()
+  const previousPatientsEligibleForFollowUp = new Set<string>()
+  
+  const previousAllAppointments = mockData.appointments.filter(
+    (apt) => {
+      const aptDate = new Date(apt.scheduled_at)
+      return aptDate >= previousStart && aptDate < previousEnd
+    }
+  )
+  
+  const previousPatientAppointments = new Map<string, typeof previousAllAppointments>()
+  previousAllAppointments.forEach((apt) => {
+    if (!previousPatientAppointments.has(apt.patient_id)) {
+      previousPatientAppointments.set(apt.patient_id, [])
+    }
+    previousPatientAppointments.get(apt.patient_id)!.push(apt)
+  })
+  
+  previousPatientAppointments.forEach((appointments, patientId) => {
+    if (appointments.length < 2) return
+    appointments.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+    
+    for (let i = 0; i < appointments.length - 1; i++) {
+      const firstApt = appointments[i]
+      const secondApt = appointments[i + 1]
+      
+      const firstAptDate = new Date(firstApt.scheduled_at)
+      if (firstAptDate >= previousStart && firstAptDate < previousEnd) {
+        previousPatientsEligibleForFollowUp.add(patientId)
+        
+        const daysDiff = (new Date(secondApt.scheduled_at).getTime() - new Date(firstApt.scheduled_at).getTime()) / (1000 * 60 * 60 * 24)
+        if (daysDiff <= 30) {
+          previousPatientsWithFollowUp.add(patientId)
+        }
+      }
+    }
+  })
+  
+  const previousReturnRate = previousPatientsEligibleForFollowUp.size > 0
+    ? ((previousPatientsWithFollowUp.size / previousPatientsEligibleForFollowUp.size) * 100).toFixed(1)
+    : "0"
+  
+  const isHigher = parseFloat(returnRate) > parseFloat(previousReturnRate)
+  
+  return {
+    summary: isHigher
+      ? `Return rate (follow-up compliance) is ${returnRate}% this period, up from ${previousReturnRate}% last period. Patients are returning for follow-ups, indicating strong trust and long-term revenue potential.`
+      : `Return rate (follow-up compliance) is ${returnRate}% this period, down from ${previousReturnRate}% last period. Consider improving follow-up communication and appointment scheduling to increase patient retention.`,
+    metrics: [
+      { label: "Patients returned", value: patientsWithFollowUp.size },
+      { label: "Eligible patients", value: patientsEligibleForFollowUp.size },
+      { label: "Return rate", value: `${returnRate}%` },
+    ],
+    actions: [
+      {
+        label: "View patients",
+        route: `/app/patients?range=${timeRange}`,
+        type: "primary",
+      },
+    ],
+    basedOn: formatRecordCount(patientsEligibleForFollowUp.size),
   }
 }

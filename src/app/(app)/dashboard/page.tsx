@@ -227,18 +227,24 @@ export default function DashboardPage() {
       }
 
       // Update local state
-      setAppointments((prev) =>
-        prev.map((apt) => {
-          if (apt.id === appointmentId) {
-            return {
-              ...apt,
-              queueStatus: newStatus === "scheduled" ? undefined : newStatus,
-              status: newStatus === "scheduled" ? "scheduled" : newStatus === "no_show" ? "no_show" : apt.status,
+      // Remove appointment from list if it's marked as no_show
+      // (completed and cancelled appointments shouldn't appear in today's queue to begin with)
+      if (newStatus === "no_show") {
+        setAppointments((prev) => prev.filter((apt) => apt.id !== appointmentId))
+      } else {
+        setAppointments((prev) =>
+          prev.map((apt) => {
+            if (apt.id === appointmentId) {
+              return {
+                ...apt,
+                queueStatus: newStatus === "scheduled" ? undefined : newStatus,
+                status: newStatus === "scheduled" ? "scheduled" : newStatus === "no_show" ? "no_show" : apt.status,
+              }
             }
-          }
-          return apt
-        })
-      )
+            return apt
+          })
+        )
+      }
     } catch (error) {
       showToast("Failed to update appointment status", "error")
     }
@@ -601,14 +607,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-content">
       <PageHeader title="Dashboard" />
 
       {/* Appointments Section */}
       {role === "doctor" ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Now Queue</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Now Queue</h2>
             <Link href="/appointments">
               <Button variant="ghost" className="text-[11px] font-bold tracking-wider -mr-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50">
                 view all
@@ -717,7 +723,7 @@ export default function DashboardPage() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Today&apos;s Appointments</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Today&apos;s Appointments</h2>
             <Link href="/appointments">
               <Button variant="ghost" className="text-[11px] font-bold tracking-wider -mr-2 text-primary-600 hover:text-primary-700 hover:bg-primary-50">
                 view all

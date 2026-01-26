@@ -1,5 +1,5 @@
 // Mock users and clinics data
-// Users: 2 doctors and 1 assistant with Arabic names
+// Users: 2 doctors and 1 assistant with English names
 // Clinics: 3 clinics with Egyptian locations (clinic name is called by location)
 
 export interface MockUser {
@@ -27,40 +27,40 @@ export const mockUsers: MockUser[] = [
   {
     id: "user-001",
     email: "ahmed.hassan@tabibdesk.com",
-    full_name: "أحمد حسن",
-    first_name: "أحمد",
-    last_name: "حسن",
+    full_name: "Ahmed Hassan",
+    first_name: "Ahmed",
+    last_name: "Hassan",
     role: "doctor",
-    specialization: "العلاج الطبيعي والتغذية",
-    avatar_initials: "أح",
+    specialization: "Physical Therapy & Nutrition",
+    avatar_initials: "AH",
   },
   {
     id: "user-002",
     email: "fatima.ali@tabibdesk.com",
-    full_name: "فاطمة علي",
-    first_name: "فاطمة",
-    last_name: "علي",
+    full_name: "Fatima Ali",
+    first_name: "Fatima",
+    last_name: "Ali",
     role: "doctor",
-    specialization: "الطب الباطني",
-    avatar_initials: "فع",
+    specialization: "Internal Medicine",
+    avatar_initials: "FA",
   },
   {
     id: "user-003",
     email: "mariam.mohamed@tabibdesk.com",
-    full_name: "مريم محمد",
-    first_name: "مريم",
-    last_name: "محمد",
+    full_name: "Mariam Mohamed",
+    first_name: "Mariam",
+    last_name: "Mohamed",
     role: "assistant",
-    avatar_initials: "مم",
+    avatar_initials: "MM",
   },
   {
     id: "user-004",
     email: "sara.ibrahim@tabibdesk.com",
-    full_name: "سارة إبراهيم",
-    first_name: "سارة",
-    last_name: "إبراهيم",
+    full_name: "Sara Ibrahim",
+    first_name: "Sara",
+    last_name: "Ibrahim",
     role: "manager",
-    avatar_initials: "سإ",
+    avatar_initials: "SI",
   },
 ]
 
@@ -68,23 +68,23 @@ export const mockUsers: MockUser[] = [
 export const mockClinics: MockClinic[] = [
   {
     id: "clinic-001",
-    name: "المعادي",
-    location: "المعادي",
-    address: "شارع النيل، المعادي، القاهرة، مصر",
+    name: "Maadi",
+    location: "Maadi",
+    address: "Nile Street, Maadi, Cairo, Egypt",
     phone: "+20 2 2750 1234",
   },
   {
     id: "clinic-002",
-    name: "مدينة نصر",
-    location: "مدينة نصر",
-    address: "شارع عباس العقاد، مدينة نصر، القاهرة، مصر",
+    name: "New Cairo",
+    location: "New Cairo",
+    address: "90th Street, New Cairo, Cairo, Egypt",
     phone: "+20 2 2274 5678",
   },
   {
     id: "clinic-003",
-    name: "الزمالك",
-    location: "الزمالك",
-    address: "شارع 26 يوليو، الزمالك، القاهرة، مصر",
+    name: "Sheikh Zayed",
+    location: "Sheikh Zayed",
+    address: "26th of July Corridor, Sheikh Zayed, Giza, Egypt",
     phone: "+20 2 2735 9012",
   },
 ]
@@ -106,4 +106,5 @@ export function getMockUsersByRole(role: "doctor" | "assistant" | "manager"): Mo
 
 // Default current user (can be changed via Switch User)
 export const DEFAULT_CURRENT_USER_ID = "user-001"
+// Default clinic: Maadi (clinic-001)
 export const DEFAULT_CURRENT_CLINIC_ID = "clinic-001"

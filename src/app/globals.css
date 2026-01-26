@@ -96,4 +96,22 @@
   .widget-status-accent {
     @apply absolute left-0 top-0 bottom-0 w-1;
   }
+
+  /* Page Content Container - Unified spacing on mobile */
+  .page-content {
+    @apply space-y-6;
+  }
+
+  /* Nested Dropdowns - Mobile fixes */
+  @media (max-width: 1023px) {
+    /* Ensure nested dropdowns don't overflow viewport */
+    [data-radix-popper-content-wrapper] {
+      max-width: calc(100vw - 2rem) !important;
+    }
+    
+    /* Adjust nested dropdown positioning on mobile */
+    [data-radix-dropdown-menu-sub-content] {
+      max-width: calc(100vw - 2rem) !important;
+    }
+  }
 }

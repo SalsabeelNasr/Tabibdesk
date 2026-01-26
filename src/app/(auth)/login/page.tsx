@@ -55,10 +55,6 @@ export default function LoginPage() {
     router.push("/dashboard")
   }
 
-  const handleDemoMode = () => {
-    router.push("/dashboard")
-  }
-
   const handleSocialLogin = (_provider: string) => {
     // Implement social login here
   }
@@ -77,7 +73,7 @@ export default function LoginPage() {
                 TabibDesk
               </span>
             </div>
-            <h2 className="mt-8 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+            <h2 className="mt-8 text-xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
               Welcome back
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -204,16 +200,6 @@ export default function LoginPage() {
                 Sign in
               </Button>
 
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full"
-                onClick={handleDemoLogin}
-              >
-                <RiFlaskLine className="mr-2 size-4" />
-                Try Demo Mode
-              </Button>
-
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300 dark:border-gray-700" />
@@ -229,8 +215,9 @@ export default function LoginPage() {
                 type="button"
                 variant="light"
                 className="w-full"
-                onClick={handleDemoMode}
+                onClick={handleDemoLogin}
               >
+                <RiFlaskLine className="mr-2 size-4" />
                 Try Demo Mode
               </Button>
             </form>

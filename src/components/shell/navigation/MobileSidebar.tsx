@@ -43,9 +43,9 @@ export default function MobileSidebar({ role }: MobileSidebarProps) {
   }, [])
 
   const roleLabel = 
-    currentUser.role === "doctor" ? "طبيب" : 
-    currentUser.role === "manager" ? "مدير" : 
-    "مساعد"
+    currentUser.role === "doctor" ? "Doctor" : 
+    currentUser.role === "manager" ? "Manager" : 
+    "Assistant"
 
   // Filter navigation based on feature flags
   const filteredNavigation = navigation.filter((item) => {

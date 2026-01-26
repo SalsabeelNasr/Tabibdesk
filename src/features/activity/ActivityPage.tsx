@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { FeatureToolbar } from "@/components/shared/FeatureToolbar";
 import { Card, CardContent } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { Skeleton } from "@/components/Skeleton";
-import { RiHistoryLine, RiFilterLine, RiUserLine, RiTimeLine } from "@remixicon/react";
+import { RiHistoryLine, RiTimeLine } from "@remixicon/react";
 import { listActivities } from "@/api/activity.api";
 import { ActivityEvent, ActivityEntityType } from "@/types/activity";
 import { format } from "date-fns";
 import { cx } from "@/lib/utils";
+import { useDebounce } from "@/lib/useDebounce";
 import Link from "next/link";
 
 interface ActivityPageProps {
@@ -22,7 +24,8 @@ export function ActivityPage({ clinicId }: ActivityPageProps) {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [entityTypeFilter, setEntityTypeFilter] = useState<ActivityEntityType | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const pageSize = 20;
 
@@ -31,7 +34,7 @@ export function ActivityPage({ clinicId }: ActivityPageProps) {
     try {
       const response = await listActivities({
         clinicId,
-        entityType: entityTypeFilter === "all" ? undefined : entityTypeFilter,
+        query: debouncedSearch,
         page: currentPage,
         pageSize,
       });
@@ -52,8 +55,9 @@ export function ActivityPage({ clinicId }: ActivityPageProps) {
   };
 
   useEffect(() => {
+    setPage(1);
     fetchActivities(1);
-  }, [clinicId, entityTypeFilter]);
+  }, [clinicId, debouncedSearch]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -62,34 +66,17 @@ export function ActivityPage({ clinicId }: ActivityPageProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="page-content">
       <PageHeader 
         title="Activity Log" 
         description="Audit trail of all actions performed in this clinic"
       />
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-          {(["all", "patient", "appointment", "task", "payment", "waitlist"] as const).map((type) => (
-            <button
-              key={type}
-              onClick={() => {
-                setPage(1);
-                setEntityTypeFilter(type);
-              }}
-              className={cx(
-                "rounded-md px-3 py-1.5 text-xs font-medium transition-all capitalize",
-                entityTypeFilter === type
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-950 dark:text-gray-50"
-                  : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
-              )}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FeatureToolbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by patient, action, or user..."
+      />
 
       {/* Activity List */}
       <div className="space-y-4">

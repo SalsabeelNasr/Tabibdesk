@@ -1,7 +1,8 @@
-import { mockUsers } from "@/data/mock/users-clinics"
+import { mockUsers, getMockUsersByRole } from "@/data/mock/users-clinics"
 import { mockData } from "@/data/mock/mock-data"
 import { isTaskArchived } from "@/features/archive/archive.rules"
 import { logActivity } from "@/api/activity.api"
+import { getFollowUpRules } from "@/api/settings.api"
 import type {
   ListTasksParams,
   ListTasksResponse,
@@ -17,7 +18,17 @@ let tasksStore: Task[] = []
 
 // Initialize with some mock tasks
 function initializeMockTasks() {
-  if (tasksStore.length === 0) {
+  // Migrate any existing tasks with old clinic ID
+  tasksStore.forEach((task) => {
+    if (task.clinicId === "demo-clinic-001") {
+      task.clinicId = "clinic-001"
+    }
+  })
+
+  // Check if we have the default mock tasks - if not, initialize them
+  const hasDefaultTasks = tasksStore.some((task) => task.id === "task-001" || task.id === "alert-task-alert-001")
+  
+  if (!hasDefaultTasks) {
     const now = new Date()
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -242,9 +253,17 @@ function enrichTaskWithNames(task: Task): TaskListItem {
 }
 
 export async function listTasks(params: ListTasksParams): Promise<ListTasksResponse> {
+  // Ensure initialization and migration happen
+  initializeMockTasks()
+  
   const { clinicId, assignedToUserId, createdByUserId, status, type, priority, source, query, page, pageSize } = params
 
+  // Debug logging
+  console.log("listTasks called with:", { clinicId, status, totalTasksInStore: tasksStore.length })
+  console.log("Tasks in store:", tasksStore.map(t => ({ id: t.id, clinicId: t.clinicId, status: t.status })))
+
   let filteredTasks = tasksStore.filter((task) => task.clinicId === clinicId)
+  console.log("After clinic filter:", filteredTasks.length)
 
   // Filter by assigned user
   if (assignedToUserId !== undefined) {
@@ -427,4 +446,157 @@ export async function assignTask(payload: AssignTaskPayload): Promise<TaskListIt
   });
 
   return enrichTaskWithNames(task)
+}
+
+/**
+ * Snooze a task (set snoozed_until and update due date)
+ */
+export async function snoozeTask(
+  taskId: string,
+  snoozedUntil: string
+): Promise<TaskListItem> {
+  const task = tasksStore.find((t) => t.id === taskId)
+  if (!task) {
+    throw new Error("Task not found")
+  }
+
+  task.snoozed_until = snoozedUntil
+  task.dueDate = snoozedUntil
+
+  // Log activity
+  await logActivity({
+    clinicId: task.clinicId,
+    actorUserId: "user-001",
+    actorName: "Dr. Ahmed Hassan",
+    actorRole: "doctor",
+    action: "snooze",
+    entityType: "task",
+    entityId: task.id,
+    entityLabel: task.title,
+    message: `Snoozed task until ${new Date(snoozedUntil).toLocaleString()}`,
+  })
+
+  return enrichTaskWithNames(task)
+}
+
+/**
+ * Update task (for general updates)
+ */
+export async function updateTask(
+  taskId: string,
+  updates: Partial<Task>
+): Promise<TaskListItem> {
+  const task = tasksStore.find((t) => t.id === taskId)
+  if (!task) {
+    throw new Error("Task not found")
+  }
+
+  Object.assign(task, updates)
+
+  return enrichTaskWithNames(task)
+}
+
+/**
+ * Check if an open follow-up task already exists for the given appointment and kind
+ */
+export async function hasOpenFollowUpTask(
+  clinicId: string,
+  appointmentId: string,
+  kind: "cancelled" | "no_show"
+): Promise<boolean> {
+  const openTasks = tasksStore.filter(
+    (task) =>
+      task.clinicId === clinicId &&
+      task.status === "pending" &&
+      task.entity_type === "appointment" &&
+      task.entity_id === appointmentId &&
+      task.follow_up_kind === kind
+  )
+  return openTasks.length > 0
+}
+
+/**
+ * Create a follow-up task for cancelled/no-show appointments
+ */
+export async function createFollowUpTask(params: {
+  clinicId: string
+  patientId: string
+  appointmentId: string
+  kind: "cancelled" | "no_show"
+  dueAt: string
+  attempt?: number
+}): Promise<TaskListItem> {
+  const { clinicId, patientId, appointmentId, kind, dueAt, attempt = 1 } = params
+
+  // Get follow-up rules to determine assignment
+  const rules = await getFollowUpRules(clinicId)
+
+  // Find user with matching role
+  const usersWithRole = getMockUsersByRole(rules.autoAssignRole === "assistant" ? "assistant" : "assistant")
+  const assignedToUserId = usersWithRole[0]?.id || "user-003" // Default to first assistant
+
+  // Get patient name for task title
+  const patient = mockData.patients.find((p) => p.id === patientId)
+  const patientName = patient ? `${patient.first_name} ${patient.last_name}` : "Patient"
+
+  // Generate task title
+  const kindLabel = kind === "cancelled" ? "Cancelled" : "No-show"
+  const title = `Follow up: ${patientName} - ${kindLabel} (Attempt ${attempt})`
+
+  const newTask: Task = {
+    id: `followup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    title,
+    description: `Follow-up task for ${kind} appointment. Attempt ${attempt} of ${rules.maxAttempts}.`,
+    type: "follow_up",
+    status: "pending",
+    priority: "normal",
+    dueDate: dueAt,
+    createdAt: new Date().toISOString(),
+    createdByUserId: "system",
+    assignedToUserId,
+    patientId,
+    clinicId,
+    source: "manual",
+    entity_type: "appointment",
+    entity_id: appointmentId,
+    follow_up_kind: kind,
+    attempt,
+    is_system_generated: true,
+  }
+
+  tasksStore.push(newTask)
+
+  // Log activity
+  await logActivity({
+    clinicId,
+    actorUserId: "system",
+    actorName: "System",
+    actorRole: "assistant",
+    action: "create",
+    entityType: "task",
+    entityId: newTask.id,
+    entityLabel: newTask.title,
+    message: `Created follow-up task: ${newTask.title}`,
+  })
+
+  return enrichTaskWithNames(newTask)
+}
+
+/**
+ * List active tasks (status = "pending")
+ */
+export async function listActiveTasks(params: {
+  clinicId: string
+  query?: string
+  status?: TaskStatus
+  assignedToUserId?: string
+  dueFrom?: string
+  dueTo?: string
+  page: number
+  pageSize: number
+}): Promise<ListTasksResponse> {
+  return listTasks({
+    ...params,
+    status: params.status || "pending",
+  })
 }

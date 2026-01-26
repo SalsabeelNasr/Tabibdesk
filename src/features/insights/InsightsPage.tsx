@@ -68,27 +68,22 @@ export function InsightsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="page-content">
       <PageHeader
         title="Insights"
         actions={
-          <div className="flex items-center gap-2">
-            <label htmlFor="time-range" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-              Time range:
-            </label>
-            <Select
-              id="time-range"
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              disabled={isLoading}
-              className="w-32"
-            >
-              <option value="today">Today</option>
-              <option value="7d">7 days</option>
-              <option value="30d">30 days</option>
-              <option value="custom">Custom</option>
-            </Select>
-          </div>
+          <Select
+            id="time-range"
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+            disabled={isLoading}
+            className="w-32"
+          >
+            <option value="today">Today</option>
+            <option value="7d">7 days</option>
+            <option value="30d">30 days</option>
+            <option value="custom">Custom</option>
+          </Select>
         }
       />
 

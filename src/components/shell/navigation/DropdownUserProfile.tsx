@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import {
   RiComputerLine,
   RiMoonLine,
   RiSunLine,
-  RiFlaskLine,
   RiUserSettingsLine,
   RiLogoutBoxRLine,
   RiArrowDownSLine,
@@ -13,7 +13,6 @@ import {
   RiUser3Line,
 } from "@remixicon/react"
 import { useTheme } from "next-themes"
-import { useDemo } from "@/contexts/demo-context"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { cx, focusRing } from "@/lib/utils"
 import {
@@ -39,13 +38,17 @@ interface SidebarUserProfileProps {
 }
 
 export function SidebarUserProfile({ mode, align = "start", children }: SidebarUserProfileProps) {
+  const router = useRouter()
   const { currentUser, allUsers, setCurrentUser } = useUserClinic()
   const { theme, setTheme } = useTheme()
-  const { isDemoMode, enableDemoMode, disableDemoMode } = useDemo()
   const [isOpen, setIsOpen] = React.useState(false)
   const [isSwitchUserOpen, setIsSwitchUserOpen] = React.useState(false)
   const [isThemeOpen, setIsThemeOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
+
+  const handleSignOut = () => {
+    router.push("/")
+  }
 
   React.useEffect(() => {
     setMounted(true)
@@ -54,9 +57,9 @@ export function SidebarUserProfile({ mode, align = "start", children }: SidebarU
   if (!mounted) return null
 
   const roleLabel =
-    currentUser.role === "doctor" ? "طبيب" :
-    currentUser.role === "manager" ? "مدير" :
-    "مساعد"
+    currentUser.role === "doctor" ? "Doctor" :
+    currentUser.role === "manager" ? "Manager" :
+    "Assistant"
 
   // Desktop modes (Expanded & Collapsed) use Dropdown
   if (mode === "dropdown" || mode === "collapsed") {
@@ -142,7 +145,7 @@ export function SidebarUserProfile({ mode, align = "start", children }: SidebarU
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">{user.full_name}</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {user.role === "doctor" ? "طبيب" : "مساعد"}
+                          {user.role === "doctor" ? "Doctor" : user.role === "manager" ? "Manager" : "Assistant"}
                         </span>
                       </div>
                     </div>
@@ -174,17 +177,10 @@ export function SidebarUserProfile({ mode, align = "start", children }: SidebarU
             </DropdownMenuSubMenu>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => {
-              if (isDemoMode) disableDemoMode(); else enableDemoMode();
-              window.location.reload();
-            }}>
-              <RiFlaskLine className="size-4 shrink-0 me-2" aria-hidden="true" />
-              {isDemoMode ? "Disable Demo Mode" : "Enable Demo Mode"}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600 dark:text-red-400 focus:bg-red-50 focus:dark:bg-red-900/10">
+          <DropdownMenuItem 
+            onClick={handleSignOut}
+            className="text-red-600 dark:text-red-400 focus:bg-red-50 focus:dark:bg-red-900/10"
+          >
             <RiLogoutBoxRLine className="size-4 shrink-0 me-2" />
             Sign out
           </DropdownMenuItem>
@@ -296,21 +292,11 @@ export function SidebarUserProfile({ mode, align = "start", children }: SidebarU
           )}
 
           <button
-            onClick={() => {
-              if (isDemoMode) disableDemoMode(); else enableDemoMode();
-              window.location.reload();
-            }}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            <RiFlaskLine className="size-4" />
-            <span>{isDemoMode ? "Disable Demo Mode" : "Enable Demo Mode"}</span>
-          </button>
-
-          <button
+            onClick={handleSignOut}
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10"
           >
             <RiLogoutBoxRLine className="size-4" />
-            <span>تسجيل الخروج</span>
+            <span>Sign out</span>
           </button>
         </div>
       )}

@@ -82,6 +82,8 @@ const DropdownMenuSubMenuContent = React.forwardRef<
         "border-gray-200 dark:border-gray-800",
         // transition
         "will-change-[transform,opacity]",
+        // mobile: ensure dropdowns stay within viewport
+        "max-w-[calc(100vw-2rem)] lg:max-w-none",
         // "data-[state=open]:animate-slideDownAndFade",
         "data-[state=closed]:animate-hide",
         "data-[side=bottom]:animate-slideDownAndFade data-[side=left]:animate-slideLeftAndFade data-[side=right]:animate-slideRightAndFade data-[side=top]:animate-slideUpAndFade",
@@ -126,6 +128,8 @@ const DropdownMenuContent = React.forwardRef<
           "border-gray-200 dark:border-gray-800",
           // transition
           "will-change-[transform,opacity]",
+          // mobile: ensure dropdowns stay within viewport
+          "max-w-[calc(100vw-2rem)] lg:max-w-none",
           "data-[state=closed]:animate-hide",
           "data-[side=bottom]:animate-slideDownAndFade data-[side=left]:animate-slideLeftAndFade data-[side=right]:animate-slideRightAndFade data-[side=top]:animate-slideUpAndFade",
           className,

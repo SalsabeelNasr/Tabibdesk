@@ -83,11 +83,22 @@ export async function listActivities(params: ListActivityParams): Promise<ListAc
     action, 
     from, 
     to, 
+    query,
     page = 1, 
     pageSize = 20 
   } = params;
 
   let filtered = activitiesStore.filter(a => a.clinicId === clinicId);
+
+  if (query && query.trim()) {
+    const lowerQuery = query.toLowerCase().trim();
+    filtered = filtered.filter(a => 
+      a.message.toLowerCase().includes(lowerQuery) || 
+      a.entityLabel?.toLowerCase().includes(lowerQuery) ||
+      a.actorName.toLowerCase().includes(lowerQuery) ||
+      a.entityType.toLowerCase().includes(lowerQuery)
+    );
+  }
 
   if (entityId) {
     filtered = filtered.filter(a => a.entityId === entityId);

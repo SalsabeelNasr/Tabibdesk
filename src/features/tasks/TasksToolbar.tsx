@@ -33,9 +33,10 @@ export function TasksToolbar({
         </div>
 
         {/* New Task Button */}
-        <Button onClick={onNewTask} className="flex-shrink-0">
-          <RiAddLine className="mr-2 size-4" />
-          New Task
+        <Button onClick={onNewTask} className="flex-shrink-0 md:h-9 md:py-1.5 md:text-sm">
+          <RiAddLine className="hidden sm:block sm:mr-2 size-4" />
+          <span className="hidden sm:inline">New Task</span>
+          <span className="sm:hidden">+</span>
         </Button>
       </div>
     </div>

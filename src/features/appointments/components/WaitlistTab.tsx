@@ -6,10 +6,9 @@ import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { Badge } from "@/components/Badge"
 import { useWaitlist } from "../hooks/useWaitlist"
-import { AddToWaitlistDrawer } from "../waitlist/AddToWaitlistDrawer"
 import { createAppointmentFromWaitlist } from "../appointments.api"
 import { remove as removeWaitlistEntry } from "../waitlist/waitingList.api"
-import { RiAddLine, RiUserLine, RiPhoneLine, RiCalendarLine } from "@remixicon/react"
+import { RiUserLine, RiPhoneLine, RiCalendarLine } from "@remixicon/react"
 import { cx } from "@/lib/utils"
 import type { WaitlistEntry } from "../types"
 import type { Slot } from "../types"
@@ -115,9 +114,8 @@ function WaitlistTable({
 
 export function WaitlistTab({ clinicId, doctorId, onBook }: WaitlistTabProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [showAddModal, setShowAddModal] = useState(false)
   
-  const { entries, loading, refetch } = useWaitlist({
+  const { entries, loading } = useWaitlist({
     clinicId,
     status: "active", // Always show only active entries
     query: searchQuery,
@@ -131,34 +129,19 @@ export function WaitlistTab({ clinicId, doctorId, onBook }: WaitlistTabProps) {
   
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex-1 w-full">
-          <Input
-            placeholder="Search by name or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
-        <Button 
-          onClick={() => setShowAddModal(true)} 
-          className="w-full sm:w-auto bg-primary-600 shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
-        >
-          <RiAddLine className="mr-2 size-4" />
-          Add to Waitlist
-        </Button>
+      <div className="flex-1 w-full">
+        <Input
+          placeholder="Search by name or phone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full"
+        />
       </div>
       
       <WaitlistTable 
         entries={entries} 
         loading={loading} 
         onBook={handleBook} 
-      />
-      
-      <AddToWaitlistDrawer
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onComplete={() => refetch?.()}
       />
     </div>
   )

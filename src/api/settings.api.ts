@@ -11,6 +11,7 @@ import type {
   ClinicSettings,
   FeatureKey,
   AppointmentSettings,
+  ClinicFollowUpRules,
 } from "@/features/settings/settings.types"
 import { mockClinics } from "@/data/mock/users-clinics"
 
@@ -271,6 +272,65 @@ export async function getAppointmentSettings(clinicId: string): Promise<Appointm
     slotDurationMinutes: 30,
     bookingRangeDays: 14,
   }
+}
+
+/**
+ * Get default follow-up rules
+ */
+function getDefaultFollowUpRules(): ClinicFollowUpRules {
+  return {
+    followUpOnCancelled: true,
+    followUpOnNoShow: true,
+    cancelFollowUpDelayHours: 24,
+    noShowFollowUpDelayHours: 2,
+    maxAttempts: 3,
+    daysBetweenAttempts: 2,
+    markColdAfterMaxAttempts: true,
+    inactivityDaysThreshold: 14,
+    quietHours: { start: "22:00", end: "10:00" },
+    autoAssignRole: "assistant",
+    snoozePresetsDays: [0, 1, 3],
+  }
+}
+
+/**
+ * Get follow-up rules for a clinic
+ * Returns defaults if not set
+ */
+export async function getFollowUpRules(clinicId: string): Promise<ClinicFollowUpRules> {
+  await new Promise((resolve) => setTimeout(resolve, 100))
+
+  const clinicSettings = await getClinicSettings(clinicId)
+  
+  if (clinicSettings.followUpRules) {
+    return clinicSettings.followUpRules
+  }
+
+  // Return defaults
+  return getDefaultFollowUpRules()
+}
+
+/**
+ * Update follow-up rules for a clinic
+ */
+export async function updateFollowUpRules(
+  clinicId: string,
+  patch: Partial<ClinicFollowUpRules>
+): Promise<ClinicFollowUpRules> {
+  await new Promise((resolve) => setTimeout(resolve, 150))
+
+  const currentRules = await getFollowUpRules(clinicId)
+  const updatedRules: ClinicFollowUpRules = {
+    ...currentRules,
+    ...patch,
+  }
+
+  // Update clinic settings with new rules
+  await updateClinicSettings(clinicId, {
+    followUpRules: updatedRules,
+  })
+
+  return updatedRules
 }
 
 /**

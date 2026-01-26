@@ -17,7 +17,11 @@ import {
   createTask,
   updateTaskStatus,
   assignTask,
+  snoozeTask,
+  createFollowUpTask,
 } from "./tasks.api"
+import { updateLastActivity, markPatientCold } from "@/api/patients.api"
+import { getFollowUpRules } from "@/api/settings.api"
 import type {
   TaskListItem,
   TaskSource,
@@ -87,7 +91,67 @@ export function TasksPage({
 
   const handleMarkDone = async (task: TaskListItem) => {
     await updateTaskStatus({ id: task.id, status: "done" })
+    
+    // Update patient last_activity_at if task is linked to a patient
+    if (task.patientId) {
+      try {
+        await updateLastActivity(task.patientId)
+      } catch (error) {
+        console.warn("Failed to update patient last activity:", error)
+      }
+    }
+    
     await fetchTasks()
+  }
+
+  const handleSnooze = async (task: TaskListItem, days: number) => {
+    const snoozeDate = new Date()
+    snoozeDate.setDate(snoozeDate.getDate() + days)
+    await snoozeTask(task.id, snoozeDate.toISOString())
+    await fetchTasks()
+  }
+
+  const handleNextAttempt = async (task: TaskListItem) => {
+    if (!task.follow_up_kind || !task.entity_id || !task.patientId) {
+      return // Not a follow-up task
+    }
+
+    try {
+      const rules = await getFollowUpRules(clinicId)
+      const nextAttempt = (task.attempt || 1) + 1
+
+      // Check if we've reached max attempts
+      if (nextAttempt > rules.maxAttempts) {
+        // Mark patient as Cold if enabled
+        if (rules.markColdAfterMaxAttempts) {
+          await markPatientCold(task.patientId)
+        }
+        // Mark current task as done
+        await updateTaskStatus({ id: task.id, status: "done" })
+        await fetchTasks()
+        return
+      }
+
+      // Calculate due date for next attempt
+      const dueDate = new Date()
+      dueDate.setDate(dueDate.getDate() + rules.daysBetweenAttempts)
+
+      // Create new follow-up task with incremented attempt
+      await createFollowUpTask({
+        clinicId,
+        patientId: task.patientId,
+        appointmentId: task.entity_id,
+        kind: task.follow_up_kind,
+        dueAt: dueDate.toISOString(),
+        attempt: nextAttempt,
+      })
+
+      // Mark current task as done
+      await updateTaskStatus({ id: task.id, status: "done" })
+      await fetchTasks()
+    } catch (error) {
+      console.error("Failed to create next attempt:", error)
+    }
   }
 
   const handleAssign = async (assignedToUserId: string | undefined) => {
@@ -101,7 +165,7 @@ export function TasksPage({
   const filteredCount = searchQuery ? tasks.length : total
 
   return (
-    <div className="space-y-6">
+    <div className="page-content">
       <PageHeader
         title={pageTitle || "Tasks"}
       />
@@ -131,12 +195,6 @@ export function TasksPage({
             <p className="mt-4 text-gray-600 dark:text-gray-400">
               {searchQuery ? "No tasks found matching your filters." : "No tasks yet."}
             </p>
-            {!searchQuery && (
-              <Button className="mt-4" onClick={() => setShowNewTaskModal(true)}>
-                <RiAddLine className="mr-2 size-4" />
-                Create First Task
-              </Button>
-            )}
           </CardContent>
         </Card>
       ) : (
@@ -147,6 +205,8 @@ export function TasksPage({
               tasks={tasks}
               onMarkDone={handleMarkDone}
               onAssign={(task) => setAssignTaskData(task)}
+              onSnooze={handleSnooze}
+              onNextAttempt={handleNextAttempt}
               role={role}
             />
           </div>
@@ -157,6 +217,8 @@ export function TasksPage({
               tasks={tasks}
               onMarkDone={handleMarkDone}
               onAssign={(task) => setAssignTaskData(task)}
+              onSnooze={handleSnooze}
+              onNextAttempt={handleNextAttempt}
               role={role}
             />
           </div>

@@ -46,6 +46,7 @@ export interface ListActivityParams {
   action?: ActivityAction;
   from?: string;
   to?: string;
+  query?: string;
   page?: number;
   pageSize?: number;
 }

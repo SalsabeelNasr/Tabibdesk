@@ -140,7 +140,7 @@ export default function RegisterPage() {
                 TabibDesk
               </span>
             </div>
-            <h2 className="mt-8 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+            <h2 className="mt-8 text-xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
               Create your account
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -397,7 +397,7 @@ export default function RegisterPage() {
 
       {/* Right side - Branding */}
       <div className="relative hidden lg:block lg:w-1/2">
-        <div className="absolute inset-0 bg-gradient-to-br from-secondary-500 to-secondary-700" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 to-primary-900" />
         <div className="absolute right-8 top-8 flex items-center gap-3">
           <div className="flex size-12 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
             <span className="text-xl font-bold text-white">TD</span>

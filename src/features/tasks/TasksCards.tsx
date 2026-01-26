@@ -6,6 +6,8 @@ import {
   RiCheckboxBlankCircleLine,
   RiUserSharedLine,
   RiWhatsappLine,
+  RiTimeLine,
+  RiArrowRightLine,
 } from "@remixicon/react"
 import { Badge } from "@/components/Badge"
 import {
@@ -21,6 +23,8 @@ interface TasksCardsProps {
   tasks: TaskListItem[]
   onMarkDone: (task: TaskListItem) => void
   onAssign: (task: TaskListItem) => void
+  onSnooze?: (task: TaskListItem, days: number) => void
+  onNextAttempt?: (task: TaskListItem) => void
   role: "doctor" | "assistant" | "manager"
 }
 
@@ -28,6 +32,8 @@ export function TasksCards({
   tasks,
   onMarkDone,
   onAssign,
+  onSnooze,
+  onNextAttempt,
   role,
 }: TasksCardsProps) {
   return (
@@ -107,6 +113,16 @@ export function TasksCards({
                     <Badge variant={getStatusBadgeVariant(task.status)} className="text-[10px] px-1.5 py-0">
                       {getStatusLabel(task.status)}
                     </Badge>
+                    {task.follow_up_kind && (
+                      <Badge variant="warning" className="text-[10px] px-1.5 py-0">
+                        Follow-up: {task.follow_up_kind === "cancelled" ? "Cancelled" : task.follow_up_kind === "no_show" ? "No-show" : "Inactive"}
+                      </Badge>
+                    )}
+                    {task.attempt !== undefined && task.follow_up_kind && (
+                      <Badge variant="neutral" className="text-[10px] px-1.5 py-0">
+                        Attempt {task.attempt}
+                      </Badge>
+                    )}
                     {task.dueDate && (
                       <Badge 
                         variant={isDone ? "neutral" : overdue ? "error" : "default"} 
@@ -120,13 +136,37 @@ export function TasksCards({
               </div>
 
               {/* Right Side - Actions Only */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
                 {waHref && (
                   <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0" title="Contact on WhatsApp">
                     <a href={waHref} target="_blank" rel="noreferrer">
                       <RiWhatsappLine className="size-4" />
                       <span className="sr-only">Contact on WhatsApp</span>
                     </a>
+                  </Button>
+                )}
+                {task.follow_up_kind && onSnooze && !isDone && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-xs"
+                    onClick={() => onSnooze(task, 1)}
+                    title="Snooze 1 day"
+                  >
+                    <RiTimeLine className="size-3 mr-1" />
+                    Snooze
+                  </Button>
+                )}
+                {task.follow_up_kind && onNextAttempt && !isDone && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-xs"
+                    onClick={() => onNextAttempt(task)}
+                    title="Next Attempt"
+                  >
+                    <RiArrowRightLine className="size-3 mr-1" />
+                    Next
                   </Button>
                 )}
                 {canAssign && (

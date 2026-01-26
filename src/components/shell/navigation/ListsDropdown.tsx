@@ -57,7 +57,9 @@ export function ListsDropdown({ isOpen, onClose, triggerRef }: ListsDropdownProp
       ref={dropdownRef}
       className={cx(
         "absolute start-full top-0 z-[60] ms-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900",
-        "animate-in fade-in-0 slide-in-from-start-1 duration-150"
+        "animate-in fade-in-0 slide-in-from-start-1 duration-150",
+        // mobile: ensure dropdown stays within viewport
+        "max-w-[calc(100vw-2rem)] lg:max-w-none"
       )}
       role="menu"
       aria-orientation="vertical"

@@ -42,6 +42,21 @@ export interface AppointmentSettings {
   bookingRangeDays: number // default 14
 }
 
+// Follow-up rules for clinic
+export interface ClinicFollowUpRules {
+  followUpOnCancelled: boolean // default true
+  followUpOnNoShow: boolean // default true
+  cancelFollowUpDelayHours: number // default 24
+  noShowFollowUpDelayHours: number // default 2 (same-day follow-up)
+  maxAttempts: number // default 3
+  daysBetweenAttempts: number // default 2
+  markColdAfterMaxAttempts: boolean // default true
+  inactivityDaysThreshold: number // default 14
+  quietHours?: { start: string; end: string } // default { "22:00", "10:00" }
+  autoAssignRole: "assistant" | "staff" // default "assistant"
+  snoozePresetsDays?: number[] // default [0, 1, 3] (today, tomorrow, 3 days)
+}
+
 // Clinic settings
 export interface ClinicSettings {
   clinicId: string
@@ -51,6 +66,7 @@ export interface ClinicSettings {
   defaultAppointmentDuration?: number // in minutes
   bufferMinutes?: number // buffer time between appointments (default 5)
   appointmentSettings?: AppointmentSettings
+  followUpRules?: ClinicFollowUpRules
 }
 
 // Effective features result (what user actually has access to)

@@ -45,18 +45,36 @@ export function Sidebar({ role }: SidebarProps) {
           isCollapsed ? "w-16" : "w-72"
         )}
       >
-        {/* Expand/Collapse Button Section */}
+        {/* Expand/Collapse Button Section with Logo */}
         <div
           className={cx(
             "flex h-16 items-center border-b border-gray-200 dark:border-gray-800",
-            isCollapsed ? "px-2" : "px-4"
+            isCollapsed ? "px-2 justify-center" : "px-4 justify-between gap-3"
           )}
         >
+          {!isCollapsed && (
+            <Link
+              href="/"
+              className={cx(
+                "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors flex-1 min-w-0",
+                pathname === "/"
+                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
+                focusRing
+              )}
+              aria-current={pathname === "/" ? "page" : undefined}
+            >
+              <div className="flex size-6 shrink-0 items-center justify-center rounded bg-primary-600 dark:bg-primary-500" aria-hidden="true">
+                <span className="text-xs font-bold text-white">TD</span>
+              </div>
+              <span className="truncate">TabibDesk</span>
+            </Link>
+          )}
           <button
             onClick={toggleSidebar}
             className={cx(
-              "group flex items-center rounded-lg text-sm font-medium transition-colors",
-              isCollapsed ? "w-full justify-center px-2 py-2.5" : "size-9 justify-center ms-1",
+              "group flex items-center rounded-lg text-sm font-medium transition-colors shrink-0",
+              isCollapsed ? "size-9 justify-center" : "size-9 justify-center",
               "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
               "dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
               focusRing
@@ -80,40 +98,6 @@ export function Sidebar({ role }: SidebarProps) {
           aria-label="Sidebar navigation"
         >
           <ul className="space-y-1">
-            {/* Logo as first navigation item */}
-            <li>
-              {(() => {
-                const logoActive = pathname === "/"
-                const logoContent = (
-                  <Link
-                    href="/"
-                    className={cx(
-                      "group flex items-center rounded-lg text-sm font-medium transition-colors",
-                      isCollapsed ? "w-full justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
-                      logoActive
-                        ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
-                      focusRing
-                    )}
-                    aria-current={logoActive ? "page" : undefined}
-                  >
-                    <div className="flex size-5 shrink-0 items-center justify-center rounded bg-primary-600 dark:bg-primary-500" aria-hidden="true">
-                      <span className="text-xs font-bold text-white">TD</span>
-                    </div>
-                    {!isCollapsed && (
-                      <span className="flex-1">TabibDesk</span>
-                    )}
-                  </Link>
-                )
-                return isCollapsed ? (
-                  <Tooltip content="TabibDesk" side="right">
-                    {logoContent}
-                  </Tooltip>
-                ) : (
-                  logoContent
-                )
-              })()}
-            </li>
             {filteredNavigation.map((item) => {
               const active = isActiveRoute(item.href, pathname)
 

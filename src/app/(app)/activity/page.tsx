@@ -1,10 +1,14 @@
 "use client";
 
-import { ActivityPage } from "@/features/activity/ActivityPage";
-import { useUserClinic } from "@/contexts/user-clinic-context";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ActivityRoute() {
-  const { currentClinic } = useUserClinic();
+  const router = useRouter();
 
-  return <ActivityPage clinicId={currentClinic.id} />;
+  useEffect(() => {
+    router.replace("/archive?tab=activity");
+  }, [router]);
+
+  return null;
 }

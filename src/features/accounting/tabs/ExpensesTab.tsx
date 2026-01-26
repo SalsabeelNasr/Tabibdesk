@@ -167,7 +167,7 @@ export function ExpensesTab({ dateRangePreset }: ExpensesTabProps) {
                 onSearchQueryChange={setSearchQuery}
               />
             </div>
-            <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto shrink-0">
+            <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto shrink-0 md:h-9 md:py-1.5 md:text-sm">
               <RiAddLine className="mr-2 size-4" />
               <span className="hidden sm:inline">Add Expense</span>
               <span className="sm:hidden">Add</span>

@@ -30,6 +30,13 @@ export interface Task {
   source: TaskSource
   sourceId?: string
   sourcePayload?: AlertTaskPayload
+  // Follow-up task fields
+  entity_type?: "patient" | "appointment"
+  entity_id?: string
+  follow_up_kind?: "cancelled" | "no_show" | "inactive"
+  attempt?: number // default 1
+  is_system_generated?: boolean
+  snoozed_until?: string | null
 }
 
 export interface TaskListItem extends Task {
