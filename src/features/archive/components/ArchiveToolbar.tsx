@@ -1,8 +1,7 @@
 "use client"
 
 import { DateRangePicker } from "@/components/DatePicker"
-import { Input } from "@/components/Input"
-import { RiSearchLine } from "@remixicon/react"
+import { SearchInput } from "@/components/SearchInput"
 import type { DateRange } from "react-day-picker"
 import type { DateRangePreset } from "../archive.types"
 
@@ -31,14 +30,11 @@ export function ArchiveToolbar({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
         {/* Search Input */}
-        <div className="relative flex-1 min-w-[200px]">
-          <RiSearchLine className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="search"
+        <div className="flex-1 min-w-[200px]">
+          <SearchInput
             placeholder={searchPlaceholder}
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
+            onSearchChange={onSearchChange}
           />
         </div>
 

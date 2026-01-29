@@ -8,22 +8,20 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { ConfirmationModal } from "@/components/ConfirmationModal"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useDemo } from "@/contexts/demo-context"
-import { mockAppointments } from "@/data/mock/mock-data"
+import { mockAppointments, mockData } from "@/data/mock/mock-data"
 import { updateStatus as updateAppointmentStatus, updateAppointmentTime } from "@/features/appointments/appointments.api"
 import { listPayments } from "@/api/payments.api"
-import { getInvoiceByAppointmentId, createInvoiceForArrivedAppointment, markInvoiceUnpaid } from "@/api/invoices.api"
-import { CapturePaymentDrawer } from "@/features/accounting/components/CapturePaymentDrawer"
+import { getInvoiceByAppointmentId, markInvoiceUnpaid } from "@/api/invoices.api"
+import { InvoiceDrawer } from "@/features/accounting/components/InvoiceDrawer"
 import { useToast } from "@/hooks/useToast"
-import type { Invoice } from "@/types/invoice"
+import type { PatientAppointment } from "@/features/accounting/components/InvoiceDrawer"
 import {
   RiCalendarLine,
   RiArrowRightLine,
-  RiTimeZoneLine,
-  RiRadioButtonLine,
-  RiCheckboxCircleLine,
-  RiWifiLine,
+  RiUserLine,
   RiMenuLine,
   RiCheckLine,
+  RiCheckboxCircleLine,
   RiMoneyDollarCircleLine,
   RiCloseLine,
 } from "@remixicon/react"
@@ -41,6 +39,34 @@ interface DashboardAppointment {
   status: string
   queueStatus?: QueueStatus
   online_call_link?: string
+}
+
+function buildCreateInvoiceAppointments(apt: DashboardAppointment): PatientAppointment[] {
+  const full = mockData.appointments.find((a) => a.id === apt.id)
+  if (!full) {
+    return [
+      {
+        id: apt.id,
+        patient_id: apt.patient_id,
+        scheduled_at: apt.scheduled_at,
+        type: apt.type || "Consultation",
+        status: apt.status,
+        doctor_id: null,
+        clinic_id: null,
+      },
+    ]
+  }
+  return [
+    {
+      id: full.id,
+      patient_id: full.patient_id,
+      scheduled_at: full.scheduled_at,
+      type: full.type,
+      status: full.status,
+      doctor_id: full.doctor_id ?? null,
+      clinic_id: full.clinic_id ?? null,
+    },
+  ]
 }
 
 export default function DashboardPage() {
@@ -63,13 +89,10 @@ export default function DashboardPage() {
 
   // Confirmation Modals State
   const [showArrivedModal, setShowArrivedModal] = useState(false)
-  const [showPaidModal, setShowPaidModal] = useState(false)
+  const [showCreateInvoiceDrawer, setShowCreateInvoiceDrawer] = useState(false)
   const [showUnmarkArrivedModal, setShowUnmarkArrivedModal] = useState(false)
   const [showUnmarkPaidModal, setShowUnmarkPaidModal] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<DashboardAppointment | null>(null)
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
-  const [loadingInvoiceFor, setLoadingInvoiceFor] = useState<string | null>(null)
-  const [invoiceByAppointmentId, setInvoiceByAppointmentId] = useState<Record<string, Invoice>>({})
 
   useEffect(() => {
     fetchDashboardData()
@@ -83,11 +106,6 @@ export default function DashboardPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointments, isDemoMode, currentClinic])
-
-  // Debug: log when appointments change
-  useEffect(() => {
-    console.log("Dashboard appointments updated:", appointments.length)
-  }, [appointments])
 
   const loadPaymentStatus = async () => {
     if (!currentClinic) return
@@ -267,23 +285,6 @@ export default function DashboardPage() {
         return "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
       default:
         return "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
-    }
-  }
-
-  const getQueueStatusIcon = (status?: QueueStatus) => {
-    switch (status) {
-      case "now":
-        return <RiRadioButtonLine className="size-4 animate-pulse" />
-      case "in_progress":
-        return <RiCheckboxCircleLine className="size-4" />
-      case "next":
-        return <RiArrowRightLine className="size-4" />
-      case "waiting":
-        return <RiTimeZoneLine className="size-4" />
-      case "online_now":
-        return <RiWifiLine className="size-4" />
-      default:
-        return null
     }
   }
 
@@ -481,37 +482,11 @@ export default function DashboardPage() {
     try {
       await updateAppointmentStatus(selectedAppointment.id, "arrived")
       showToast("Patient marked as arrived", "success")
-      
-      // Update local state
       setAppointments((prev) =>
-        prev.map((apt) => {
-          if (apt.id === selectedAppointment.id) {
-            return { ...apt, status: "arrived" }
-          }
-          return apt
-        })
+        prev.map((apt) =>
+          apt.id === selectedAppointment.id ? { ...apt, status: "arrived" } : apt
+        )
       )
-
-      // Create Due (invoice) immediately so Paid opens instantly
-      if (currentClinic) {
-        try {
-          const invoice = await createInvoiceForArrivedAppointment({
-            id: selectedAppointment.id,
-            clinic_id: currentClinic.id,
-            doctor_id: currentUser.id,
-            patient_id: selectedAppointment.patient_id,
-            type: selectedAppointment.type || "Consultation",
-          })
-          setInvoiceByAppointmentId((prev) => ({ ...prev, [selectedAppointment.id]: invoice }))
-        } catch (error) {
-          // Pricing missing / invoice creation failed
-          showToast(
-            "Could not create due (invoice). Please set pricing for this appointment type.",
-            "error"
-          )
-        }
-      }
-
       setShowArrivedModal(false)
     } catch (error) {
       showToast("Failed to mark patient as arrived", "error")
@@ -545,32 +520,16 @@ export default function DashboardPage() {
     }
   }
 
-  const handleMarkPaidClick = async (apt: DashboardAppointment) => {
-    // Only allow marking as paid if appointment is arrived (due should already exist)
-    if (apt.status !== "arrived") {
-      showToast("Please mark appointment as 'Arrived' first", "error")
-      return
-    }
-
-    const invoice = invoiceByAppointmentId[apt.id]
-    if (!invoice) {
-      showToast("Due not ready yet. Please wait a moment.", "error")
-      return
-    }
-
+  const openCreateInvoiceDrawer = (apt: DashboardAppointment) => {
     setSelectedAppointment(apt)
-    setSelectedInvoice(invoice)
-    setShowPaidModal(true)
+    setShowCreateInvoiceDrawer(true)
   }
 
-  const handleMarkPaidSuccess = () => {
-    if (!selectedAppointment) return
-    setPaidAppointments((prev) => new Set([...prev, selectedAppointment.id]))
-    setShowPaidModal(false)
-    setSelectedInvoice(null)
+  const handleCreateInvoiceSuccess = async () => {
+    setShowCreateInvoiceDrawer(false)
     setSelectedAppointment(null)
-    // Refresh dashboard data
-    fetchDashboardData()
+    await fetchDashboardData()
+    if (currentClinic) await loadPaymentStatus()
   }
 
   const handleUnmarkPaid = async () => {
@@ -637,23 +596,24 @@ export default function DashboardPage() {
                   const badgeText = isNow ? "now" : isNext ? "next" : null
                   
                   return (
-                  <div
+                  <Link
                     key={apt.id}
-                    className="widget-row"
+                    href={`/patients/${apt.patient_id}`}
+                    className="widget-row cursor-pointer"
                   >
                     <div className="widget-content-stack">
                       <button
+                        type="button"
                         onClick={(e) => {
-                          e.preventDefault();
-                          handleMarkDone(apt.id);
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleMarkDone(apt.id)
                         }}
                         className={`flex size-10 shrink-0 items-center justify-center rounded-full transition-all group/done ${getIconBackgroundClass(index)} hover:bg-green-500 hover:text-white dark:hover:bg-green-600 cursor-pointer`}
                         title="Mark as Done"
                       >
                         <div className="group-hover/done:hidden">
-                          <span className={getIconColorClass(index)}>
-                            {getQueueStatusIcon(apt.queueStatus)}
-                          </span>
+                          <RiUserLine className={`size-5 ${getIconColorClass(index)}`} />
                         </div>
                         <div className="hidden group-hover/done:block">
                           <RiCheckLine className="size-6" />
@@ -681,33 +641,27 @@ export default function DashboardPage() {
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate lowercase font-medium">
                             {apt.type}
                           </p>
-                          {(apt.queueStatus === "online_now" || apt.queueStatus === "now") && (
-                            <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${apt.queueStatus === "online_now" ? "text-purple-600 dark:text-purple-400" : "text-green-600 dark:text-green-400"}`}>
-                              <span className={`size-1.5 rounded-full ${apt.queueStatus === "online_now" ? "bg-purple-500" : "bg-green-500"} animate-pulse`} />
-                              live
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 ml-4">
-                      {apt.online_call_link ? (
-                        <Button 
-                          variant="primary" 
+                    {apt.online_call_link ? (
+                      <div className="flex items-center gap-1.5 ml-4 shrink-0">
+                        <Button
+                          type="button"
+                          variant="primary"
                           className="btn-primary-widget shadow-sm"
-                          onClick={() => window.open(apt.online_call_link, '_blank')}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            window.open(apt.online_call_link, "_blank")
+                          }}
                         >
                           join call
                         </Button>
-                      ) : null}
-                      <Link href={`/patients/${apt.patient_id}`}>
-                        <Button variant="secondary" className="btn-secondary-widget">
-                          open profile
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
+                      </div>
+                    ) : null}
+                  </Link>
                   )
                 })}
               </div>
@@ -745,7 +699,7 @@ export default function DashboardPage() {
                   const badgeVariant = isNow ? "success" : isNext ? "default" : "neutral"
                   const badgeText = isNow ? "now" : isNext ? "next" : null
                   
-                  const isBusy = markingArrived === apt.id || markingPaid === apt.id || loadingInvoiceFor === apt.id
+                  const isBusy = markingArrived === apt.id || markingPaid === apt.id
 
                   return (
                   <div
@@ -859,16 +813,16 @@ export default function DashboardPage() {
                         {!paidAppointments.has(apt.id) && apt.status === "arrived" && (
                           <Button
                             variant="secondary"
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              handleMarkPaidClick(apt); 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              openCreateInvoiceDrawer(apt)
                             }}
-                            disabled={markingPaid === apt.id || markingArrived === apt.id || loadingInvoiceFor === apt.id}
+                            disabled={markingPaid === apt.id || markingArrived === apt.id}
                             className="btn-secondary-widget text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100 shrink-0 whitespace-nowrap"
-                            title="Mark as Paid"
+                            title="Create invoice"
                           >
                             <RiMoneyDollarCircleLine className="size-3.5 sm:mr-1" />
-                            <span className="hidden sm:inline">paid</span>
+                            <span className="hidden sm:inline">create invoice</span>
                           </Button>
                         )}
                         <Button
@@ -936,17 +890,18 @@ export default function DashboardPage() {
         isLoading={!!markingArrived}
       />
 
-      <CapturePaymentDrawer
-        open={showPaidModal}
+      <InvoiceDrawer
+        open={showCreateInvoiceDrawer}
         onOpenChange={(open) => {
-          setShowPaidModal(open)
-          if (!open) {
-            setSelectedInvoice(null)
-            setSelectedAppointment(null)
-          }
+          setShowCreateInvoiceDrawer(open)
+          if (!open) setSelectedAppointment(null)
         }}
-        invoice={selectedInvoice}
-        onSuccess={handleMarkPaidSuccess}
+        mode="invoice-and-pay"
+        invoice={null}
+        patientId={selectedAppointment?.patient_id}
+        patientAppointments={selectedAppointment ? buildCreateInvoiceAppointments(selectedAppointment) : []}
+        defaultAppointmentId={selectedAppointment?.id}
+        onSuccess={handleCreateInvoiceSuccess}
       />
 
       <ConfirmationModal

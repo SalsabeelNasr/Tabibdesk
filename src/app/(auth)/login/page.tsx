@@ -73,12 +73,6 @@ export default function LoginPage() {
                 TabibDesk
               </span>
             </div>
-            <h2 className="mt-8 text-xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-              Welcome back
-            </h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Sign in to your account to continue
-            </p>
           </div>
 
           <div className="mt-8">

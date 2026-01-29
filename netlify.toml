@@ -13,7 +13,4 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Next.js routing is handled by @netlify/plugin-nextjs (auto-applied); do not use SPA catch-all redirect

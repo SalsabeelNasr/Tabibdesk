@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { AppointmentsHeader } from "@/features/appointments/components/AppointmentsHeader"
+import { AppointmentsHeader, DoctorSelector } from "@/features/appointments/components/AppointmentsHeader"
 import { DailyScheduleView, type DailyScheduleViewRef } from "@/features/appointments/components/DailyScheduleView"
 import { WaitlistTab } from "@/features/appointments/components/WaitlistTab"
 import { BookAppointmentDrawer } from "@/features/appointments/components/BookAppointmentDrawer"
@@ -104,14 +104,19 @@ export default function AppointmentsPage() {
   
   return (
     <div className="page-content">
-      <PageHeader title="Appointments" />
+      <PageHeader
+        title="Appointments"
+        actions={
+          <DoctorSelector
+            clinicId={clinicId}
+            selectedDoctorId={effectiveDoctorId}
+            onDoctorChange={setSelectedDoctorId}
+          />
+        }
+      />
       <AppointmentsHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        clinicId={clinicId}
-        selectedDoctorId={effectiveDoctorId}
-        onDoctorChange={setSelectedDoctorId}
-        onAddToWaitlist={() => setShowAddToWaitlistDrawer(true)}
       />
       
       {activeTab === "appointments" ? (
@@ -127,6 +132,7 @@ export default function AppointmentsPage() {
           clinicId={clinicId} 
           doctorId={effectiveDoctorId} 
           onBook={handleBookFromWaitlist}
+          onAddToWaitlist={() => setShowAddToWaitlistDrawer(true)}
         />
       )}
       

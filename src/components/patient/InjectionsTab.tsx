@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { RiSyringeLine, RiAddLine, RiCalendarLine } from "@remixicon/react"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface Injection {
   id: string
@@ -44,12 +45,14 @@ export function InjectionsTab({ injections, onAddInjection }: InjectionsTabProps
       </div>
 
       {sortedInjections.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <RiSyringeLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-2 text-gray-600 dark:text-gray-400">No injections recorded yet</p>
-          </CardContent>
-        </Card>
+        <PatientEmptyState
+          icon={RiSyringeLine}
+          title="No injections yet"
+          description="Add injection records to see them here."
+          actionLabel={onAddInjection ? "Add injection" : undefined}
+          onAction={onAddInjection}
+          actionIcon={RiAddLine}
+        />
       ) : (
         <div className="space-y-4">
           {sortedInjections.map((injection) => (

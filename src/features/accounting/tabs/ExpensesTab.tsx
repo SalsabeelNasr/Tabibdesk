@@ -139,6 +139,21 @@ export function ExpensesTab({ dateRangePreset }: ExpensesTabProps) {
         </Card>
       </div>
 
+      {/* Search Bar and Add Button - Always visible */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex-1 min-w-0">
+          <AccountingToolbar
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+          />
+        </div>
+        <Button variant="secondary" onClick={() => setShowAddModal(true)} className="w-full sm:w-auto shrink-0 md:h-9 md:py-1.5 md:text-sm">
+          <RiAddLine className="mr-2 size-4" />
+          <span className="hidden sm:inline">Add Expense</span>
+          <span className="sm:hidden">Add</span>
+        </Button>
+      </div>
+
       {/* Expenses List */}
       {loading ? (
         <Card>
@@ -154,26 +169,13 @@ export function ExpensesTab({ dateRangePreset }: ExpensesTabProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <RiShoppingBagLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">No expenses found</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+              {searchQuery ? "No expenses found matching your search." : "No expenses found"}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <>
-          {/* Search Bar and Add Button - Above List */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1 min-w-0">
-              <AccountingToolbar
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-              />
-            </div>
-            <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto shrink-0 md:h-9 md:py-1.5 md:text-sm">
-              <RiAddLine className="mr-2 size-4" />
-              <span className="hidden sm:inline">Add Expense</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          </div>
-
           {/* Desktop Table */}
           <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
             <div className="overflow-x-auto">

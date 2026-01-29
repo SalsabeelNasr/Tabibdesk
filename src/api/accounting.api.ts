@@ -1,7 +1,7 @@
 /**
  * Accounting API
- * Mock implementation for payments, expenses, and accounting operations
- * All data handling is replaceable - this is the backend interface layer
+ * Reads from single source: invoices.api + payments.api (no duplicate payment store).
+ * Expenses remain local; payments and cashier/balances come from payments.api + invoices.api.
  */
 
 import type {
@@ -23,88 +23,32 @@ import type {
   ListBalancesParams,
   ListBalancesResponse,
 } from "@/features/accounting/accounting.types"
+import type { Payment as InvoicePayment } from "@/types/payment"
+import { listPayments as listPaymentsFromStore } from "@/api/payments.api"
+import { listInvoices } from "@/api/invoices.api"
+import { mockData } from "@/data/mock/mock-data"
 
-// Mock data stores with seed data
-const paymentsStore: Payment[] = [
-  // Today's payments
-  {
-    id: "pay_001",
-    clinicId: "clinic_1",
-    patientId: "patient_1",
-    patientName: "Ahmed Hassan",
-    appointmentId: "apt_001",
-    amount: 500,
-    method: "cash",
+function getPatientName(patientId: string): string {
+  const p = mockData.patients.find((x) => x.id === patientId)
+  return p ? `${p.first_name} ${p.last_name}` : "Unknown Patient"
+}
+
+function mapToAccountingPayment(p: InvoicePayment): Payment {
+  return {
+    id: p.id,
+    clinicId: p.clinicId,
+    patientId: p.patientId,
+    patientName: getPatientName(p.patientId),
+    appointmentId: p.appointmentId ?? undefined,
+    amount: p.amount,
+    method: p.method as Payment["method"],
     status: "paid",
-    createdAt: new Date().toISOString(),
-    createdByUserId: "user_1",
-  },
-  {
-    id: "pay_002",
-    clinicId: "clinic_1",
-    patientId: "patient_2",
-    patientName: "Fatima Ali",
-    appointmentId: "apt_002",
-    amount: 300,
-    method: "instapay",
-    status: "paid",
-    reference: "INS123456",
-    createdAt: new Date().toISOString(),
-    createdByUserId: "user_1",
-  },
-  {
-    id: "pay_003",
-    clinicId: "clinic_1",
-    patientId: "patient_3",
-    patientName: "Omar Mohamed",
-    appointmentId: "apt_003",
-    amount: 700,
-    method: "credit_card",
-    status: "paid",
-    reference: "CARD7890",
-    createdAt: new Date().toISOString(),
-    createdByUserId: "user_1",
-  },
-  // Pending approval
-  {
-    id: "pay_004",
-    clinicId: "clinic_1",
-    patientId: "patient_4",
-    patientName: "Sara Ibrahim",
-    appointmentId: "apt_004",
-    amount: 500,
-    method: "instapay",
-    status: "pending_approval",
-    reference: "INS789012",
-    evidenceUrl: "/uploads/evidence-001.jpg",
-    createdAt: new Date().toISOString(),
-    createdByUserId: "user_1",
-  },
-  // This month's previous payments
-  {
-    id: "pay_005",
-    clinicId: "clinic_1",
-    patientId: "patient_5",
-    patientName: "Layla Ahmed",
-    amount: 600,
-    method: "cash",
-    status: "paid",
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    createdByUserId: "user_1",
-  },
-  {
-    id: "pay_006",
-    clinicId: "clinic_1",
-    patientId: "patient_6",
-    patientName: "Karim Youssef",
-    amount: 400,
-    method: "bank_transfer",
-    status: "paid",
-    reference: "BANK456789",
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    createdByUserId: "user_1",
-  },
-]
+    reference: undefined,
+    evidenceUrl: p.proofFileId ? `/uploads/${p.proofFileId}` : undefined,
+    createdAt: p.createdAt,
+    createdByUserId: p.createdByUserId,
+  }
+}
 
 const expensesStore: Expense[] = [
   {
@@ -164,73 +108,88 @@ const integrationStore: Record<string, AccountingIntegration> = {}
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
- * PAYMENTS
+ * PAYMENTS — read/write via single source (invoices.api + payments.api)
  */
 
 export async function createPayment(input: CreatePaymentInput): Promise<Payment> {
   await delay(300)
+  const { createPayment: createInvoicePayment } = await import("@/api/payments.api")
+  const { getInvoiceByAppointmentId, createInvoiceWithAmount, markInvoicePaid } = await import("@/api/invoices.api")
 
-  const payment: Payment = {
-    id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    clinicId: input.clinicId,
-    patientId: input.patientId,
-    patientName: input.patientName,
-    appointmentId: input.appointmentId,
-    amount: input.amount,
-    method: input.method,
-    status: input.status || "paid",
-    reference: input.reference,
-    notes: input.notes,
-    evidenceUrl: input.evidenceUrl,
-    createdAt: new Date().toISOString(),
-    createdByUserId: input.createdByUserId,
+  let invoiceId: string
+  const appointmentId = input.appointmentId ?? ""
+
+  if (appointmentId) {
+    const existing = await getInvoiceByAppointmentId(appointmentId)
+    if (existing && existing.status === "unpaid") {
+      invoiceId = existing.id
+    } else if (existing && existing.status === "paid") {
+      throw new Error("This appointment is already paid.")
+    } else {
+      const apt = mockData.appointments.find((a) => a.id === appointmentId)
+      const clinicId = apt?.clinic_id ?? input.clinicId
+      const doctorId = apt?.doctor_id ?? "user-001"
+      const inv = await createInvoiceWithAmount({
+        clinicId,
+        doctorId,
+        patientId: input.patientId,
+        appointmentId,
+        appointmentType: apt?.type ?? "Consultation",
+        amount: input.amount,
+      })
+      invoiceId = inv.id
+    }
+  } else {
+    const inv = await createInvoiceWithAmount({
+      clinicId: input.clinicId,
+      doctorId: "user-001",
+      patientId: input.patientId,
+      appointmentId: "",
+      appointmentType: "Consultation",
+      amount: input.amount,
+    })
+    invoiceId = inv.id
   }
 
-  paymentsStore.push(payment)
-  return payment
+  const created = await createInvoicePayment({
+    clinicId: input.clinicId,
+    invoiceId,
+    patientId: input.patientId,
+    appointmentId,
+    amount: input.amount,
+    method: input.method as InvoicePayment["method"],
+    proofFileId: input.evidenceUrl,
+    createdByUserId: input.createdByUserId,
+  })
+  await markInvoicePaid(invoiceId)
+  return mapToAccountingPayment(created)
 }
 
 export async function updatePayment(
   paymentId: string,
-  input: UpdatePaymentInput
+  _input: UpdatePaymentInput
 ): Promise<Payment> {
   await delay(200)
-
-  const index = paymentsStore.findIndex((p) => p.id === paymentId)
-  if (index === -1) {
-    throw new Error("Payment not found")
-  }
-
-  const updated: Payment = {
-    ...paymentsStore[index],
-    ...input,
-    updatedAt: new Date().toISOString(),
-  }
-
-  paymentsStore[index] = updated
-  return updated
+  const { getPaymentById } = await import("@/api/payments.api")
+  const existing = await getPaymentById(paymentId)
+  if (!existing) throw new Error("Payment not found")
+  // payments.api has no status field; no-op for status/approve; UI refetch will show latest
+  return mapToAccountingPayment(existing)
 }
 
 export async function getPayment(paymentId: string): Promise<Payment> {
   await delay(100)
-
-  const payment = paymentsStore.find((p) => p.id === paymentId)
-  if (!payment) {
-    throw new Error("Payment not found")
-  }
-
-  return payment
+  const { getPaymentById } = await import("@/api/payments.api")
+  const p = await getPaymentById(paymentId)
+  if (!p) throw new Error("Payment not found")
+  return mapToAccountingPayment(p)
 }
 
 export async function deletePayment(paymentId: string): Promise<void> {
   await delay(200)
-
-  const index = paymentsStore.findIndex((p) => p.id === paymentId)
-  if (index === -1) {
-    throw new Error("Payment not found")
-  }
-
-  paymentsStore.splice(index, 1)
+  const { getPaymentById, deletePaymentByInvoiceId } = await import("@/api/payments.api")
+  const byId = await getPaymentById(paymentId)
+  if (byId) await deletePaymentByInvoiceId(byId.invoiceId)
 }
 
 export async function listPayments(
@@ -238,41 +197,30 @@ export async function listPayments(
 ): Promise<ListPaymentsResponse> {
   await delay(200)
 
-  let filtered = paymentsStore
-
-  // Apply filters
-  if (params.patientId) {
-    filtered = filtered.filter((p) => p.patientId === params.patientId)
-  }
+  const res = await listPaymentsFromStore({
+    clinicId: params.clinicId,
+    patientId: params.patientId,
+    from: params.dateFrom,
+    to: params.dateTo,
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 20,
+  })
+  let list = res.payments
   if (params.appointmentId) {
-    filtered = filtered.filter((p) => p.appointmentId === params.appointmentId)
+    list = list.filter((p) => p.appointmentId === params.appointmentId)
   }
   if (params.status) {
-    filtered = filtered.filter((p) => p.status === params.status)
-  }
-  if (params.dateFrom) {
-    filtered = filtered.filter((p) => p.createdAt >= params.dateFrom!)
-  }
-  if (params.dateTo) {
-    filtered = filtered.filter((p) => p.createdAt <= params.dateTo!)
+    // payments.api has no status; all are paid
+    if (params.status !== "paid") list = []
   }
 
-  // Sort by date desc
-  filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-
-  // Pagination
-  const page = params.page || 1
-  const pageSize = params.pageSize || 20
-  const start = (page - 1) * pageSize
-  const end = start + pageSize
-  const paginatedPayments = filtered.slice(start, end)
-
+  const payments = list.map(mapToAccountingPayment)
   return {
-    payments: paginatedPayments,
-    total: filtered.length,
-    page,
-    pageSize,
-    hasMore: end < filtered.length,
+    payments,
+    total: res.total,
+    page: res.page,
+    pageSize: res.pageSize,
+    hasMore: res.hasMore,
   }
 }
 
@@ -338,7 +286,7 @@ export async function listExpenses(
 }
 
 /**
- * CASHIER / TODAY VIEW
+ * CASHIER / TODAY VIEW — from payments.api + unpaid invoices
  */
 
 export async function getTodayCashierRows(params: {
@@ -347,57 +295,57 @@ export async function getTodayCashierRows(params: {
 }): Promise<CashierRow[]> {
   await delay(300)
 
-  // Mock: Get today's payments for this clinic
-  const todayPayments = paymentsStore.filter(
-    (p) => p.createdAt.startsWith(params.date)
-  )
+  const [paymentsRes, unpaidRes] = await Promise.all([
+    listPaymentsFromStore({
+      clinicId: params.clinicId,
+      from: params.date,
+      to: params.date,
+      page: 1,
+      pageSize: 500,
+    }),
+    listInvoices({
+      clinicId: params.clinicId,
+      status: "unpaid",
+      from: params.date,
+      to: params.date,
+      page: 1,
+      pageSize: 500,
+    }),
+  ])
 
-  // Build cashier rows from payments
-  const rows: CashierRow[] = todayPayments.map((payment) => {
-    const isPaid = payment.status === "paid"
-    const isPending = payment.status === "pending_approval"
-    
-    return {
-      appointmentId: payment.appointmentId || `apt_${payment.id}`,
-      patientId: payment.patientId,
-      patientName: payment.patientName || "Unknown Patient",
+  const rows: CashierRow[] = paymentsRes.payments.map((p) => ({
+    appointmentId: p.appointmentId || `apt_${p.id}`,
+    patientId: p.patientId,
+    patientName: getPatientName(p.patientId),
+    appointmentStatus: "completed",
+    time: p.createdAt,
+    feeAmount: p.amount,
+    paymentId: p.id,
+    paymentStatus: "paid",
+    paymentMethod: p.method as CashierRow["paymentMethod"],
+    paymentAmount: p.amount,
+    paymentReference: undefined,
+    evidenceUrl: undefined,
+  }))
+
+  unpaidRes.invoices.forEach((inv) => {
+    rows.push({
+      appointmentId: inv.appointmentId || `apt_${inv.id}`,
+      patientId: inv.patientId,
+      patientName: getPatientName(inv.patientId),
       appointmentStatus: "completed",
-      time: payment.createdAt,
-      feeAmount: payment.amount,
-      paymentId: payment.id,
-      paymentStatus: isPaid ? "paid" : isPending ? "pending_approval" : "unpaid",
-      paymentMethod: payment.method,
-      paymentAmount: payment.amount,
-      paymentReference: payment.reference,
-      evidenceUrl: payment.evidenceUrl,
-    }
+      time: inv.createdAt,
+      feeAmount: inv.amount,
+      paymentStatus: "unpaid",
+    })
   })
 
-  // Add some unpaid appointments (mock)
-  if (rows.length < 5) {
-    const unpaidMockPatients = [
-      { id: "patient_10", name: "Mona Khaled" },
-      { id: "patient_11", name: "Youssef Salem" },
-    ]
-    
-    unpaidMockPatients.forEach((patient, index) => {
-      rows.push({
-        appointmentId: `apt_unpaid_${index}`,
-        patientId: patient.id,
-        patientName: patient.name,
-        appointmentStatus: "completed",
-        time: new Date(Date.now() + (index + 1) * 60 * 60 * 1000).toISOString(),
-        feeAmount: 500,
-        paymentStatus: "unpaid",
-      })
-    })
-  }
-
+  rows.sort((a, b) => b.time.localeCompare(a.time))
   return rows
 }
 
 /**
- * BALANCES
+ * BALANCES — from payments.api + unpaid invoices
  */
 
 export async function getPatientBalances(
@@ -405,39 +353,43 @@ export async function getPatientBalances(
 ): Promise<ListBalancesResponse> {
   await delay(300)
 
-  // Get all payments
-  const allPayments = paymentsStore
+  const [paymentsRes, unpaidRes] = await Promise.all([
+    listPaymentsFromStore({ clinicId: params.clinicId, page: 1, pageSize: 10000 }),
+    listInvoices({ clinicId: params.clinicId, status: "unpaid", page: 1, pageSize: 10000 }),
+  ])
 
-  // Group by patient
   const balanceMap: Record<string, PatientBalance> = {}
 
-  for (const payment of allPayments) {
+  for (const payment of paymentsRes.payments) {
     if (!balanceMap[payment.patientId]) {
       balanceMap[payment.patientId] = {
         patientId: payment.patientId,
-        patientName: payment.patientName || "Unknown Patient",
-        phone: "0100-000-0000",
+        patientName: getPatientName(payment.patientId),
+        phone: mockData.patients.find((p) => p.id === payment.patientId)?.phone ?? "0100-000-0000",
         totalDue: 0,
         lastVisit: payment.createdAt,
         lastPayment: "",
       }
     }
-
     const balance = balanceMap[payment.patientId]
+    if (payment.createdAt > balance.lastPayment) balance.lastPayment = payment.createdAt
+    if (payment.createdAt > balance.lastVisit) balance.lastVisit = payment.createdAt
+  }
 
-    // Calculate total due (unpaid/partial)
-    if (payment.status === "unpaid" || payment.status === "partial") {
-      balance.totalDue += payment.amount
+  for (const inv of unpaidRes.invoices) {
+    if (!balanceMap[inv.patientId]) {
+      balanceMap[inv.patientId] = {
+        patientId: inv.patientId,
+        patientName: getPatientName(inv.patientId),
+        phone: mockData.patients.find((p) => p.id === inv.patientId)?.phone ?? "0100-000-0000",
+        totalDue: 0,
+        lastVisit: inv.createdAt,
+        lastPayment: "",
+      }
     }
-
-    // Track last payment date
-    if (payment.status === "paid" && payment.createdAt > balance.lastPayment) {
-      balance.lastPayment = payment.createdAt
-    }
-    
-    // Track last visit
-    if (payment.createdAt > balance.lastVisit) {
-      balance.lastVisit = payment.createdAt
+    balanceMap[inv.patientId].totalDue += inv.amount
+    if (inv.createdAt > balanceMap[inv.patientId].lastVisit) {
+      balanceMap[inv.patientId].lastVisit = inv.createdAt
     }
   }
 
@@ -482,25 +434,37 @@ export async function getPatientPaymentHistory(params: {
 }): Promise<PatientPaymentHistory> {
   await delay(200)
 
-  const payments = paymentsStore
-    .filter(
-      (p) => p.clinicId === params.clinicId && p.patientId === params.patientId
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  const [paymentsRes, unpaidRes] = await Promise.all([
+    listPaymentsFromStore({
+      clinicId: params.clinicId,
+      patientId: params.patientId,
+      page: 1,
+      pageSize: 500,
+    }),
+    listInvoices({
+      clinicId: params.clinicId,
+      patientId: params.patientId,
+      status: "unpaid",
+      page: 1,
+      pageSize: 500,
+    }),
+  ])
 
-  const unpaidCharges = payments.filter(
-    (p) => p.status === "unpaid" || p.status === "partial"
+  const payments = paymentsRes.payments.map(mapToAccountingPayment).sort(
+    (a, b) => b.createdAt.localeCompare(a.createdAt)
   )
+
+  const unpaidCharges = unpaidRes.invoices.map((inv) => ({
+    id: inv.id,
+    appointmentId: inv.appointmentId || undefined,
+    date: inv.createdAt,
+    amount: inv.amount,
+    status: "unpaid" as const,
+  }))
 
   return {
     payments,
-    unpaidCharges: unpaidCharges.map((p) => ({
-      id: p.id,
-      appointmentId: p.appointmentId || undefined,
-      date: p.createdAt,
-      amount: p.amount,
-      status: p.status,
-    })),
+    unpaidCharges,
   }
 }
 
@@ -517,30 +481,35 @@ export async function getMonthlySummary(params: {
   const startDate = `${params.month}-01`
   const endDate = `${params.month}-31` // Simplified
 
-  const paymentsResponse = await listPayments({
-    clinicId: params.clinicId,
-    dateFrom: startDate,
-    dateTo: endDate,
-    page: 1,
-    pageSize: 10000,
-  })
-
-  const expensesResponse = await listExpenses({
-    clinicId: params.clinicId,
-    dateFrom: startDate,
-    dateTo: endDate,
-    page: 1,
-    pageSize: 10000,
-  })
+  const [paymentsResponse, expensesResponse, unpaidRes] = await Promise.all([
+    listPayments({
+      clinicId: params.clinicId,
+      dateFrom: startDate,
+      dateTo: endDate,
+      page: 1,
+      pageSize: 10000,
+    }),
+    listExpenses({
+      clinicId: params.clinicId,
+      dateFrom: startDate,
+      dateTo: endDate,
+      page: 1,
+      pageSize: 10000,
+    }),
+    listInvoices({
+      clinicId: params.clinicId,
+      status: "unpaid",
+      from: startDate,
+      to: endDate,
+      page: 1,
+      pageSize: 10000,
+    }),
+  ])
 
   const paidPayments = paymentsResponse.payments.filter((p) => p.status === "paid")
   const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0)
   const totalExpenses = expensesResponse.expenses.reduce((sum: number, e: Expense) => sum + e.amount, 0)
-
-  const unpaidPayments = paymentsResponse.payments.filter(
-    (p) => p.status === "unpaid" || p.status === "partial"
-  )
-  const totalOutstanding = unpaidPayments.reduce((sum, p) => sum + p.amount, 0)
+  const totalOutstanding = unpaidRes.invoices.reduce((sum, inv) => sum + inv.amount, 0)
 
   // Payment methods breakdown
   const paymentMethodBreakdown: Record<string, number> = {}

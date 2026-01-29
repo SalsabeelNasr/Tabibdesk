@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent } from "@/components/Card"
+import { Card, CardContent, CardHeader } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { Label } from "@/components/Label"
@@ -20,6 +20,7 @@ import {
   RiSaveLine,
   RiCloseLine,
   RiInformationLine,
+  RiWhatsappLine,
 } from "@remixicon/react"
 
 interface Patient {
@@ -253,70 +254,68 @@ export function BasicInfoCompact({ patient, onUpdate }: BasicInfoCompactProps) {
 
   return (
     <>
-      <Card className="bg-gray-50 dark:bg-gray-900/50">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 px-4 py-3 min-h-12 flex flex-row items-center justify-start">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <RiInformationLine className="size-4 text-gray-600 dark:text-gray-400" />
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+              <RiInformationLine className="size-4 text-primary-500/70 dark:text-primary-400/70" />
+              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                 Patient Information
               </h3>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="h-7 px-2">
-              <RiEditLine className="size-3.5" />
+            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="h-6 px-1.5 text-[10px] font-bold uppercase tracking-wider">
+              <RiEditLine className="size-3" />
+              Edit
             </Button>
           </div>
-
+        </CardHeader>
+        <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <InfoItem 
-              icon={RiUserLine} 
-              label="Name" 
-              value={`${patient.first_name} ${patient.last_name}`} 
-            />
-            <InfoItem 
-              icon={RiPhoneLine} 
-              label="Phone" 
-              value={patient.phone} 
-            />
-            {patient.email && (
-              <InfoItem 
-                icon={RiMailLine} 
-                label="Email" 
-                value={patient.email} 
+            {patient.phone ? (
+              <div className="flex items-center gap-2">
+                <RiPhoneLine className="size-3.5 shrink-0 text-gray-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-500">Phone</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
+                      {patient.phone}
+                    </p>
+                    <a
+                      href={`https://wa.me/${patient.phone.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                      title="WhatsApp"
+                    >
+                      <RiWhatsappLine className="size-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            {patient.email ? (
+              <InfoItem icon={RiMailLine} label="Email" value={patient.email} />
+            ) : null}
+            {patient.address ? (
+              <InfoItem icon={RiMapPinLine} label="Address" value={patient.address} />
+            ) : null}
+            {patient.job ? (
+              <InfoItem icon={RiBriefcaseLine} label="Occupation" value={patient.job} />
+            ) : null}
+            {patient.height ? (
+              <InfoItem icon={RiRulerLine} label="Height" value={`${patient.height} cm`} />
+            ) : null}
+            {(patient as any).source ? (
+              <InfoItem
+                icon={RiUserLine}
+                label="Source"
+                value={formatSource((patient as any).source, (patient as any).source_other)}
               />
-            )}
-            {patient.address && (
-              <InfoItem 
-                icon={RiMapPinLine} 
-                label="Address" 
-                value={patient.address} 
-              />
-            )}
-            {patient.job && (
-              <InfoItem 
-                icon={RiBriefcaseLine} 
-                label="Occupation" 
-                value={patient.job} 
-              />
-            )}
-            {patient.height && (
-              <InfoItem 
-                icon={RiRulerLine} 
-                label="Height" 
-                value={`${patient.height} cm`} 
-              />
-            )}
-            {(patient as any).source && (
-              <InfoItem 
-                icon={RiUserLine} 
-                label="Source" 
-                value={formatSource((patient as any).source, (patient as any).source_other)} 
-              />
-            )}
-            <InfoItem 
-              icon={RiCalendarLine} 
-              label="Registered" 
-              value={new Date(patient.created_at).toLocaleDateString()} 
+            ) : null}
+            <InfoItem
+              icon={RiCalendarLine}
+              label="Registered"
+              value={new Date(patient.created_at).toLocaleDateString()}
             />
           </div>
 
@@ -348,7 +347,7 @@ export function BasicInfoCompact({ patient, onUpdate }: BasicInfoCompactProps) {
 
       {/* Edit Drawer */}
       <Drawer open={isEditing} onOpenChange={setIsEditing}>
-        <DrawerContent>
+        <DrawerContent side="right" className="w-full sm:max-w-lg">
           <DrawerHeader>
             <DrawerTitle>Edit Patient Information</DrawerTitle>
           </DrawerHeader>

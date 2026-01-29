@@ -36,9 +36,10 @@ export function AccountingPage() {
         }
       />
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
-        <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
+      {/* Tab Navigation - same structure as AppointmentsHeader for consistent spacing */}
+      <div className="space-y-3">
+        <div className="border-b border-gray-200 dark:border-gray-800">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
           <button
             onClick={() => setActiveTab("in")}
             className={`${
@@ -47,7 +48,7 @@ export function AccountingPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
             } whitespace-nowrap border-b-2 px-2 sm:px-1 py-4 text-sm font-medium`}
           >
-            IN
+            In
           </button>
           <button
             onClick={() => setActiveTab("out")}
@@ -57,7 +58,7 @@ export function AccountingPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
             } whitespace-nowrap border-b-2 px-2 sm:px-1 py-4 text-sm font-medium`}
           >
-            OUT
+            Out
           </button>
           <button
             onClick={() => setActiveTab("dues")}
@@ -67,9 +68,10 @@ export function AccountingPage() {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
             } whitespace-nowrap border-b-2 px-2 sm:px-1 py-4 text-sm font-medium`}
           >
-            DUES
+            Dues
           </button>
         </nav>
+        </div>
       </div>
 
       {/* Tab Content */}

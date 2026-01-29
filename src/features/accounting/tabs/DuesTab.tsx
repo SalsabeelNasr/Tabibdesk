@@ -8,7 +8,7 @@ import { Badge } from "@/components/Badge"
 import { useInvoices } from "../hooks/useInvoices"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { AccountingToolbar, type DateRangePreset } from "../components/AccountingToolbar"
-import { CapturePaymentDrawer } from "../components/CapturePaymentDrawer"
+import { InvoiceDrawer } from "../components/InvoiceDrawer"
 import { mockData } from "@/data/mock/mock-data"
 import { RiPhoneLine, RiWhatsappLine, RiMoneyDollarCircleLine } from "@remixicon/react"
 import { startOfToday, startOfMonth } from "date-fns"
@@ -124,6 +124,12 @@ export function DuesTab({ dateRangePreset }: DuesTabProps) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Search Bar - Always visible */}
+      <AccountingToolbar
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      />
+
       {loading ? (
         <Card>
           <CardContent className="py-12">
@@ -138,17 +144,13 @@ export function DuesTab({ dateRangePreset }: DuesTabProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <RiMoneyDollarCircleLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">No unpaid invoices</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+              {searchQuery ? "No unpaid invoices found matching your search." : "No unpaid invoices"}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <>
-          {/* Search Bar - Above List */}
-          <AccountingToolbar
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-          />
-
           {/* Desktop Table */}
           <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
             <div className="overflow-x-auto">
@@ -296,9 +298,10 @@ export function DuesTab({ dateRangePreset }: DuesTabProps) {
         </>
       )}
 
-      <CapturePaymentDrawer
+      <InvoiceDrawer
         open={showMarkPaidModal}
         onOpenChange={setShowMarkPaidModal}
+        mode="pay-only"
         invoice={selectedInvoice}
         onSuccess={() => {
           refetch()

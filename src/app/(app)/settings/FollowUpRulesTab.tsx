@@ -83,7 +83,7 @@ export function FollowUpRulesTab() {
             <div className="space-y-0.5">
               <Label htmlFor="follow-up-no-show">Create tasks after no-show</Label>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Automatically create a follow-up task when a patient doesn't show up
+                Automatically create a follow-up task when a patient doesn&apos;t show up
               </p>
             </div>
             <Switch

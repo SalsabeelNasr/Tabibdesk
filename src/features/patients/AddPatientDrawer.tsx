@@ -5,6 +5,7 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/Drawer"
@@ -99,8 +100,8 @@ export function AddPatientDrawer({ open, onOpenChange, onSubmit }: AddPatientDra
         <DrawerHeader>
           <DrawerTitle>Add New Patient</DrawerTitle>
         </DrawerHeader>
-        <DrawerBody>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+          <DrawerBody>
             <PatientFormFields
               formData={formData}
               onChange={setFormData}
@@ -108,22 +109,21 @@ export function AddPatientDrawer({ open, onOpenChange, onSubmit }: AddPatientDra
               showEmail={true}
               showGender={true}
             />
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" isLoading={isSubmitting} className="flex-[2]">
-                Add Patient
-              </Button>
-            </div>
-          </form>
-        </DrawerBody>
+          </DrawerBody>
+          <DrawerFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" isLoading={isSubmitting}>
+              Add Patient
+            </Button>
+          </DrawerFooter>
+        </form>
       </DrawerContent>
     </Drawer>
   )

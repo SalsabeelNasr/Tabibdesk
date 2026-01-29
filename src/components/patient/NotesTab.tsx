@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
-import { RiFileTextLine, RiTimeLine, RiEditLine, RiDeleteBinLine, RiCheckLine, RiCloseLine, RiArrowRightSLine } from "@remixicon/react"
+import { RiFileTextLine, RiTimeLine, RiEditLine, RiDeleteBinLine, RiCheckLine, RiCloseLine, RiArrowRightSLine, RiAddLine } from "@remixicon/react"
 import { Button } from "@/components/Button"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { Textarea } from "@/components/Textarea"
-import { update as updateNote, remove as removeNote } from "@/api/notes.api"
+import { create as createNote, update as updateNote, remove as removeNote } from "@/api/notes.api"
 import { useToast } from "@/hooks/useToast"
 import { cx } from "@/lib/utils"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 import {
   Drawer,
   DrawerBody,
@@ -16,7 +17,7 @@ import {
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
-  DrawerTitle,
+  DrawerHeaderTitle,
 } from "@/components/Drawer"
 
 interface DoctorNote {
@@ -29,12 +30,13 @@ interface DoctorNote {
 interface NotesTabProps {
   notes: DoctorNote[]
   patient?: any
+  onNoteAdded?: () => void
 }
 
 const INITIAL_VISIBLE_COUNT = 5
 const LOAD_MORE_INCREMENT = 5
 
-export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabProps) {
+export function NotesTab({ notes: initialNotes, patient, onNoteAdded }: NotesTabProps) {
   const { role } = useUserClinic()
   const { showToast } = useToast()
   const [notes, setNotes] = useState(initialNotes)
@@ -42,8 +44,13 @@ export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabPro
   const [selectedNote, setSelectedNote] = useState<DoctorNote | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isAddMode, setIsAddMode] = useState(false)
   const [editValue, setEditValue] = useState("")
   const isDoctor = role === "doctor"
+
+  useEffect(() => {
+    setNotes(initialNotes)
+  }, [initialNotes])
 
   // Sort notes by date (newest first)
   const sortedNotes = [...notes].sort(
@@ -61,7 +68,38 @@ export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabPro
     setSelectedNote(note)
     setEditValue(note.note)
     setIsEditing(false)
+    setIsAddMode(false)
     setIsDrawerOpen(true)
+  }
+
+  const handleAddNote = () => {
+    setSelectedNote(null)
+    setEditValue("")
+    setIsAddMode(true)
+    setIsEditing(true)
+    setIsDrawerOpen(true)
+  }
+
+  const handleAddSave = async () => {
+    if (!patient?.id || !editValue.trim()) return
+    try {
+      await createNote({ patientId: patient.id, note: editValue.trim() })
+      showToast("Note added successfully", "success")
+      setIsDrawerOpen(false)
+      setIsAddMode(false)
+      setEditValue("")
+      onNoteAdded?.()
+    } catch (error) {
+      showToast("Failed to add note", "error")
+    }
+  }
+
+  const handleDrawerOpenChange = (open: boolean) => {
+    setIsDrawerOpen(open)
+    if (!open) {
+      setIsAddMode(false)
+      if (!selectedNote) setEditValue("")
+    }
   }
 
   const handleEditStart = () => {
@@ -121,25 +159,41 @@ export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabPro
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden shadow-sm">
-        <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 py-2.5 px-4 min-h-12 flex items-center">
+        <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 px-4 py-3 min-h-12 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             <RiFileTextLine className="size-4 text-primary-500/70 dark:text-primary-400/70" />
             <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Clinical Notes History</h3>
           </div>
+          {patient?.id && (
+            <Button variant="ghost" size="sm" onClick={handleAddNote} className="size-8 shrink-0 p-0" title="Add note">
+              <RiAddLine className="size-4" />
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {notes.length === 0 ? (
-            <div className="py-12 text-center">
-              <RiFileTextLine className="mx-auto size-12 text-gray-300 dark:text-gray-700" />
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">No clinical notes recorded yet</p>
+            <div className="p-4">
+              <PatientEmptyState
+                icon={RiFileTextLine}
+                title="No clinical notes yet"
+                description="Add clinical notes to see them here."
+              />
             </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {visibleNotes.map((note) => (
-                <button
+                <div
                   key={note.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleViewNote(note)}
-                  className="w-full flex items-end gap-4 px-5 py-4 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors group text-left"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      handleViewNote(note)
+                    }
+                  }}
+                  className="w-full flex items-end gap-4 px-5 py-4 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors group text-left cursor-pointer"
                 >
                   {/* Note content - primary (like patient name on card) */}
                   <div className="min-w-0 flex-1">
@@ -187,7 +241,7 @@ export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabPro
                     )}
                     <RiArrowRightSLine className="size-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors" aria-hidden />
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -205,34 +259,34 @@ export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabPro
         </CardContent>
       </Card>
 
-      {/* Note Details Drawer */}
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="sm:max-w-lg">
+      {/* Note Details / Add Drawer */}
+      <Drawer open={isDrawerOpen} onOpenChange={handleDrawerOpenChange}>
+        <DrawerContent side="right" className="w-full sm:max-w-lg">
           <DrawerHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
-                <RiFileTextLine className="size-5" />
-              </div>
-              <div>
-                <DrawerTitle>Clinical Note Details</DrawerTitle>
-                <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                  <RiTimeLine className="size-3.5" />
-                  <span>
-                    {selectedNote && new Date(selectedNote.created_at).toLocaleDateString("en-US", {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <DrawerHeaderTitle
+              icon={<RiFileTextLine className="size-5 text-primary-600 dark:text-primary-400" />}
+              title={isAddMode ? "Add Clinical Note" : "Clinical Note Details"}
+              description={
+                !isAddMode && selectedNote ? (
+                  <>
+                    <RiTimeLine className="size-3.5 shrink-0" />
+                    <span>
+                      {new Date(selectedNote.created_at).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </>
+                ) : undefined
+              }
+            />
           </DrawerHeader>
           <DrawerBody>
-            {isEditing ? (
+            {isEditing || isAddMode ? (
               <div className="space-y-4 h-full flex flex-col">
                 <Textarea
                   value={editValue}
@@ -251,7 +305,17 @@ export function NotesTab({ notes: initialNotes, patient: _patient }: NotesTabPro
             )}
           </DrawerBody>
           <DrawerFooter>
-            {isEditing ? (
+            {isAddMode ? (
+              <>
+                <Button variant="outline" onClick={() => handleDrawerOpenChange(false)} className="flex-1 sm:flex-none">
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleAddSave} disabled={!editValue.trim()} className="flex-1 sm:flex-none gap-2">
+                  <RiCheckLine className="size-4" />
+                  Add Note
+                </Button>
+              </>
+            ) : isEditing ? (
               <>
                 <Button variant="outline" onClick={handleEditCancel} className="flex-1 sm:flex-none">
                   Cancel

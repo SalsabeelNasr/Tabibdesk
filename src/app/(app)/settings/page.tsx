@@ -56,9 +56,10 @@ export default function SettingsPage() {
     <div className="page-content">
       <PageHeader title="Settings" />
 
-      {/* Tab Navigation - Responsive */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
-        <nav className="-mb-px flex space-x-4 overflow-x-auto pb-px sm:space-x-8" aria-label="Settings tabs">
+      {/* Tab Navigation - same structure as Appointments/Accounting for consistent spacing */}
+      <div className="space-y-3">
+        <div className="border-b border-gray-200 dark:border-gray-800">
+          <nav className="-mb-px flex space-x-4 overflow-x-auto pb-px sm:space-x-8" aria-label="Settings tabs">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -86,6 +87,7 @@ export default function SettingsPage() {
             )
           })}
         </nav>
+        </div>
       </div>
 
       {/* Tab Content - Responsive */}

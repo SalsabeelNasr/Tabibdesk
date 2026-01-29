@@ -136,26 +136,36 @@ export function Pricing({ lang }: PricingProps) {
           ))}
         </div>
 
-        {/* Add-ons Section - Minimal */}
-        <div className="mt-12 flex flex-col items-center">
-          <div className="rounded-2xl bg-gray-50 dark:bg-gray-900/50 p-6 w-full max-w-3xl border border-gray-100 dark:border-gray-800">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
-                  <RiSparklingLine className="size-5" />
+        {/* Add-ons Section - Elegant */}
+        <div className="mt-16 flex flex-col items-center">
+          <div className="w-full max-w-3xl">
+            <div className="group relative overflow-hidden rounded-xl bg-white/80 p-6 ring-1 ring-gray-200/50 transition-all hover:ring-gray-300/50 dark:bg-gray-900/80 dark:ring-gray-800/50 dark:hover:ring-gray-700/50 sm:p-8">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/20">
+                    <RiSparklingLine className="size-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                      {t.addonTitle}
+                    </h4>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {lang === "ar" ? "باقات مخصصة حسب احتياجك" : "Custom packs based on your needs"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">{t.addonTitle}</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{lang === "ar" ? "باقات مخصصة حسب احتياجك" : "Custom packs based on your needs"}</p>
+                <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 ring-1 ring-gray-200/50 dark:bg-gray-800/50 dark:ring-gray-700/50">
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      {t.addonWhatsApp}
+                    </span>
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 ring-1 ring-gray-200/50 dark:bg-gray-800/50 dark:ring-gray-700/50">
+                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      {t.addonAI}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-4">
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700">
-                  {t.addonWhatsApp}
-                </span>
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md border border-gray-200 dark:border-gray-700">
-                  {t.addonAI}
-                </span>
               </div>
             </div>
           </div>

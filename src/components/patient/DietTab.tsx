@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { RiRestaurantLine, RiHistoryLine } from "@remixicon/react"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface PatientDiet {
   id: string
@@ -86,12 +87,11 @@ export function DietTab({ diets, onEditDiet: _onEditDiet }: DietTabProps) {
   return (
     <div className="space-y-6">
       {!activeDiet ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <RiRestaurantLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-2 text-gray-600 dark:text-gray-400">No diet plan yet</p>
-          </CardContent>
-        </Card>
+        <PatientEmptyState
+          icon={RiRestaurantLine}
+          title="No diet plan yet"
+          description="Create a diet plan to see it here."
+        />
       ) : (
         <>
           {/* Active Diet Plan */}

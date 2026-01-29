@@ -29,10 +29,10 @@ async function initializeMockInvoices() {
     return aptDate < now && (apt.status === "arrived" || apt.status === "completed")
   })
 
-  // Create invoices for past appointments
+  // Create invoices for past appointments (deterministic paid/unpaid so Income tab always has entries)
   for (const apt of pastAppointments) {
-    // Skip some to have mix of paid/unpaid
-    const shouldBePaid = Math.random() > 0.33 // ~67% paid, ~33% unpaid
+    const hash = (apt.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0) + apt.id.length) % 3
+    const shouldBePaid = hash !== 0 // ~67% paid so mock Income tab shows data
     
     // Get pricing for this appointment type
     let amount = 350 // default
@@ -64,9 +64,9 @@ async function initializeMockInvoices() {
     invoicesStore.push(invoice)
   }
 
-  // Sync payments after invoices are created
+  // Sync payments after invoices are created so Income tab has entries
   const { syncPaymentsWithInvoices } = await import("./payments.api")
-  syncPaymentsWithInvoices()
+  await syncPaymentsWithInvoices()
 }
 
 // Initialize on module load (async)
@@ -276,12 +276,28 @@ export async function listInvoices(params: ListInvoicesParams): Promise<ListInvo
     })
   }
   
-  // Filter by query (search in appointment type or patient ID)
+  // Filter by query (search in patient name, phone, or appointment type)
   if (params.query) {
-    const queryLower = params.query.toLowerCase()
-    filtered = filtered.filter((inv) =>
-      inv.appointmentType.toLowerCase().includes(queryLower)
-    )
+    const queryLower = params.query.trim().toLowerCase()
+    if (queryLower) {
+      const { mockData } = await import("@/data/mock/mock-data")
+      const matchingPatientIds = new Set(
+        mockData.patients
+          .filter(
+            (pt) =>
+              `${(pt.first_name || "").toLowerCase()} ${(pt.last_name || "").toLowerCase()}`.includes(queryLower) ||
+              (pt.first_name || "").toLowerCase().includes(queryLower) ||
+              (pt.last_name || "").toLowerCase().includes(queryLower) ||
+              (pt.phone || "").toLowerCase().includes(queryLower)
+          )
+          .map((pt) => pt.id)
+      )
+      filtered = filtered.filter(
+        (inv) =>
+          matchingPatientIds.has(inv.patientId) ||
+          inv.appointmentType.toLowerCase().includes(queryLower)
+      )
+    }
   }
   
   // Sort by date desc
@@ -382,6 +398,76 @@ export async function voidInvoice(invoiceId: string): Promise<Invoice> {
   const updated: Invoice = {
     ...invoicesStore[index],
     status: "void",
+  }
+
+  invoicesStore[index] = updated
+  return updated
+}
+
+export interface UpdateInvoiceLineItemsParams {
+  invoiceId: string
+  consultationWaived: boolean
+  consultationAmount: number
+  procedureLines: { id?: string; label: string; amount: number }[]
+  discountAmount: number
+}
+
+/**
+ * Update invoice with line items (consultation, procedures, discount).
+ * Recalculates amount from line items.
+ */
+export async function updateInvoiceLineItems(
+  params: UpdateInvoiceLineItemsParams
+): Promise<Invoice> {
+  await delay(150)
+
+  const index = invoicesStore.findIndex((inv) => inv.id === params.invoiceId)
+  if (index === -1) {
+    throw new Error("Invoice not found")
+  }
+
+  const lineItems: Invoice["lineItems"] = []
+
+  if (!params.consultationWaived && params.consultationAmount > 0) {
+    lineItems!.push({
+      id: `line_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      type: "consultation",
+      label: "Consultation",
+      amount: params.consultationAmount,
+    })
+  } else {
+    lineItems!.push({
+      id: `line_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      type: "consultation",
+      label: "Consultation — Waived",
+      amount: 0,
+    })
+  }
+
+  for (const p of params.procedureLines) {
+    if (p.amount <= 0) continue
+    lineItems!.push({
+      id: p.id ?? `line_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      type: "procedure",
+      label: p.label,
+      amount: p.amount,
+    })
+  }
+
+  if (params.discountAmount > 0) {
+    lineItems!.push({
+      id: `line_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      type: "discount",
+      label: "Discount",
+      amount: -params.discountAmount,
+    })
+  }
+
+  const total = lineItems!.reduce((sum, i) => sum + i.amount, 0)
+  const updated: Invoice = {
+    ...invoicesStore[index],
+    lineItems,
+    amount: Math.max(0, total),
   }
 
   invoicesStore[index] = updated

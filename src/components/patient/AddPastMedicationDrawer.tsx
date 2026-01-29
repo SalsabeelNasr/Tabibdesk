@@ -2,31 +2,33 @@
 
 import { useState } from "react"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/Dialog"
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerHeaderTitle,
+} from "@/components/Drawer"
 import { Button } from "@/components/Button"
 import { Label } from "@/components/Label"
 import { DatePicker } from "@/components/DatePicker"
+import { RiCapsuleLine } from "@remixicon/react"
 import { MedicationFormFields } from "@/features/prescriptions/MedicationFormFields"
 import type { CreatePastMedicationPayload } from "@/features/prescriptions/prescriptions.types"
 
-interface AddPastMedicationModalProps {
+interface AddPastMedicationDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (payload: CreatePastMedicationPayload) => Promise<void>
   patientId: string
 }
 
-export function AddPastMedicationModal({
+export function AddPastMedicationDrawer({
   open,
   onOpenChange,
   onSubmit,
   patientId,
-}: AddPastMedicationModalProps) {
+}: AddPastMedicationDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -44,10 +46,8 @@ export function AddPastMedicationModal({
 
     setIsSubmitting(true)
     try {
-      // Concatenate strength and form into the name or handle as needed
-      // For PastMedication, we only have 'name', 'duration', 'takenFrom', 'takenTo', 'notes'
-      const nameWithDetails = formData.name + 
-        (formData.strength ? ` ${formData.strength}` : "") + 
+      const nameWithDetails = formData.name +
+        (formData.strength ? ` ${formData.strength}` : "") +
         (formData.form ? ` (${formData.form})` : "")
 
       await onSubmit({
@@ -59,7 +59,6 @@ export function AddPastMedicationModal({
         notes: formData.notes,
       })
       onOpenChange(false)
-      // Reset form
       setFormData({
         name: "",
         strength: "",
@@ -77,40 +76,46 @@ export function AddPastMedicationModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Add Past Medication</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <MedicationFormFields
-            data={formData}
-            onChange={(updates) => setFormData((prev) => ({ ...prev, ...updates }))}
-            showInstructions={false}
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent side="right" className="w-full sm:max-w-xl">
+        <DrawerHeader>
+          <DrawerHeaderTitle
+            icon={<RiCapsuleLine className="size-5 text-primary-600 dark:text-primary-400" />}
+            title="Add Past Medication"
           />
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Started Taking</Label>
-              <DatePicker
-                value={formData.takenFrom}
-                onChange={(date) => date && setFormData((prev) => ({ ...prev, takenFrom: date }))}
+        </DrawerHeader>
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+          <DrawerBody>
+            <div className="space-y-6">
+              <MedicationFormFields
+                data={formData}
+                onChange={(updates) => setFormData((prev) => ({ ...prev, ...updates }))}
+                showInstructions={false}
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Stopped Taking (Optional)</Label>
-              <DatePicker
-                value={formData.takenTo}
-                onChange={(date) => setFormData((prev) => ({ ...prev, takenTo: date }))}
-                placeholder="Still taking (Ongoing)"
-              />
-            </div>
-          </div>
 
-          <DialogFooter>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Started Taking</Label>
+                  <DatePicker
+                    value={formData.takenFrom}
+                    onChange={(date) => date && setFormData((prev) => ({ ...prev, takenFrom: date }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Stopped Taking (Optional)</Label>
+                  <DatePicker
+                    value={formData.takenTo}
+                    onChange={(date) => setFormData((prev) => ({ ...prev, takenTo: date }))}
+                    placeholder="Still taking (Ongoing)"
+                  />
+                </div>
+              </div>
+            </div>
+          </DrawerBody>
+          <DrawerFooter>
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
@@ -124,9 +129,9 @@ export function AddPastMedicationModal({
             >
               Add Medication
             </Button>
-          </DialogFooter>
+          </DrawerFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   )
 }

@@ -60,6 +60,31 @@ export async function syncPaymentsWithInvoices() {
       
       paymentsStore.push(payment)
     })
+
+    // Fallback: if no paid invoices (e.g. no past arrived/completed appointments), seed a few so Income tab shows entries
+    if (paymentsStore.length === 0) {
+      const { mockData } = await import("@/data/mock/mock-data")
+      const now = new Date()
+      const methods: PaymentMethod[] = ["cash", "visa", "instapay"]
+      const patients = mockData.patients.slice(0, 3)
+      patients.forEach((pt, i) => {
+        const created = new Date(now)
+        created.setDate(created.getDate() - i - 1)
+        created.setHours(10 + i, 30, 0, 0)
+        paymentsStore.push({
+          id: `pay_seed_${i + 1}`,
+          clinicId: "clinic-001",
+          invoiceId: `inv_seed_${i + 1}`,
+          patientId: pt.id,
+          appointmentId: `apt_seed_${i + 1}`,
+          amount: 350,
+          method: methods[i % 3],
+          proofFileId: methods[i % 3] !== "cash" ? `proof_seed_${i + 1}` : undefined,
+          createdByUserId: "user-001",
+          createdAt: created.toISOString(),
+        })
+      })
+    }
   } catch (error) {
     // If invoices not initialized yet, will sync later
     console.log("Payments sync deferred:", error)
@@ -176,13 +201,29 @@ export async function listPayments(params: ListPaymentsParams): Promise<ListPaym
     })
   }
   
-  // Filter by query (search in invoice ID or appointment ID)
+  // Filter by query (search in patient name, phone, invoice ID, or appointment ID)
   if (params.query) {
-    const queryLower = params.query.toLowerCase()
-    filtered = filtered.filter((p) =>
-      p.invoiceId.toLowerCase().includes(queryLower) ||
-      p.appointmentId.toLowerCase().includes(queryLower)
-    )
+    const queryLower = params.query.trim().toLowerCase()
+    if (queryLower) {
+      const { mockData } = await import("@/data/mock/mock-data")
+      const matchingPatientIds = new Set(
+        mockData.patients
+          .filter(
+            (pt) =>
+              `${(pt.first_name || "").toLowerCase()} ${(pt.last_name || "").toLowerCase()}`.includes(queryLower) ||
+              (pt.first_name || "").toLowerCase().includes(queryLower) ||
+              (pt.last_name || "").toLowerCase().includes(queryLower) ||
+              (pt.phone || "").toLowerCase().includes(queryLower)
+          )
+          .map((pt) => pt.id)
+      )
+      filtered = filtered.filter(
+        (p) =>
+          matchingPatientIds.has(p.patientId) ||
+          p.invoiceId.toLowerCase().includes(queryLower) ||
+          p.appointmentId.toLowerCase().includes(queryLower)
+      )
+    }
   }
   
   // Sort by date desc

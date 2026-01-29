@@ -63,51 +63,23 @@ function LandingPageContent() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="rounded-md p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-200 hover:dark:bg-gray-900 md:hidden"
-                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-                onClick={() => setIsMobileMenuOpen((v) => !v)}
-              >
-                {isMobileMenuOpen ? <RiCloseLine className="size-5" /> : <RiMenuLine className="size-5" />}
-              </button>
+              <div className="flex items-center gap-2 md:hidden">
+                <LanguageToggle />
+                <button
+                  type="button"
+                  className="rounded-md p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-200 hover:dark:bg-gray-900"
+                  aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                  onClick={() => setIsMobileMenuOpen((v) => !v)}
+                >
+                  {isMobileMenuOpen ? <RiCloseLine className="size-5" /> : <RiMenuLine className="size-5" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
         {isMobileMenuOpen && (
           <div className="border-t border-gray-100 bg-white p-4 dark:border-gray-800 dark:bg-gray-950 md:hidden">
-            <div className="space-y-2">
-              <Link
-                href={`/?lang=${lang}#pricing`}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-900"
-              >
-                {t.navPricing}
-              </Link>
-            </div>
-
-            <div className="my-4 border-t border-gray-100 dark:border-gray-800" />
-            <div className="flex items-center justify-between gap-3">
-              <LanguageToggle />
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-                >
-                  {t.navLogin}
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-                >
-                  {t.navSignup}
-                </Link>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button className="w-full" variant="primary">
                   {t.navLogin}

@@ -2,12 +2,11 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
-import { Input } from "@/components/Input"
+import { SearchInput } from "@/components/SearchInput"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { PageHeader } from "@/components/shared/PageHeader"
 import {
-  RiSearchLine,
   RiUserAddLine,
   RiUserSearchLine,
   RiPhoneLine,
@@ -85,13 +84,11 @@ export default function AssistantLeadsPage() {
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <RiSearchLine className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-          <Input
+        <div className="flex-1 max-w-md">
+          <SearchInput
             placeholder="Search by name or phone..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            onSearchChange={setSearchTerm}
           />
         </div>
         <div className="flex gap-2">

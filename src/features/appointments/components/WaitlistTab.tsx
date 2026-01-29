@@ -3,12 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/Button"
-import { Input } from "@/components/Input"
+import { SearchInput } from "@/components/SearchInput"
 import { Badge } from "@/components/Badge"
 import { useWaitlist } from "../hooks/useWaitlist"
 import { createAppointmentFromWaitlist } from "../appointments.api"
 import { remove as removeWaitlistEntry } from "../waitlist/waitingList.api"
-import { RiUserLine, RiPhoneLine, RiCalendarLine } from "@remixicon/react"
+import { RiAddLine, RiPhoneLine, RiCalendarLine } from "@remixicon/react"
 import { cx } from "@/lib/utils"
 import type { WaitlistEntry } from "../types"
 import type { Slot } from "../types"
@@ -17,6 +17,7 @@ interface WaitlistTabProps {
   clinicId: string
   doctorId?: string
   onBook?: (entry: WaitlistEntry) => void
+  onAddToWaitlist?: () => void
 }
 
 function WaitlistTable({
@@ -112,7 +113,7 @@ function WaitlistTable({
   )
 }
 
-export function WaitlistTab({ clinicId, doctorId, onBook }: WaitlistTabProps) {
+export function WaitlistTab({ clinicId, doctorId, onBook, onAddToWaitlist }: WaitlistTabProps) {
   const [searchQuery, setSearchQuery] = useState("")
   
   const { entries, loading } = useWaitlist({
@@ -129,13 +130,23 @@ export function WaitlistTab({ clinicId, doctorId, onBook }: WaitlistTabProps) {
   
   return (
     <div className="space-y-4">
-      <div className="flex-1 w-full">
-        <Input
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full">
+        <SearchInput
           placeholder="Search by name or phone..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full"
+          onSearchChange={setSearchQuery}
+          className="flex-1 min-w-0"
         />
+        {onAddToWaitlist && (
+          <Button
+            onClick={onAddToWaitlist}
+            variant="secondary"
+            className="shrink-0"
+          >
+            <RiAddLine className="mr-2 size-4" />
+            Add to Waitlist
+          </Button>
+        )}
       </div>
       
       <WaitlistTable 

@@ -1,13 +1,15 @@
 "use client"
 
-import { Input } from "@/components/Input"
-import { RiSearchLine } from "@remixicon/react"
+import { Button } from "@/components/Button"
+import { SearchInput } from "@/components/SearchInput"
+import { RiUserAddLine } from "@remixicon/react"
 
 interface PatientsToolbarProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   totalPatients: number
   filteredCount?: number
+  onAddPatient?: () => void
 }
 
 export function PatientsToolbar({
@@ -15,22 +17,28 @@ export function PatientsToolbar({
   onSearchChange,
   totalPatients,
   filteredCount,
+  onAddPatient,
 }: PatientsToolbarProps) {
   return (
     <div className="space-y-3">
-      {/* Search */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Search Input */}
-        <div className="relative flex-1 min-w-[200px]">
-          <RiSearchLine className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search by name, phone, email, complaint, or job..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+      {/* Search + Add Patient */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <SearchInput
+          placeholder="Search by name, phone, email, complaint, or job..."
+          value={searchQuery}
+          onSearchChange={onSearchChange}
+          className="flex-1 min-w-0"
+        />
+        {onAddPatient && (
+          <Button
+            onClick={onAddPatient}
+            variant="secondary"
+            className="shrink-0"
+          >
+            <RiUserAddLine className="mr-2 size-4" />
+            Add Patient
+          </Button>
+        )}
       </div>
 
       {/* Result Count (below the rows) */}

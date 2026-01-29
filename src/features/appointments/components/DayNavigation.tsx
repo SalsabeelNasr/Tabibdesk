@@ -5,11 +5,15 @@ import { Button } from "@/components/Button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover"
 import { Calendar } from "@/components/Calendar"
 import { RiArrowLeftSLine, RiArrowRightSLine, RiCalendarLine } from "@remixicon/react"
-import { format } from "date-fns"
+import { format, isBefore, startOfDay } from "date-fns"
 
 interface DayNavigationProps {
   currentDate: Date
   onDateChange: (date: Date) => void
+}
+
+function isBeforeToday(date: Date): boolean {
+  return isBefore(startOfDay(date), startOfDay(new Date()))
 }
 
 export function DayNavigation({ currentDate, onDateChange }: DayNavigationProps) {
@@ -32,21 +36,23 @@ export function DayNavigation({ currentDate, onDateChange }: DayNavigationProps)
   }
   
   const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
+    if (date && !isBeforeToday(date)) {
       onDateChange(date)
       setIsCalendarOpen(false)
     }
   }
   
   const isToday = format(currentDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
+  const cannotGoToPast = isToday
   
   return (
     <div className="flex items-center justify-between gap-1 sm:gap-4 rounded-lg border border-gray-200 bg-white p-2 sm:p-4 dark:border-gray-800 dark:bg-gray-950">
-      {/* Previous Day */}
+      {/* Previous Day - disabled when on today so we never go to past */}
       <Button
         variant="ghost"
         size="sm"
         onClick={goToPreviousDay}
+        disabled={cannotGoToPast}
         className="shrink-0 h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3"
       >
         <RiArrowLeftSLine className="size-5" />
@@ -72,6 +78,8 @@ export function DayNavigation({ currentDate, onDateChange }: DayNavigationProps)
               mode="single"
               selected={currentDate}
               onSelect={handleDateSelect}
+              disabled={isBeforeToday}
+              fromDate={startOfDay(new Date())}
               initialFocus
               enableYearNavigation
             />

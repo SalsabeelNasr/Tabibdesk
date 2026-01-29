@@ -37,7 +37,7 @@ export function MoveAppointmentModal({
         <DialogHeader>
           <DialogTitle>Move Appointment</DialogTitle>
           <DialogDescription>
-            Move <span className="font-semibold text-gray-900 dark:text-gray-50">{patientName}</span>'s appointment?
+            Move <span className="font-semibold text-gray-900 dark:text-gray-50">{patientName}</span>&apos;s appointment?
           </DialogDescription>
         </DialogHeader>
         

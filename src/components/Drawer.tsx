@@ -74,6 +74,7 @@ const DrawerContent = React.forwardRef<
       <DrawerOverlay>
         <DrawerPrimitives.Content
           ref={forwardedRef}
+          aria-describedby={undefined}
           className={cx(
             // base
             "fixed inset-y-0 z-50 flex flex-1 flex-col overflow-y-auto bg-white p-4 shadow-lg focus:outline-none dark:bg-[#090E1A] sm:p-6",
@@ -184,6 +185,29 @@ const DrawerFooter = ({
 
 DrawerFooter.displayName = "DrawerFooter"
 
+interface DrawerHeaderTitleProps {
+  icon: React.ReactNode
+  title: React.ReactNode
+  description?: React.ReactNode
+}
+
+function DrawerHeaderTitle({ icon, title, description }: DrawerHeaderTitleProps) {
+  return (
+    <>
+      <DrawerTitle className="flex items-center gap-2">
+        {icon}
+        {title}
+      </DrawerTitle>
+      {description != null && (
+        <DrawerDescription className="text-sm mt-0.5 flex items-center gap-1.5">
+          {description}
+        </DrawerDescription>
+      )}
+    </>
+  )
+}
+DrawerHeaderTitle.displayName = "DrawerHeaderTitle"
+
 export {
   Drawer,
   DrawerBody,
@@ -192,6 +216,7 @@ export {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
+  DrawerHeaderTitle,
   DrawerTitle,
   DrawerTrigger,
 }

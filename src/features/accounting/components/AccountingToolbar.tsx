@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useEffect } from "react"
-import { Input } from "@/components/Input"
+import { SearchInput } from "@/components/SearchInput"
 import { useDebounce } from "@/lib/useDebounce"
-import { RiSearchLine, RiFilterLine } from "@remixicon/react"
+import { RiFilterLine } from "@remixicon/react"
 
 export type DateRangePreset = "today" | "7days" | "30days" | "90days" | "thismonth" | "custom" | "all"
 
@@ -31,16 +31,11 @@ export function AccountingToolbar({
     <div className="flex flex-col gap-3">
       {/* Search Bar */}
       <div className="flex-1 min-w-0">
-        <div className="relative">
-          <RiSearchLine className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => onSearchQueryChange(e.target.value)}
-            className="pl-8 w-full"
-          />
-        </div>
+        <SearchInput
+          placeholder="Search..."
+          value={searchQuery}
+          onSearchChange={onSearchQueryChange}
+        />
       </div>
 
       {/* Filters Button (for mobile) */}

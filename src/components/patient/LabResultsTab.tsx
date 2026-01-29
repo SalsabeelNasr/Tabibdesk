@@ -7,6 +7,7 @@ import { Input } from "@/components/Input"
 import { Badge } from "@/components/Badge"
 import { RiFlaskLine, RiAddLine, RiFileDownloadLine, RiSaveLine, RiCloseLine, RiEditLine, RiDeleteBinLine, RiArrowDownSLine, RiArrowRightSLine, RiAttachmentLine, RiCloseFill } from "@remixicon/react"
 import Image from "next/image"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface LabResult {
   id: string
@@ -117,12 +118,11 @@ export function LabResultsTab({ labResults }: LabResultsTabProps) {
   return (
     <div className="space-y-6">
       {labResults.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <RiFlaskLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-2 text-gray-600 dark:text-gray-400">No lab results yet</p>
-          </CardContent>
-        </Card>
+        <PatientEmptyState
+          icon={RiFlaskLine}
+          title="No lab results yet"
+          description="Upload lab reports or add entries to get started."
+        />
       ) : (
         <div className="space-y-3">
           {sortedDates.map((date) => (

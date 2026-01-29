@@ -1,6 +1,6 @@
 // Tremor Raw Input [v1.0.3]
 
-import { RiEyeFill, RiEyeOffFill, RiSearchLine } from "@remixicon/react"
+import { RiEyeFill, RiEyeOffFill, RiSearchLine, RiSparkling2Line } from "@remixicon/react"
 import React from "react"
 import { tv, type VariantProps } from "tailwind-variants"
 
@@ -78,7 +78,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className={cx(
             inputStyles({ hasError, enableStepper }),
             {
-              "pl-8": isSearch,
+              "pl-11": isSearch,
               "pr-10": isPassword,
             },
             inputClassName,
@@ -89,13 +89,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <div
             className={cx(
               // base
-              "pointer-events-none absolute bottom-0 left-2 flex h-full items-center justify-center",
+              "pointer-events-none absolute bottom-0 left-2.5 flex h-full items-center justify-center gap-1",
               // text color
               "text-gray-400 dark:text-gray-600",
             )}
           >
             <RiSearchLine
               className="size-[1.125rem] shrink-0"
+              aria-hidden="true"
+            />
+            <RiSparkling2Line
+              className="size-3.5 shrink-0 opacity-70"
               aria-hidden="true"
             />
           </div>

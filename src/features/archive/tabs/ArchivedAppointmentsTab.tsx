@@ -160,12 +160,13 @@ export function ArchivedAppointmentsTab({
             <ArchiveAppointmentsTable appointments={appointments} />
           </div>
 
-          {/* Mobile Cards View */}
+          {/* Mobile Cards View - no cancel/reschedule for past archived appointments */}
           <div className="md:hidden">
             <AppointmentsCards
               appointments={appointments}
               onReschedule={() => {}}
               onCancel={() => {}}
+              readOnly
             />
           </div>
 

@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Input } from "@/components/Input"
+import { SearchInput } from "@/components/SearchInput"
 import { Label } from "@/components/Label"
 import { Button } from "@/components/Button"
 import { Alert } from "@/components/Alert"
-import { RiUserLine, RiSearchLine } from "@remixicon/react"
+import { RiUserLine } from "@remixicon/react"
 import { useDemo } from "@/contexts/demo-context"
 import { PatientFormFields, type PatientFormData } from "@/features/patients/PatientFormFields"
 import { createPatient } from "@/features/patients/patients.api"
@@ -233,21 +233,14 @@ export function PatientSelector({
       {/* Existing Patient Search */}
       {patientMode === "existing" && !selectedPatient && (
         <div className="space-y-3">
-          <div className="relative w-full">
-            <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 z-10" />
-            <Input
-              id="patient-search"
-              placeholder="Search for the patient by name or phone"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 h-11 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 rounded-xl"
-            />
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600"></div>
-              </div>
-            )}
-          </div>
+          <SearchInput
+            id="patient-search"
+            placeholder="Search for the patient by name or phone"
+            value={searchTerm}
+            onSearchChange={setSearchTerm}
+            loading={isSearching}
+            className="h-11 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 rounded-xl"
+          />
 
           {searchResults.length > 0 ? (
             <div className="max-h-48 space-y-2 overflow-y-auto pr-1 mt-2">

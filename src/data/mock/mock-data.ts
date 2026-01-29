@@ -3,6 +3,7 @@
 
 import type { DoctorAvailability } from "@/features/appointments/types"
 import type { Prescription, PastMedication } from "@/features/prescriptions/prescriptions.types"
+import type { AttachmentKind, ScanExtraction } from "@/types/attachment"
 
 export const DEMO_DOCTOR_ID = "demo-doctor-001"
 export const DEMO_CLINIC_ID = "demo-clinic-001"
@@ -846,6 +847,73 @@ export const mockLabResults: LabResult[] = [
     pdf_url: null,
     notes: "Continue dietary modifications",
     lab_file_id: "labfile-001",
+  },
+  // Lab results linked to X-Ray (attach-003) - AI-extracted from image
+  {
+    id: "lab-attach-003-a",
+    patient_id: "patient-001",
+    test_name: "Chest X-Ray - Lung fields",
+    value: "Clear",
+    unit: "",
+    normal_range: "Clear",
+    status: "normal",
+    test_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    pdf_url: null,
+    notes: "No consolidation or pleural effusion",
+    lab_file_id: "attach-003",
+  },
+  {
+    id: "lab-attach-003-b",
+    patient_id: "patient-001",
+    test_name: "Cardiac silhouette",
+    value: "Normal",
+    unit: "",
+    normal_range: "Normal",
+    status: "normal",
+    test_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    pdf_url: null,
+    notes: null,
+    lab_file_id: "attach-003",
+  },
+  {
+    id: "lab-attach-003-c",
+    patient_id: "patient-001",
+    test_name: "Bone structures",
+    value: "No acute fracture",
+    unit: "",
+    normal_range: "Intact",
+    status: "normal",
+    test_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    pdf_url: null,
+    notes: "Degenerative changes noted",
+    lab_file_id: "attach-003",
+  },
+  // Lab results linked to attachment (Blood Test Results.xlsx - attach-004)
+  {
+    id: "lab-attach-001",
+    patient_id: "patient-001",
+    test_name: "Glucose",
+    value: "95",
+    unit: "mg/dL",
+    normal_range: "70-100",
+    status: "normal",
+    test_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    pdf_url: null,
+    notes: null,
+    lab_file_id: "attach-004",
+  },
+  {
+    id: "lab-attach-002",
+    patient_id: "patient-001",
+    test_name: "HbA1c",
+    value: "5.6",
+    unit: "%",
+    normal_range: "<5.7",
+    status: "normal",
+    test_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    pdf_url: null,
+    notes: null,
+    lab_file_id: "attach-004",
   },
   // Ahmed Abdullah (patient-002) - Diabetes monitoring
   {
@@ -1988,6 +2056,7 @@ interface Attachment {
   file_url: string
   uploaded_at: string
   uploaded_by: string
+  attachment_kind?: AttachmentKind
 }
 
 export const mockAttachments: Attachment[] = [
@@ -1997,9 +2066,10 @@ export const mockAttachments: Attachment[] = [
     file_name: "Insurance Card.pdf",
     file_type: "application/pdf",
     file_size: 245760,
-    file_url: "/attachments/insurance-card.pdf",
+    file_url: "/mock/files/samplereport.png",
     uploaded_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "document",
   },
   {
     id: "attach-002",
@@ -2007,9 +2077,10 @@ export const mockAttachments: Attachment[] = [
     file_name: "Medical History.docx",
     file_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     file_size: 89600,
-    file_url: "/attachments/medical-history.docx",
+    file_url: "/mock/files/samplereport.png",
     uploaded_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "document",
   },
   {
     id: "attach-003",
@@ -2017,9 +2088,10 @@ export const mockAttachments: Attachment[] = [
     file_name: "X-Ray Report.jpg",
     file_type: "image/jpeg",
     file_size: 1536000,
-    file_url: "/attachments/xray-report.jpg",
+    file_url: "/mock/files/lab.png",
     uploaded_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
     uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "lab",
   },
   {
     id: "attach-004",
@@ -2027,9 +2099,10 @@ export const mockAttachments: Attachment[] = [
     file_name: "Blood Test Results.xlsx",
     file_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     file_size: 45120,
-    file_url: "/attachments/blood-test.xlsx",
+    file_url: "/mock/files/lab.png",
     uploaded_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "lab",
   },
   {
     id: "attach-005",
@@ -2037,9 +2110,10 @@ export const mockAttachments: Attachment[] = [
     file_name: "Prescription History.pdf",
     file_type: "application/pdf",
     file_size: 178240,
-    file_url: "/attachments/prescription-history.pdf",
+    file_url: "/mock/files/samplereport.png",
     uploaded_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
     uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "document",
   },
   {
     id: "attach-006",
@@ -2047,9 +2121,39 @@ export const mockAttachments: Attachment[] = [
     file_name: "CT Scan.png",
     file_type: "image/png",
     file_size: 2048000,
-    file_url: "/attachments/ct-scan.png",
+    file_url: "/mock/files/ct.png",
     uploaded_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "scan",
+  },
+  {
+    id: "attach-007",
+    patient_id: "patient-001",
+    file_name: "Chest X-Ray.pdf",
+    file_type: "application/pdf",
+    file_size: 512000,
+    file_url: "/mock/files/ct.png",
+    uploaded_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    uploaded_by: "Dr. Ahmed Hassan",
+    attachment_kind: "scan",
+  },
+]
+
+// Scan extractions (AI-extracted text note per scan attachment)
+export const mockScanExtractions: ScanExtraction[] = [
+  {
+    id: "scan-ext-001",
+    attachment_id: "attach-006",
+    patient_id: "patient-002",
+    text: "CT abdomen/pelvis: No acute findings. Liver, spleen, kidneys, and pancreas are unremarkable. No lymphadenopathy. No free fluid. Impression: Normal study.",
+    extracted_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "scan-ext-002",
+    attachment_id: "attach-007",
+    patient_id: "patient-001",
+    text: "Chest X-Ray PA and lateral: Lungs are clear with no focal consolidation, mass, or pleural effusion. Cardiac silhouette is normal in size. Mediastinal contours are unremarkable. No pneumothorax. Bony structures show mild degenerative changes. Impression: Normal chest radiograph.",
+    extracted_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ]
 
@@ -2682,6 +2786,7 @@ export const mockData = {
   labResults: mockLabResults,
   transcriptions: mockTranscriptions,
   attachments: mockAttachments,
+  scanExtractions: mockScanExtractions,
   leads: mockLeads,
   waitingListEntries: mockWaitingListEntries,
   approvalRequests: mockApprovalRequests,

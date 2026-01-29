@@ -5,13 +5,14 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
-  DrawerTitle,
+  DrawerHeaderTitle,
 } from "@/components/Drawer"
 import { Button } from "@/components/Button"
 import { Label } from "@/components/Label"
 import { Textarea } from "@/components/Textarea"
-import { RiAddLine, RiCloseLine } from "@remixicon/react"
+import { RiAddLine, RiCloseLine, RiFileList3Line } from "@remixicon/react"
 import type { CreatePrescriptionPayload, PrescriptionItem } from "./prescriptions.types"
 import { MedicationFormFields } from "./MedicationFormFields"
 
@@ -93,10 +94,13 @@ export function AddPrescriptionDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent side="right" className="w-full sm:max-w-2xl">
         <DrawerHeader>
-          <DrawerTitle>New Prescription</DrawerTitle>
+          <DrawerHeaderTitle
+            icon={<RiFileList3Line className="size-5 text-primary-600 dark:text-primary-400" />}
+            title="New Prescription"
+          />
         </DrawerHeader>
-        <DrawerBody>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+          <DrawerBody>
             <div className="space-y-4">
               {/* Medications Section */}
               <div className="space-y-4">
@@ -175,29 +179,26 @@ export function AddPrescriptionDrawer({
                 />
               </div>
             </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                isLoading={isSubmitting}
-                disabled={items.filter((item) => item.name.trim() && item.sig.trim()).length === 0}
-                className="flex-[2]"
-              >
-                Save Prescription
-              </Button>
-            </div>
-          </form>
-        </DrawerBody>
+          </DrawerBody>
+          <DrawerFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting}
+              disabled={items.filter((item) => item.name.trim() && item.sig.trim()).length === 0}
+            >
+              Save Prescription
+            </Button>
+          </DrawerFooter>
+        </form>
       </DrawerContent>
     </Drawer>
   )

@@ -192,12 +192,6 @@ export function PatientHistoryTab({ clinicId, patientId, appointments, tasks = [
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
-          Patient History
-        </h3>
-      </div>
-
       {/* Filter Buttons */}
       <div className="flex flex-wrap gap-2">
         <FilterButton value="all" label="All" icon={RiFileList3Line} count={counts.all} />

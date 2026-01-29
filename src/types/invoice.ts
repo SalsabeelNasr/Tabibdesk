@@ -1,4 +1,11 @@
-export type InvoiceStatus = "unpaid" | "paid" | "void";
+export type InvoiceStatus = "unpaid" | "partial" | "paid" | "void";
+
+export interface ChargeLineItem {
+  id: string
+  type: "consultation" | "procedure" | "discount"
+  label: string
+  amount: number
+}
 
 export interface Invoice {
   id: string
@@ -10,4 +17,6 @@ export interface Invoice {
   amount: number
   status: InvoiceStatus
   createdAt: string
+  /** Optional line items (consultation, procedures, discount). When present, amount = sum(lineItems). */
+  lineItems?: ChargeLineItem[]
 }

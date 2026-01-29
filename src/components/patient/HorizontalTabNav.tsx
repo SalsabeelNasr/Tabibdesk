@@ -9,6 +9,7 @@ import {
   RiCapsuleLine,
   RiTaskLine,
   RiAttachmentLine,
+  RiMoneyDollarCircleLine,
 } from "@remixicon/react"
 
 export interface Tab {
@@ -26,6 +27,7 @@ interface HorizontalTabNavProps {
   onAddMedication?: () => void
   onAddTask?: () => void
   onAddFile?: () => void
+  onAddCharge?: () => void
 }
 
 export function HorizontalTabNav({
@@ -36,119 +38,185 @@ export function HorizontalTabNav({
   onAddMedication,
   onAddTask,
   onAddFile,
+  onAddCharge,
 }: HorizontalTabNavProps) {
   const [showActionsMenu, setShowActionsMenu] = useState(false)
 
   const actions = [
-    {
-      label: "Clinical Note",
-      icon: RiFileTextLine,
-      onClick: onAddNote,
-    },
-    {
-      label: "Prescription",
-      icon: RiCapsuleLine,
-      onClick: onAddMedication,
-    },
-    {
-      label: "Task",
-      icon: RiTaskLine,
-      onClick: onAddTask,
-    },
-    {
-      label: "File",
-      icon: RiAttachmentLine,
-      onClick: onAddFile,
-    },
+    { label: "Add note", icon: RiFileTextLine, onClick: onAddNote },
+    { label: "Add task", icon: RiTaskLine, onClick: onAddTask },
+    { label: "Upload file", icon: RiAttachmentLine, onClick: onAddFile },
+    { label: "Add invoice", icon: RiMoneyDollarCircleLine, onClick: onAddCharge },
+    { label: "Add prescription", icon: RiCapsuleLine, onClick: onAddMedication },
   ]
+
+  const AddButton = () => (
+    <div className="relative shrink-0">
+      <button
+        onClick={() => setShowActionsMenu(!showActionsMenu)}
+        className={cx(
+          "inline-flex items-center justify-center rounded-lg border p-2 transition-colors",
+          showActionsMenu
+            ? "border-primary-600 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-400"
+            : "border-primary-600 bg-primary-600 text-white hover:bg-primary-700 dark:border-primary-500 dark:bg-primary-500 dark:text-white dark:hover:bg-primary-600"
+        )}
+        aria-label="Add Record"
+      >
+        {showActionsMenu ? (
+          <RiCloseLine className="size-5" />
+        ) : (
+          <RiAddLine className="size-5" />
+        )}
+      </button>
+
+      {showActionsMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setShowActionsMenu(false)}
+          />
+
+          {/* Dropdown Menu */}
+          <div className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-950">
+            <div className="p-1.5">
+              {actions.map((action, i) => {
+                const ActionIcon = action.icon
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setShowActionsMenu(false)
+                      action.onClick?.()
+                    }}
+                    className="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
+                  >
+                    <ActionIcon className="size-5 text-gray-500 transition-colors group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200" />
+                    <span>{action.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-800">
-      <div className="flex items-center justify-between">
-        {/* Tabs */}
-        <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.id
+      <div className="flex items-center justify-between gap-0">
+        {/* Tabs: full width on mobile (no + button), normal on desktop */}
+        <nav
+          className="-mb-px flex min-w-0 flex-1 sm:flex-initial sm:min-w-0 overflow-x-auto sm:overflow-visible"
+          aria-label="Tabs"
+        >
+          <div className="flex w-full flex-1 gap-0 sm:w-auto sm:flex-initial sm:gap-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={cx(
-                  "group inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors",
-                  isActive
-                    ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
-                    : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200"
-                )}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <Icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
                   className={cx(
-                    "size-5 shrink-0",
+                    "group inline-flex flex-1 min-w-0 justify-center gap-2 whitespace-nowrap border-b-2 px-1 py-2.5 text-sm font-medium transition-colors sm:flex-initial sm:min-w-0 sm:justify-start sm:py-3",
                     isActive
-                      ? "text-primary-600 dark:text-primary-400"
-                      : "text-gray-500 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300"
+                      ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200"
                   )}
-                />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            )
-          })}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon
+                    className={cx(
+                      "size-5 shrink-0",
+                      isActive
+                        ? "text-primary-600 dark:text-primary-400"
+                        : "text-gray-500 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300"
+                    )}
+                  />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              )
+            })}
+          </div>
         </nav>
 
-        {/* Add Record Dropdown */}
-        <div className="relative ml-4 shrink-0">
-          <button
-            onClick={() => setShowActionsMenu(!showActionsMenu)}
-            className={cx(
-              "inline-flex items-center justify-center rounded-lg border p-2 transition-colors",
-              showActionsMenu
-                ? "border-primary-600 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-400"
-                : "border-primary-600 bg-primary-600 text-white hover:bg-primary-700 dark:border-primary-500 dark:bg-primary-500 dark:text-white dark:hover:bg-primary-600"
-            )}
-            aria-label="Add Record"
-          >
-            {showActionsMenu ? (
-              <RiCloseLine className="size-5" />
-            ) : (
-              <RiAddLine className="size-5" />
-            )}
-          </button>
-
-          {showActionsMenu && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowActionsMenu(false)}
-              />
-
-              {/* Dropdown Menu */}
-              <div className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-950">
-                <div className="p-1.5">
-                  {actions.map((action, i) => {
-                    const ActionIcon = action.icon
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setShowActionsMenu(false)
-                          action.onClick?.()
-                        }}
-                        className="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
-                      >
-                        <ActionIcon className="size-5 text-gray-500 transition-colors group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200" />
-                        <span>{action.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </>
-          )}
+        {/* Add Record Dropdown (Desktop Only) */}
+        <div className="hidden shrink-0 ml-4 sm:block">
+          <AddButton />
         </div>
+
+        {/* Mobile: no button, placeholder keeps layout consistent */}
+        <div id="mobile-action-button" className="w-0 overflow-hidden sm:hidden" aria-hidden />
       </div>
+    </div>
+  )
+}
+
+// Export the AddButton component for use in the PageHeader
+export function MobileAddButton({ 
+  onAddNote, 
+  onAddMedication, 
+  onAddTask, 
+  onAddFile, 
+  onAddCharge 
+}: Partial<HorizontalTabNavProps>) {
+  const [showActionsMenu, setShowActionsMenu] = useState(false)
+
+  const actions = [
+    { label: "Add note", icon: RiFileTextLine, onClick: onAddNote },
+    { label: "Add task", icon: RiTaskLine, onClick: onAddTask },
+    { label: "Upload file", icon: RiAttachmentLine, onClick: onAddFile },
+    { label: "Add invoice", icon: RiMoneyDollarCircleLine, onClick: onAddCharge },
+    { label: "Add prescription", icon: RiCapsuleLine, onClick: onAddMedication },
+  ]
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        onClick={() => setShowActionsMenu(!showActionsMenu)}
+        className={cx(
+          "inline-flex items-center justify-center rounded-lg border p-2 transition-colors",
+          showActionsMenu
+            ? "border-primary-600 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-400"
+            : "border-primary-600 bg-primary-600 text-white hover:bg-primary-700 dark:border-primary-500 dark:bg-primary-500 dark:text-white dark:hover:bg-primary-600"
+        )}
+        aria-label="Add Record"
+      >
+        {showActionsMenu ? (
+          <RiCloseLine className="size-5" />
+        ) : (
+          <RiAddLine className="size-5" />
+        )}
+      </button>
+
+      {showActionsMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowActionsMenu(false)} />
+          <div className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-950">
+            <div className="p-1.5">
+              {actions.map((action, i) => {
+                const ActionIcon = action.icon
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setShowActionsMenu(false)
+                      action.onClick?.()
+                    }}
+                    className="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
+                  >
+                    <ActionIcon className="size-5 text-gray-500 transition-colors group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200" />
+                    <span>{action.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

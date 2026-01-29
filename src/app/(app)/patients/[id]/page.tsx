@@ -9,36 +9,39 @@ import { Card, CardContent } from "@/components/Card"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { useDemo } from "@/contexts/demo-context"
 import { useUserClinic } from "@/contexts/user-clinic-context"
-import { mockData } from "@/data/mock/mock-data"
+import { mockData, mockAppointments } from "@/data/mock/mock-data"
 
 // Import new components
-import { HorizontalTabNav, Tab } from "@/components/patient/HorizontalTabNav"
+import { HorizontalTabNav, Tab, MobileAddButton } from "@/components/patient/HorizontalTabNav"
 import { ClinicalNotesTab } from "@/components/patient/ClinicalNotesTab"
-import { GeneralTab } from "@/components/patient/GeneralTab"
 import { DoctorTab } from "@/components/patient/DoctorTab"
-import { PrescriptionsTab } from "@/components/patient/PrescriptionsTab"
 import { FilesTab } from "@/components/patient/FilesTab"
 import { TasksTab } from "@/components/patient/TasksTab"
 import { PatientHistoryTab } from "@/components/patient/PatientHistoryTab"
+import { InvoicesTab } from "@/components/patient/InvoicesTab"
 import { AddTaskDrawer } from "@/features/tasks/AddTaskDrawer"
 import { createTask, listTasks, updateTaskStatus } from "@/features/tasks/tasks.api"
 import { listInvoices } from "@/api/invoices.api"
 import { update as updatePatient } from "@/api/patients.api"
+import { getByPatientId as getNotesByPatientId } from "@/api/notes.api"
 import { useToast } from "@/hooks/useToast"
 import type { CreateTaskPayload } from "@/features/tasks/tasks.types"
 import { AddPrescriptionDrawer } from "@/features/prescriptions/AddPrescriptionDrawer"
-import { AddPastMedicationModal } from "@/components/patient/AddPastMedicationModal"
+import { AddPastMedicationDrawer } from "@/components/patient/AddPastMedicationDrawer"
+import { AddWeightDrawer, type AddWeightPayload } from "@/components/patient/AddWeightDrawer"
+import { AddFileDrawer } from "@/components/patient/AddFileDrawer"
+import { InvoiceDrawer, type PatientAppointment } from "@/features/accounting/components/InvoiceDrawer"
+import { getDraftDueTotalForPatient } from "@/api/draft-due.api"
 import { createPrescription, getPastMedicationsByPatient, createPastMedication } from "@/features/prescriptions/prescriptions.api"
 import type { CreatePrescriptionPayload, CreatePastMedicationPayload } from "@/features/prescriptions/prescriptions.types"
 import {
-  RiFileTextLine,
   RiUserLine,
-  RiCapsuleLine,
   RiFolderLine,
   RiTaskLine,
-  RiTimeLine,
   RiHistoryLine,
   RiStethoscopeLine,
+  RiMoneyDollarCircleLine,
+  RiTimeLine,
 } from "@remixicon/react"
 
 export default function PatientDetailPage() {
@@ -50,10 +53,14 @@ export default function PatientDetailPage() {
 
   const [loading, setLoading] = useState(true)
   const [patient, setPatient] = useState<any | null>(null)
-  const [activeTab, setActiveTab] = useState<string>("clinicalNotes")
+  const [activeTab, setActiveTab] = useState<string>("note")
   const [showAddTaskDrawer, setShowAddTaskDrawer] = useState(false)
   const [showAddPrescriptionDrawer, setShowAddPrescriptionDrawer] = useState(false)
-  const [showAddPastMedicationModal, setShowAddPastMedicationModal] = useState(false)
+  const [showAddPastMedicationDrawer, setShowAddPastMedicationDrawer] = useState(false)
+  const [showAddWeightDrawer, setShowAddWeightDrawer] = useState(false)
+  const [showUploadFileDrawer, setShowUploadFileDrawer] = useState(false)
+  const [showInvoiceDrawer, setShowInvoiceDrawer] = useState(false)
+  const [invoicesRefreshTrigger, setInvoicesRefreshTrigger] = useState(0)
 
   // Data for tabs
   const [weightLogs, setWeightLogs] = useState<any[]>([])
@@ -64,6 +71,7 @@ export default function PatientDetailPage() {
   const [tasks, setTasks] = useState<any[]>([])
   const [notes, setNotes] = useState<any[]>([])
   const [attachments, setAttachments] = useState<any[]>([])
+  const [scanExtractions, setScanExtractions] = useState<any[]>([])
   const [transcriptions, setTranscriptions] = useState<any[]>([])
   const [pastMedications, setPastMedications] = useState<any[]>([])
   const [totalDue, setTotalDue] = useState<number>(0)
@@ -71,7 +79,7 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     fetchPatientData()
-    fetchUnpaidInvoices()
+    fetchDueTotal()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId, isDemoMode])
 
@@ -99,6 +107,7 @@ export default function PatientDetailPage() {
         setTasks(mockData.tasks.filter((t) => t.patient_id === patientId))
         setNotes(mockData.doctorNotes.filter((n) => n.patient_id === patientId))
         setAttachments(mockData.attachments.filter((a) => a.patient_id === patientId))
+        setScanExtractions(mockData.scanExtractions.filter((s) => s.patient_id === patientId))
         setTranscriptions(mockData.transcriptions.filter((t) => t.patient_id === patientId))
         setPastMedications(mockData.pastMedications.filter((m) => m.patientId === patientId))
       } else {
@@ -112,20 +121,23 @@ export default function PatientDetailPage() {
     setLoading(false)
   }
 
-  const fetchUnpaidInvoices = async () => {
+  const fetchDueTotal = async () => {
     try {
       const clinicId = currentClinic?.id || "clinic-001"
-      const result = await listInvoices({
-        clinicId,
-        patientId,
-        status: "unpaid",
-        page: 1,
-        pageSize: 1000,
-      })
-      const total = result.invoices.reduce((sum, inv) => sum + inv.amount, 0)
-      setTotalDue(total)
+      const [invResult, draftTotal] = await Promise.all([
+        listInvoices({
+          clinicId,
+          patientId,
+          status: "unpaid",
+          page: 1,
+          pageSize: 1000,
+        }),
+        getDraftDueTotalForPatient(patientId),
+      ])
+      const invoicesTotal = invResult.invoices.reduce((sum, inv) => sum + inv.amount, 0)
+      setTotalDue(invoicesTotal + draftTotal)
     } catch (error) {
-      console.error("Failed to fetch unpaid invoices:", error)
+      console.error("Failed to fetch due total:", error)
     }
   }
 
@@ -235,7 +247,6 @@ export default function PatientDetailPage() {
     }
   }
 
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -293,72 +304,102 @@ export default function PatientDetailPage() {
     return `${Math.floor(diffDays / 365)} years ago`
   }
 
-  // Define tabs
+  // Patient is "now" in today's queue (first in queue) – show green live indicator on profile
+  const isNowInQueue =
+    isDemoMode &&
+    (() => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const todayAppts = mockAppointments.filter((apt) => {
+        const aptDate = new Date(apt.scheduled_at)
+        return aptDate >= today && aptDate < tomorrow
+      })
+      const queue = todayAppts
+        .filter((apt) => !["completed", "cancelled", "no_show"].includes(apt.status))
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+      const first = queue[0]
+      return first?.patient_id === patientId
+    })()
+
+  // Define tabs: first = Note (stethoscope), second = Profile (user, contains general + dr content)
   const tabs: Tab[] = [
-    { id: "clinicalNotes", label: "Notes", icon: RiFileTextLine },
-    { id: "general", label: "General", icon: RiUserLine },
-    { id: "doctor", label: "Dr", icon: RiStethoscopeLine },
-    { id: "medications", label: "Prescription", icon: RiCapsuleLine },
+    { id: "note", label: "Note", icon: RiStethoscopeLine },
+    { id: "profile", label: "Profile", icon: RiUserLine },
     { id: "tasks", label: "Tasks", icon: RiTaskLine },
     { id: "files", label: "Files", icon: RiFolderLine },
+    { id: "invoices", label: "Invoices", icon: RiMoneyDollarCircleLine },
     { id: "history", label: "History", icon: RiHistoryLine },
   ]
 
   return (
-    <div className="space-y-6">
-      {/* PageHeader with Back Navigation */}
-      <PageHeader
-        title={
-          <div className="flex items-center gap-2">
-            <span>{`${patient.first_name} ${patient.last_name}`}</span>
-            <Badge 
-              variant="neutral" 
-              className="bg-gray-900 text-white text-xs font-medium dark:bg-gray-800 dark:text-gray-100"
-            >
-              {patient.age ? `${patient.age}y` : "Age N/A"} • {patient.gender}
-            </Badge>
-            {totalDue > 0 && (
-              <Badge 
-                variant="error" 
-                className="text-xs font-medium"
-              >
-                Due: {totalDue.toFixed(2)} EGP
-              </Badge>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-row items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="truncate text-xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-3xl">
+              {`${patient.first_name} ${patient.last_name}`}
+            </h1>
+            {isNowInQueue && (
+              <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">
+                <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+                live
+              </span>
             )}
           </div>
-        }
-        actions={
-          lastVisited && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-              <RiTimeLine className="size-4 shrink-0" />
-              <span>Last visited: {formatLastVisited(lastVisited)}</span>
-            </div>
-          )
-        }
-      />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+            <Badge
+              variant="neutral"
+              className="shrink-0 bg-gray-900 text-white text-xs font-medium dark:bg-gray-800 dark:text-gray-100"
+            >
+              {patient.age != null ? `${patient.age}y` : "Age N/A"} • {patient.gender}
+            </Badge>
+            {totalDue > 0 && (
+              <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                <RiMoneyDollarCircleLine className="size-3.5" />
+                Due: {totalDue.toFixed(2)} EGP
+              </span>
+            )}
+          </div>
+          {lastVisited && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Last visit: {formatLastVisited(lastVisited)}
+            </p>
+          )}
+        </div>
+        <div className="shrink-0 sm:hidden">
+          <MobileAddButton
+            onAddNote={() => setActiveTab("note")}
+            onAddMedication={() => setShowAddPrescriptionDrawer(true)}
+            onAddTask={() => setShowAddTaskDrawer(true)}
+            onAddFile={() => {
+              setActiveTab("files")
+              setShowUploadFileDrawer(true)
+            }}
+            onAddCharge={() => setShowInvoiceDrawer(true)}
+          />
+        </div>
+      </div>
 
       {/* Horizontal Tab Navigation */}
       <HorizontalTabNav
         activeTab={activeTab}
         onTabChange={setActiveTab}
         tabs={tabs}
-        onAddNote={() => {
-          setActiveTab("clinicalNotes")
-        }}
-        onAddMedication={() => {
-          setShowAddPrescriptionDrawer(true)
-        }}
-        onAddTask={() => {
-          setShowAddTaskDrawer(true)
-        }}
+        onAddNote={() => setActiveTab("note")}
+        onAddMedication={() => setShowAddPrescriptionDrawer(true)}
+        onAddTask={() => setShowAddTaskDrawer(true)}
         onAddFile={() => {
           setActiveTab("files")
+          setShowUploadFileDrawer(true)
         }}
+        onAddCharge={() => setShowInvoiceDrawer(true)}
       />
 
       {/* Tab Content */}
       <div>
-        {activeTab === "clinicalNotes" && (
+        {activeTab === "note" && (
           <ClinicalNotesTab
             onSaveNote={(note) => {
               // TODO: Implement save note
@@ -366,40 +407,56 @@ export default function PatientDetailPage() {
             }}
           />
         )}
-        {activeTab === "general" && (
-          <GeneralTab
-            patient={patient}
-            weightLogs={weightLogs}
-            pastMedications={pastMedications}
-            onAddPastMedication={() => {
-              setShowAddPastMedicationModal(true)
-            }}
-            onUpdatePatient={handleUpdatePatient}
-          />
-        )}
-        {activeTab === "doctor" && (
+        {activeTab === "profile" && (
           <DoctorTab
             patient={patient}
             notes={notes}
             weightLogs={weightLogs}
             pastMedications={pastMedications}
-            onAddPastMedication={() => {
-              setShowAddPastMedicationModal(true)
+            prescriptions={prescriptions}
+            onAddPastMedication={() => setShowAddPastMedicationDrawer(true)}
+            onAddPrescription={() => setShowAddPrescriptionDrawer(true)}
+            onAddWeightLog={() => setShowAddWeightDrawer(true)}
+            onNoteAdded={async () => {
+              if (isDemoMode) {
+                setNotes(mockData.doctorNotes.filter((n) => n.patient_id === patientId))
+              } else {
+                const list = await getNotesByPatientId(patientId)
+                setNotes(list.map((n) => ({ id: n.id, patient_id: n.patientId, note: n.note, created_at: n.createdAt })))
+              }
             }}
+            onUpdatePatient={handleUpdatePatient}
           />
         )}
-        {activeTab === "medications" && <PrescriptionsTab prescriptions={prescriptions} />}
         {activeTab === "files" && (
           <FilesTab
             labResults={labResults}
             attachments={attachments}
-            onUploadAttachment={(files) => {
-              // TODO: Implement file upload
-              console.log("Upload files:", files)
-            }}
+            scanExtractions={scanExtractions}
             onDeleteAttachment={(attachmentId) => {
-              // TODO: Implement delete attachment
-              console.log("Delete attachment:", attachmentId)
+              if (isDemoMode) {
+                const idx = mockData.attachments.findIndex((a) => a.id === attachmentId)
+                if (idx >= 0) mockData.attachments.splice(idx, 1)
+                setAttachments(mockData.attachments.filter((a) => a.patient_id === patientId))
+              }
+            }}
+            onExtractLab={(attachmentId) => {
+              // TODO: Call API to extract lab from file; for demo no-op
+              console.log("Extract lab for attachment:", attachmentId)
+            }}
+            onExtractScan={(attachmentId, text) => {
+              if (isDemoMode && text.trim()) {
+                const newExtraction = {
+                  id: `scan-ext-${Date.now()}`,
+                  attachment_id: attachmentId,
+                  patient_id: patientId,
+                  text: text.trim(),
+                  extracted_at: new Date().toISOString(),
+                }
+                mockData.scanExtractions.push(newExtraction as any)
+                setScanExtractions(mockData.scanExtractions.filter((s) => s.patient_id === patientId))
+                showToast("Scan note saved", "success")
+              }
             }}
           />
         )}
@@ -439,8 +496,7 @@ export default function PatientDetailPage() {
                 // TODO: Fetch from API when integrated
               }
               showToast("Prescription created successfully", "success")
-              // Switch to prescriptions tab to show the newly added prescription
-              setActiveTab("medications")
+              setActiveTab("profile")
             } catch (error) {
               console.error("Failed to create prescription:", error)
               showToast("Failed to create prescription", "error")
@@ -451,18 +507,46 @@ export default function PatientDetailPage() {
           clinicId={currentClinic?.id || "clinic-001"}
           doctorId={currentUser?.id}
         />
-        <AddPastMedicationModal
-          open={showAddPastMedicationModal}
-          onOpenChange={setShowAddPastMedicationModal}
+        <AddFileDrawer
+          open={showUploadFileDrawer}
+          onOpenChange={setShowUploadFileDrawer}
+          onUpload={(files, kind, thumbnails) => {
+            if (isDemoMode) {
+              const uploadedBy = currentUser?.full_name ?? "Dr. Ahmed Hassan"
+              const now = new Date().toISOString()
+              Array.from(files).forEach((file, i) => {
+                const newAttachment = {
+                  id: `attach-${Date.now()}-${i}`,
+                  patient_id: patientId,
+                  file_name: file.name,
+                  file_type: file.type || "application/octet-stream",
+                  file_size: file.size,
+                  file_url: `/attachments/${file.name}`,
+                  uploaded_at: now,
+                  uploaded_by: uploadedBy,
+                  attachment_kind: kind,
+                  thumbnail_url: thumbnails?.[file.name],
+                }
+                mockData.attachments.push(newAttachment as any)
+              })
+              setAttachments(mockData.attachments.filter((a) => a.patient_id === patientId))
+              showToast(`${files.length} file(s) uploaded`, "success")
+            } else {
+              // TODO: POST to API with kind and thumbnails
+              console.log("Upload files:", files, "kind:", kind, "thumbnails:", thumbnails)
+            }
+          }}
+        />
+        <AddPastMedicationDrawer
+          open={showAddPastMedicationDrawer}
+          onOpenChange={setShowAddPastMedicationDrawer}
           onSubmit={async (payload: CreatePastMedicationPayload) => {
             try {
               const newMed = await createPastMedication(payload)
               if (isDemoMode) {
                 setPastMedications([newMed, ...pastMedications])
-                // Also update mockData
                 mockData.pastMedications.push(newMed as any)
               } else {
-                // Refresh from API
                 const meds = await getPastMedicationsByPatient(patientId)
                 setPastMedications(meds)
               }
@@ -475,6 +559,43 @@ export default function PatientDetailPage() {
           }}
           patientId={patientId}
         />
+        <AddWeightDrawer
+          open={showAddWeightDrawer}
+          onOpenChange={setShowAddWeightDrawer}
+          patientId={patientId}
+          onSubmit={async (payload: AddWeightPayload) => {
+            if (isDemoMode) {
+              const newLog = {
+                id: `weight-${Date.now()}`,
+                patient_id: payload.patientId,
+                weight: payload.weight,
+                recorded_date: payload.recordedDate,
+                notes: payload.notes ?? null,
+              }
+              mockData.weightLogs.push(newLog as any)
+              setWeightLogs(mockData.weightLogs.filter((w) => w.patient_id === patientId))
+            }
+            showToast("Weight recorded successfully", "success")
+          }}
+        />
+        <InvoiceDrawer
+          open={showInvoiceDrawer}
+          onOpenChange={setShowInvoiceDrawer}
+          onSuccess={() => {
+            fetchDueTotal()
+            setInvoicesRefreshTrigger((n) => n + 1)
+          }}
+          mode="update-due-only"
+          patientId={patientId}
+          patientAppointments={appointments as PatientAppointment[]}
+        />
+        {activeTab === "invoices" && (
+          <InvoicesTab
+            patientId={patientId}
+            clinicId={patient.clinic_id || currentClinic?.id || "clinic-001"}
+            refreshTrigger={invoicesRefreshTrigger}
+          />
+        )}
         {activeTab === "history" && (
           <Card>
             <CardContent className="p-6">

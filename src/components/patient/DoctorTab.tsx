@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader } from "@/components/Card"
 import { Badge } from "@/components/Badge"
 import { Checkbox } from "@/components/Checkbox"
+import { BasicInfoCompact } from "./BasicInfoCompact"
 import { WeightChart } from "./WeightChart"
 import { PastMedications } from "./PastMedications"
 import { NotesTab } from "./NotesTab"
@@ -12,10 +13,14 @@ import {
   RiHeartPulseLine,
   RiLineChartLine,
   RiHistoryLine,
+  RiCapsuleLine,
+  RiTimeLine,
+  RiAddLine,
 } from "@remixicon/react"
-import type { PastMedication } from "@/features/prescriptions/prescriptions.types"
+import type { PastMedication, Prescription } from "@/features/prescriptions/prescriptions.types"
 import { useState } from "react"
 import { format } from "date-fns"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface Patient {
   id: string
@@ -73,7 +78,12 @@ interface DoctorTabProps {
   notes: DoctorNote[]
   weightLogs?: WeightLog[]
   pastMedications?: PastMedication[]
+  prescriptions?: Prescription[]
   onAddPastMedication?: () => void
+  onAddPrescription?: () => void
+  onAddWeightLog?: () => void
+  onNoteAdded?: () => void
+  onUpdatePatient?: (updates: Partial<Patient>) => Promise<void>
 }
 
 const INITIAL_WEIGHT_VISIBLE_COUNT = 5
@@ -84,7 +94,12 @@ export function DoctorTab({
   notes,
   weightLogs = [],
   pastMedications = [],
+  prescriptions = [],
   onAddPastMedication,
+  onAddPrescription,
+  onAddWeightLog,
+  onNoteAdded,
+  onUpdatePatient,
 }: DoctorTabProps) {
   const [visibleWeightCount, setVisibleWeightCount] = useState(INITIAL_WEIGHT_VISIBLE_COUNT)
 
@@ -125,10 +140,13 @@ export function DoctorTab({
 
   return (
     <div className="space-y-6">
+      {/* Basic Patient Information - Compact */}
+      <BasicInfoCompact patient={patient} onUpdate={onUpdatePatient} />
+
       {/* AI Medical Summary */}
       {aiDiagnosis && (
         <Card className="border-blue-100 dark:border-blue-900/30 overflow-hidden">
-          <CardHeader className="bg-blue-50/50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/30 py-2.5 px-4 min-h-12 flex items-center">
+          <CardHeader className="bg-blue-50/50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/30 px-4 py-3 min-h-12 flex flex-row items-center justify-start">
             <div className="flex items-center gap-2">
               <RiRobot2Line className="size-4 text-blue-600 dark:text-blue-400" />
               <h3 className="text-xs font-bold text-blue-900/70 dark:text-blue-100/70 uppercase tracking-widest">
@@ -155,11 +173,11 @@ export function DoctorTab({
         </Card>
       )}
 
-      {/* Medical Conditions and Weight Progress Row */}
+      {/* Medical Conditions and Medications Row */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Medical Conditions */}
         <Card className="overflow-hidden shadow-sm">
-          <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 py-2.5 px-4 min-h-12 flex items-center">
+          <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 px-4 py-3 min-h-12 flex flex-row items-center justify-start">
             <div className="flex items-center gap-2">
               <RiHeartPulseLine className="size-4 text-red-500/70 dark:text-red-400/70" />
               <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
@@ -189,69 +207,188 @@ export function DoctorTab({
           </CardContent>
         </Card>
 
-        {/* Weight Progress */}
-        <Card className="overflow-hidden shadow-sm">
-          <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 py-2.5 px-4 min-h-12 flex items-center">
-            <div className="flex items-center gap-2">
-              <RiLineChartLine className="size-4 text-primary-500/70 dark:text-primary-400/70" />
-              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                Weight Progress
-              </h3>
-            </div>
-          </CardHeader>
-          {weightLogs.length === 0 ? (
-            <CardContent className="py-12 text-center">
-              <RiLineChartLine className="mx-auto size-10 text-gray-300 dark:text-gray-700 mb-2" />
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                No weight progress data yet
-              </p>
-            </CardContent>
-          ) : (
-            <CardContent className="p-4">
-              <WeightChart weightLogs={weightLogs} />
-
-              {/* Weight History List */}
-              <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
-                <div className="flex items-center gap-2 mb-3 px-1">
-                  <RiHistoryLine className="size-3.5 text-gray-400" />
-                  <h4 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Weight History</h4>
-                </div>
-                <div className="space-y-2">
-                  {visibleWeightLogs.map((log) => (
-                    <div key={log.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 transition-colors hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-gray-900 dark:text-gray-50">{log.weight} kg</span>
-                        <span className="text-[10px] text-gray-500 font-medium">{format(new Date(log.recorded_date), "MMM d, yyyy")}</span>
-                      </div>
-                      {log.notes && (
-                        <span className="text-[10px] text-gray-400 italic max-w-[150px] truncate">{log.notes}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {hasMoreWeight && (
-                  <div className="flex justify-center mt-3">
-                    <Button
-                      variant="ghost"
-                      onClick={handleLoadMoreWeight}
-                      className="w-full h-8 text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-primary-600 dark:text-gray-500 dark:hover:text-primary-400"
-                    >
-                      Load More History
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          )}
-        </Card>
+        {/* Past Medications */}
+        <PastMedications medications={pastMedications} onAddMedication={onAddPastMedication} />
       </div>
 
+      {/* Prescriptions */}
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 px-4 py-3 min-h-12 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <RiCapsuleLine className="size-4 text-primary-500/70 dark:text-primary-400/70" />
+            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              Prescriptions
+            </h3>
+          </div>
+          {onAddPrescription && (
+            <Button variant="ghost" size="sm" onClick={onAddPrescription} className="size-8 shrink-0 p-0" title="Add prescription">
+              <RiAddLine className="size-4" />
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="p-4">
+          {prescriptions.length === 0 ? (
+            <PatientEmptyState
+              icon={RiCapsuleLine}
+              title="No prescriptions yet"
+              description="Add a prescription to see it here."
+            />
+          ) : (
+            <div className="space-y-4">
+              {[...prescriptions]
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map((prescription) => (
+                  <div
+                    key={prescription.id}
+                    className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/30"
+                  >
+                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {format(new Date(prescription.createdAt), "MMMM d, yyyy")}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 border-l border-gray-200 dark:border-gray-800 pl-3">
+                          <RiTimeLine className="size-3.5" />
+                          {format(new Date(prescription.createdAt), "h:mm a")}
+                        </div>
+                      </div>
+                      {prescription.visitType && (
+                        <Badge variant="neutral" className="text-xs h-5 px-2 uppercase font-bold tracking-wider">
+                          {prescription.visitType === "in_clinic" ? "In Clinic" : "Online"}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {prescription.diagnosisText && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Diagnosis</p>
+                          <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug font-medium">
+                            {prescription.diagnosisText}
+                          </p>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Medications</p>
+                        <div className="grid gap-2">
+                          {prescription.items.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start gap-3 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-2.5"
+                            >
+                              <div className="flex size-7 items-center justify-center rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 shrink-0 mt-0.5">
+                                <RiCapsuleLine className="size-4 text-primary-600 dark:text-primary-400" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                                    {item.name}
+                                    {item.strength && <span className="text-gray-500 font-normal ml-1.5 text-xs">({item.strength})</span>}
+                                  </h4>
+                                  {item.form && (
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{item.form}</span>
+                                  )}
+                                </div>
+                                <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400 font-medium leading-relaxed">{item.sig}</p>
+                                {(item.duration || item.notes) && (
+                                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                    {item.duration && (
+                                      <div className="flex items-center gap-1 text-xs text-gray-500 font-medium bg-white dark:bg-gray-900 px-2 py-0.5 rounded border border-gray-100 dark:border-gray-800">
+                                        <RiTimeLine className="size-3" />
+                                        {item.duration}
+                                      </div>
+                                    )}
+                                    {item.notes && (
+                                      <p className="text-xs text-gray-400 italic font-medium">Note: {item.notes}</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {prescription.notesToPatient && (
+                        <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
+                          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Notes to Patient</p>
+                          <div className="rounded-lg bg-amber-50/30 dark:bg-amber-900/10 p-2.5 border border-amber-100/50 dark:border-amber-900/20">
+                            <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed font-medium">
+                              {prescription.notesToPatient}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Past Medications */}
-      <PastMedications medications={pastMedications} onAddMedication={onAddPastMedication} />
+      {/* Weight Progress */}
+      <Card className="overflow-hidden shadow-sm">
+        <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 px-4 py-3 min-h-12 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <RiLineChartLine className="size-4 text-primary-500/70 dark:text-primary-400/70" />
+            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+              Weight Progress
+            </h3>
+          </div>
+          {onAddWeightLog && (
+            <Button variant="ghost" size="sm" onClick={onAddWeightLog} className="size-8 shrink-0 p-0" title="Add weight">
+              <RiAddLine className="size-4" />
+            </Button>
+          )}
+        </CardHeader>
+        {weightLogs.length === 0 ? (
+          <CardContent className="p-4">
+            <PatientEmptyState
+              icon={RiLineChartLine}
+              title="No weight progress yet"
+              description="Record weight measurements to see progress here."
+            />
+          </CardContent>
+        ) : (
+          <CardContent className="p-4">
+            <WeightChart weightLogs={weightLogs} />
+
+            {/* Weight History List */}
+            <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <RiHistoryLine className="size-3.5 text-gray-400" />
+                <h4 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Weight History</h4>
+              </div>
+              <div className="space-y-2">
+                {visibleWeightLogs.map((log) => (
+                  <div key={log.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 transition-colors hover:bg-gray-100/50 dark:hover:bg-gray-800/50">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-gray-50">{log.weight} kg</span>
+                      <span className="text-[10px] text-gray-500 font-medium">{format(new Date(log.recorded_date), "MMM d, yyyy")}</span>
+                    </div>
+                    {log.notes && (
+                      <span className="text-[10px] text-gray-400 italic max-w-[150px] truncate">{log.notes}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {hasMoreWeight && (
+                <div className="flex justify-center mt-3">
+                  <Button
+                    variant="ghost"
+                    onClick={handleLoadMoreWeight}
+                    className="w-full h-8 text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-primary-600 dark:text-gray-500 dark:hover:text-primary-400"
+                  >
+                    Load More History
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Past Notes */}
-      <NotesTab notes={notes} patient={patient} />
+      <NotesTab notes={notes} patient={patient} onNoteAdded={onNoteAdded} />
     </div>
   )
 }

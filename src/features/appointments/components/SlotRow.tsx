@@ -18,16 +18,14 @@ interface SlotRowProps {
 }
 
 export function SlotRow({ slot, onReschedule, onCancel }: SlotRowProps) {
-  if (slot.state !== "booked") return null
-  
   const { showToast } = useToast()
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
-  
+
   const startTime = formatSlotTime(slot.startAt)
   const endTime = formatSlotTime(slot.endAt)
   const timeRange = `${startTime} - ${endTime}`
-  
+
   const handleCancelClick = () => {
     setShowCancelModal(true)
   }
@@ -57,6 +55,10 @@ export function SlotRow({ slot, onReschedule, onCancel }: SlotRowProps) {
     }
   }
   
+  if (slot.state !== "booked") {
+    return null
+  }
+
   return (
     <div className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-2 transition-colors bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 shadow-sm">
       {/* Status Accent Line */}

@@ -6,6 +6,7 @@ import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { AIExtractionModal } from "./AIExtractionModal"
 import { RiVoiceprintLine, RiTimeLine, RiRobot2Line } from "@remixicon/react"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface Transcription {
   id: string
@@ -71,12 +72,11 @@ export function TranscriptionsTab({ transcriptions }: TranscriptionsTabProps) {
   return (
     <div className="space-y-6">
       {sortedTranscriptions.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <RiVoiceprintLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-2 text-gray-600 dark:text-gray-400">No transcriptions yet</p>
-          </CardContent>
-        </Card>
+        <PatientEmptyState
+          icon={RiVoiceprintLine}
+          title="No transcriptions yet"
+          description="Record or upload audio to get started."
+        />
       ) : (
         <div className="space-y-4">
           {sortedTranscriptions.map((transcription) => (

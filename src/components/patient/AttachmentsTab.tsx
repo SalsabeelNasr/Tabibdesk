@@ -14,6 +14,7 @@ import {
   RiDeleteBinLine,
   RiUploadLine,
 } from "@remixicon/react"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface Attachment {
   id: string
@@ -129,12 +130,11 @@ export function AttachmentsTab({ attachments, onUpload, onDelete }: AttachmentsT
 
       {/* Attachments Grid */}
       {attachments.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <RiAttachmentLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-2 text-gray-600 dark:text-gray-400">No attachments yet</p>
-          </CardContent>
-        </Card>
+        <PatientEmptyState
+          icon={RiAttachmentLine}
+          title="No attachments yet"
+          description="Upload attachments to see them here."
+        />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {attachments.map((attachment) => (

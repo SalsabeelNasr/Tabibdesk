@@ -65,9 +65,9 @@ export function ClinicalNotesMobile({
             </div>
           )}
         </div>
-        
-        {/* Floating Progress Indicator */}
-        <button
+        <div className="flex items-center gap-2">
+          {/* Floating Progress Indicator */}
+          <button
           onClick={() => setShowChecklist(!showChecklist)}
           className="relative flex items-center justify-center size-10 active:scale-90 transition-transform"
         >
@@ -98,6 +98,7 @@ export function ClinicalNotesMobile({
             {completenessPercentage}%
           </span>
         </button>
+        </div>
       </div>
 
       {/* Checklist Bottom Sheet */}
@@ -164,22 +165,22 @@ export function ClinicalNotesMobile({
         </>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col p-4 relative">
+      {/* Main Content - full width, no horizontal padding */}
+      <div className="flex-1 flex flex-col min-h-[320px] px-0 py-2 relative">
         {/* Textarea */}
-        <div className="relative flex-1 flex flex-col min-h-0">
+        <div className="relative flex-1 flex flex-col min-h-[280px] w-full">
           <textarea
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
             placeholder="Start typing or record..."
-            className="w-full flex-1 resize-none rounded-2xl border-0 outline-none focus:outline-none focus:ring-0 ring-0 bg-white shadow-sm dark:bg-gray-900 text-base text-gray-900 placeholder-gray-300 dark:text-gray-100 leading-relaxed p-6 transition-all"
+            className="w-full flex-1 min-h-[280px] resize-none rounded-none border-0 outline-none focus:outline-none focus:ring-0 ring-0 bg-white dark:bg-gray-900 text-base text-gray-900 placeholder-gray-300 dark:text-gray-100 leading-relaxed px-4 py-4 transition-all"
           />
           
-          {/* Detection toast - small, responsive, on-brand */}
+          {/* Detection toast - neutral, at bottom of card */}
           {showReminder && (
-            <div className="absolute top-3 left-3 right-3 animate-in fade-in slide-in-from-top-2 duration-300 z-20">
-              <div className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-white shadow-md dark:bg-primary-600 w-fit max-w-full mx-auto">
-                <RiCheckboxCircleLine className="size-3.5 shrink-0 text-primary-100" />
+            <div className="absolute bottom-3 left-3 right-3 animate-in fade-in slide-in-from-bottom-2 duration-300 z-20">
+              <div className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-1.5 text-gray-700 shadow-sm dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700 w-fit max-w-full mx-auto">
+                <RiCheckboxCircleLine className="size-3.5 shrink-0 text-gray-500 dark:text-gray-400" />
                 <span className="text-xs font-medium truncate">Detected: {lastDetectedItem}</span>
               </div>
             </div>
@@ -187,28 +188,28 @@ export function ClinicalNotesMobile({
         </div>
       </div>
 
-      {/* Sticky Bottom Action Bar */}
-      <div className="border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md px-4 py-4 safe-area-inset-bottom">
-        <div className="flex items-center gap-3">
+      {/* Sticky Bottom Action Bar - compact for mobile */}
+      <div className="border-t border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md px-3 py-3 safe-area-inset-bottom">
+        <div className="flex items-center gap-2">
           {isRecording ? (
             <>
               <button
                 onClick={handlePauseResume}
                 className={cx(
-                  "flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-2xl transition-all font-bold text-xs uppercase tracking-widest active:scale-95",
+                  "flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl transition-all font-semibold text-xs uppercase tracking-wider active:scale-95",
                   isPaused
                     ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30"
                     : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30"
                 )}
               >
-                {isPaused ? <RiPlayLine className="size-5" /> : <RiPauseLine className="size-5" />}
+                {isPaused ? <RiPlayLine className="size-4" /> : <RiPauseLine className="size-4" />}
                 <span>{isPaused ? "Resume" : "Pause"}</span>
               </button>
               <button
                 onClick={handleStopRecording}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-2xl bg-red-100 text-red-700 dark:bg-red-900/30 transition-all font-bold text-xs uppercase tracking-widest active:scale-95"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-red-100 text-red-700 dark:bg-red-900/30 transition-all font-semibold text-xs uppercase tracking-wider active:scale-95"
               >
-                <RiStopLine className="size-5" />
+                <RiStopLine className="size-4" />
                 <span>Stop</span>
               </button>
             </>
@@ -217,17 +218,17 @@ export function ClinicalNotesMobile({
               <Button
                 variant="secondary"
                 onClick={handleStartRecording}
-                className="size-14 rounded-2xl shadow-none"
+                className="size-11 rounded-xl shadow-none min-w-0 p-0"
                 title="Start Recording"
               >
-                <RiMicLine className="size-7" />
+                <RiMicLine className="size-5" />
               </Button>
               <Button
                 onClick={handleSendNote}
                 disabled={!newNote.trim()}
-                className="flex-1 h-14 rounded-2xl text-xs font-bold uppercase tracking-widest active:scale-95 shadow-lg shadow-primary-500/20"
+                className="flex-1 h-11 rounded-xl text-xs font-semibold uppercase tracking-wider active:scale-95 shadow-md shadow-primary-500/20 min-h-0 py-2"
               >
-                <RiSendPlaneLine className="mr-2 size-5" />
+                <RiSendPlaneLine className="mr-1.5 size-4" />
                 Save Note
               </Button>
             </>

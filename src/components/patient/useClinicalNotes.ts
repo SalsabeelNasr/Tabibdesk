@@ -86,7 +86,6 @@ export function useClinicalNotes({
   }
 
   return {
-    // State
     newNote,
     setNewNote,
     isRecording,
@@ -94,14 +93,10 @@ export function useClinicalNotes({
     showReminder,
     lastDetectedItem,
     checklist,
-    
-    // Computed
     completedCount,
     totalCount,
     completenessPercentage,
     checklistItems,
-    
-    // Handlers
     handleSendNote,
     handleStartRecording,
     handleStopRecording,

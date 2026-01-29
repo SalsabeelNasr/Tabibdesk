@@ -352,7 +352,7 @@ export function AiSummaryTab() {
             <div className="mb-4 flex items-center gap-2">
               <RiFileTextLine className="size-5 text-primary-600 dark:text-primary-400" />
               <h3 className="font-semibold text-gray-900 dark:text-gray-50">
-                Today's AI Summary
+                Today&apos;s AI Summary
               </h3>
               <Badge variant="neutral">{dailyReport.date}</Badge>
             </div>
@@ -367,7 +367,7 @@ export function AiSummaryTab() {
             {/* Today's Stats Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
-                <p className="text-xs text-gray-600 dark:text-gray-400">Today's Revenue</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Today&apos;s Revenue</p>
                 <p className="mt-1 text-lg font-semibold text-success-600 dark:text-success-400">
                   {formatCurrency(
                     Object.values(dailyReport.totalsByMethod).reduce((sum, val) => sum + val, 0)

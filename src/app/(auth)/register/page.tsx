@@ -140,12 +140,6 @@ export default function RegisterPage() {
                 TabibDesk
               </span>
             </div>
-            <h2 className="mt-8 text-xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-              Create your account
-            </h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Start your 14-day free trial. No credit card required.
-            </p>
           </div>
 
           <div className="mt-8">

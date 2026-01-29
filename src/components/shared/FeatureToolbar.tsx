@@ -1,8 +1,7 @@
 "use client"
 
 import React from "react"
-import { Input } from "@/components/Input"
-import { RiSearchLine } from "@remixicon/react"
+import { SearchInput } from "@/components/SearchInput"
 import { cx } from "@/lib/utils"
 
 interface FeatureToolbarProps {
@@ -32,14 +31,11 @@ export function FeatureToolbar({
     )}>
       {/* Search Area - Primary on mobile */}
       {onSearchChange !== undefined && (
-        <div className="relative flex-1 min-w-0 max-w-lg">
-          <RiSearchLine className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <Input
-            type="search"
+        <div className="flex-1 min-w-0 max-w-lg">
+          <SearchInput
             placeholder={searchPlaceholder}
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 h-10 text-sm border-gray-200 bg-gray-50/50 focus:border-primary-500 focus:bg-white dark:border-gray-700 dark:bg-gray-800/50 dark:focus:bg-gray-900 w-full transition-colors rounded-lg"
+            onSearchChange={onSearchChange}
           />
         </div>
       )}

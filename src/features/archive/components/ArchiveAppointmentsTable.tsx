@@ -1,12 +1,7 @@
 "use client"
 
 import { Badge } from "@/components/Badge"
-import { Button } from "@/components/Button"
-import {
-  RiCalendarLine,
-  RiUserLine,
-  RiEyeLine,
-} from "@remixicon/react"
+import { RiCalendarLine } from "@remixicon/react"
 import Link from "next/link"
 import type { AppointmentListItem } from "@/features/appointments/appointments.types"
 import { getStatusBadgeVariant, getStatusLabel, formatAppointmentDate } from "@/features/appointments/appointments.utils"
@@ -37,9 +32,6 @@ export function ArchiveAppointmentsTable({ appointments }: ArchiveAppointmentsTa
               </th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-50">
                 Status
-              </th>
-              <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-gray-50">
-                Actions
               </th>
             </tr>
           </thead>
@@ -72,16 +64,6 @@ export function ArchiveAppointmentsTable({ appointments }: ArchiveAppointmentsTa
                   <Badge variant={getStatusBadgeVariant(appointment.status)}>
                     {getStatusLabel(appointment.status)}
                   </Badge>
-                </td>
-                <td className="px-4 py-4">
-                  <div className="flex justify-end gap-2">
-                    <Link href={`/patients/${appointment.patient_id}`}>
-                      <Button variant="ghost" size="sm">
-                        <RiUserLine className="mr-1 size-4" />
-                        Open Patient
-                      </Button>
-                    </Link>
-                  </div>
                 </td>
               </tr>
             ))}

@@ -92,7 +92,6 @@ export function PatientsPage() {
       <PatientsHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onAddPatient={() => setShowAddDrawer(true)}
       />
 
       <PatientsToolbar
@@ -100,6 +99,7 @@ export function PatientsPage() {
         onSearchChange={setSearchQuery}
         totalPatients={total}
         filteredCount={filteredCount}
+        onAddPatient={() => setShowAddDrawer(true)}
       />
 
       {loading && patients.length === 0 ? (

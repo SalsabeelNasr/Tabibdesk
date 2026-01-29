@@ -7,6 +7,7 @@ import { Button } from "@/components/Button"
 import type { PastMedication } from "@/features/prescriptions/prescriptions.types"
 import { format } from "date-fns"
 import { useState } from "react"
+import { PatientEmptyState } from "@/components/patient/PatientEmptyState"
 
 interface PastMedicationsProps {
   medications: PastMedication[]
@@ -36,31 +37,29 @@ export function PastMedications({ medications, onAddMedication }: PastMedication
 
   return (
     <Card className="overflow-hidden shadow-sm">
-      <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 py-2.5 px-4 min-h-12 flex items-center">
+      <CardHeader className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800 px-4 py-3 min-h-12 flex flex-row items-center justify-start">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <RiCapsuleLine className="size-4 text-primary-500/70 dark:text-primary-400/70" />
             <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Past Medications</h3>
           </div>
           {onAddMedication && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onAddMedication}
-              className="h-7 px-2 text-[11px] font-bold uppercase tracking-wider text-primary-600 hover:text-primary-700 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-900/20 gap-1.5"
-            >
-              <RiAddLine className="size-3.5" />
-              Add Medication
+            <Button variant="ghost" size="sm" onClick={onAddMedication} className="size-8 shrink-0 p-0" title="Add medication">
+              <RiAddLine className="size-4" />
             </Button>
           )}
         </div>
       </CardHeader>
       <CardContent className="p-4">
         {sortedMedications.length === 0 ? (
-          <div className="py-10 text-center flex flex-col items-center justify-center">
-            <RiCapsuleLine className="size-10 text-gray-200 dark:text-gray-800 mb-2" />
-            <p className="text-sm font-medium text-gray-400 dark:text-gray-500">No past medications recorded</p>
-          </div>
+          <PatientEmptyState
+            icon={RiCapsuleLine}
+            title="No past medications yet"
+            description="Add past medications to see them here."
+            actionLabel={onAddMedication ? "Add medication" : undefined}
+            onAction={onAddMedication}
+            actionIcon={RiAddLine}
+          />
         ) : (
           <div className="space-y-4">
             <div className="grid gap-2.5">

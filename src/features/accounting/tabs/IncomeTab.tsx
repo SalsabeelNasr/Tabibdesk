@@ -13,7 +13,7 @@ import { RiAddLine, RiFileLine, RiMoneyDollarCircleLine } from "@remixicon/react
 import { mockData } from "@/data/mock/mock-data"
 import { ProofViewerModal } from "../components/ProofViewerModal"
 import type { Payment } from "@/types/payment"
-import { CapturePaymentDrawer } from "../components/CapturePaymentDrawer"
+import { InvoiceDrawer } from "../components/InvoiceDrawer"
 
 interface IncomeTabProps {
   dateRangePreset: DateRangePreset
@@ -161,6 +161,22 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
         </Card>
       </div>
 
+      {/* Search Bar and Capture Button - Always visible */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex-1 min-w-0">
+          <AccountingToolbar searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
+        </div>
+        <Button
+          variant="secondary"
+          onClick={() => setShowCaptureDrawer(true)}
+          className="w-full sm:w-auto shrink-0 md:h-9 md:py-1.5 md:text-sm"
+        >
+          <RiAddLine className="mr-2 size-4" />
+          <span className="hidden sm:inline">Capture</span>
+          <span className="sm:hidden">Capture</span>
+        </Button>
+      </div>
+
       {/* Payments List */}
       {loading ? (
         <Card>
@@ -176,26 +192,13 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
         <Card>
           <CardContent className="py-12 text-center">
             <RiMoneyDollarCircleLine className="mx-auto size-12 text-gray-400" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">No payments found</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
+              {searchQuery ? "No payments found matching your search." : "No payments found"}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <>
-          {/* Search Bar and Capture Button - Above List */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1 min-w-0">
-              <AccountingToolbar searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
-            </div>
-            <Button
-              onClick={() => setShowCaptureDrawer(true)}
-              className="w-full sm:w-auto shrink-0 md:h-9 md:py-1.5 md:text-sm"
-            >
-              <RiAddLine className="mr-2 size-4" />
-              <span className="hidden sm:inline">Capture</span>
-              <span className="sm:hidden">Capture</span>
-            </Button>
-          </div>
-
           {/* Desktop Table */}
           <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
             <div className="overflow-x-auto">
@@ -297,13 +300,14 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
         title="Proof of Payment"
       />
 
-      <CapturePaymentDrawer
+      <InvoiceDrawer
         open={showCaptureDrawer}
         onOpenChange={setShowCaptureDrawer}
         onSuccess={() => {
           refetch()
           setShowCaptureDrawer(false)
         }}
+        mode="capture-only"
       />
     </div>
   )

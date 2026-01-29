@@ -24,6 +24,8 @@ interface AppointmentsCardsProps {
   onReschedule: (appointment: AppointmentListItem) => void
   onCancel: (appointmentId: string) => void
   onFillSlot?: (appointment: AppointmentListItem) => void
+  /** When true, hide cancel/reschedule/fill-slot; profile openable only from patient name (e.g. archive tab). */
+  readOnly?: boolean
 }
 
 export function AppointmentsCards({
@@ -31,6 +33,7 @@ export function AppointmentsCards({
   onReschedule,
   onCancel,
   onFillSlot,
+  readOnly = false,
 }: AppointmentsCardsProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -116,63 +119,65 @@ export function AppointmentsCards({
                 </a>
               </div>
             )}
-            <div className="mt-4 flex gap-2">
-              {(appointment.status === "scheduled" || appointment.status === "confirmed") && (
-                <>
+            {!readOnly && (
+              <div className="mt-4 flex gap-2">
+                {(appointment.status === "scheduled" || appointment.status === "confirmed") && (
+                    <>
+                      <Button
+                        variant="primary"
+                        className="btn-card-action flex-1"
+                        onClick={() => onReschedule(appointment)}
+                      >
+                        <RiCalendarEventLine className="mr-1 size-4" />
+                        Reschedule
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="btn-card-action text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                        onClick={() => onCancel(appointment.id)}
+                      >
+                        <RiCloseLine className="mr-1 size-4" />
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                  {appointment.status === "completed" && (
+                    <Button variant="secondary" className="btn-card-action flex-1" disabled>
+                      <RiCheckLine className="mr-1 size-4" />
+                      Completed
+                    </Button>
+                  )}
+                  {appointment.status === "cancelled" && (
+                    <>
+                      {onFillSlot ? (
+                        <Button
+                          variant="primary"
+                          className="btn-card-action flex-1"
+                          onClick={() => onFillSlot(appointment)}
+                        >
+                          <RiUserAddLine className="mr-1 size-4" />
+                          Fill Slot
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" className="btn-card-action flex-1 text-gray-500" disabled>
+                          <RiCloseLine className="mr-1 size-4" />
+                          Cancelled
+                        </Button>
+                      )}
+                    </>
+                  )}
+                {appointment.status === "no_show" && onFillSlot && (
                   <Button
                     variant="primary"
                     className="btn-card-action flex-1"
-                    onClick={() => onReschedule(appointment)}
+                    onClick={() => onFillSlot(appointment)}
                   >
-                    <RiCalendarEventLine className="mr-1 size-4" />
-                    Reschedule
+                    <RiUserAddLine className="mr-1 size-4" />
+                    Fill Slot
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="btn-card-action text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                    onClick={() => onCancel(appointment.id)}
-                  >
-                    <RiCloseLine className="mr-1 size-4" />
-                    Cancel
-                  </Button>
-                </>
-              )}
-              {appointment.status === "completed" && (
-                <Button variant="secondary" className="btn-card-action flex-1" disabled>
-                  <RiCheckLine className="mr-1 size-4" />
-                  Completed
-                </Button>
-              )}
-              {appointment.status === "cancelled" && (
-                <>
-                  {onFillSlot ? (
-                    <Button
-                      variant="primary"
-                      className="btn-card-action flex-1"
-                      onClick={() => onFillSlot(appointment)}
-                    >
-                      <RiUserAddLine className="mr-1 size-4" />
-                      Fill Slot
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" className="btn-card-action flex-1 text-gray-500" disabled>
-                      <RiCloseLine className="mr-1 size-4" />
-                      Cancelled
-                    </Button>
-                  )}
-                </>
-              )}
-              {appointment.status === "no_show" && onFillSlot && (
-                <Button
-                  variant="primary"
-                  className="btn-card-action flex-1"
-                  onClick={() => onFillSlot(appointment)}
-                >
-                  <RiUserAddLine className="mr-1 size-4" />
-                  Fill Slot
-                </Button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )})}

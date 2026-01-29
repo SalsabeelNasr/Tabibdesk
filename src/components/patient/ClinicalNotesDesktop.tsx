@@ -10,7 +10,6 @@ import {
   RiPlayLine,
   RiStopLine,
   RiCheckboxCircleLine,
-  RiRobot2Line,
 } from "@remixicon/react"
 import { cx } from "@/lib/utils"
 
@@ -28,7 +27,6 @@ interface ClinicalNotesDesktopProps {
   completenessPercentage: number
   checklistItems: any[]
   
-  // Handlers
   handleSendNote: () => void
   handleStartRecording: () => void
   handleStopRecording: () => void
@@ -162,11 +160,11 @@ export function ClinicalNotesDesktop({
             className="w-full flex-1 resize-none bg-transparent text-lg text-gray-900 placeholder-gray-300 outline-none focus:outline-none focus:ring-0 ring-0 border-0 shadow-none dark:text-gray-100 leading-relaxed p-8 pb-24 transition-all"
           />
           
-          {/* Detection toast - small, responsive, on-brand */}
+          {/* Detection toast - neutral, at bottom of card */}
           {showReminder && (
-            <div className="absolute bottom-28 left-4 right-4 sm:left-8 sm:right-auto animate-in fade-in slide-in-from-bottom-2 duration-300 z-20">
-              <div className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-white shadow-md dark:bg-primary-600">
-                <RiCheckboxCircleLine className="size-3.5 shrink-0 text-primary-100" />
+            <div className="absolute bottom-4 left-4 right-4 sm:left-8 sm:right-auto animate-in fade-in slide-in-from-bottom-2 duration-300 z-20">
+              <div className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-1.5 text-gray-700 shadow-sm dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                <RiCheckboxCircleLine className="size-3.5 shrink-0 text-gray-500 dark:text-gray-400" />
                 <span className="text-xs font-medium truncate max-w-[min(16rem,60vw)]">Detected: {lastDetectedItem}</span>
               </div>
             </div>

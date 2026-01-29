@@ -57,10 +57,10 @@ export function TasksTab({
   return (
     <div className="space-y-4">
       {sortedTasks.length === 0 ? (
-        <div className="py-12 text-center bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
-          <RiTaskLine className="mx-auto size-12 text-gray-300" />
-          <p className="mt-2 text-sm text-gray-500">No in-progress tasks for this patient.</p>
-          <p className="mt-1 text-xs text-gray-400">Completed tasks are shown in the History tab.</p>
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30">
+          <RiTaskLine className="size-10 text-gray-400 dark:text-gray-500 shrink-0" aria-hidden />
+          <p className="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">No in-progress tasks for this patient.</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">Completed tasks are shown in the History tab.</p>
         </div>
       ) : (
         <div className="space-y-3">

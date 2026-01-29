@@ -3,6 +3,7 @@ export type ActivityEntityType =
   | "appointment"
   | "task"
   | "payment"
+  | "invoice"
   | "waitlist"
   | "settings"
   | "auth";

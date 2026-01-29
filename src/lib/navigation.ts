@@ -28,8 +28,8 @@ export const doctorNavigation: NavItem[] = [
   { name: "Appointments", href: "/appointments", icon: RiCalendarLine, featureKey: "appointments" },
   { name: "Insights", href: "/insights", icon: RiBarChartLine, featureKey: "insights" },
   { name: "Tasks", href: "/tasks", icon: RiTaskLine, featureKey: "tasks" },
-  { name: "Archive", href: "/archive", icon: RiArchiveLine },
   { name: "Accounting", href: "/accounting", icon: RiMoneyDollarCircleLine, featureKey: "accounting" },
+  { name: "Archive", href: "/archive", icon: RiArchiveLine },
   { name: "Settings", href: "/settings", icon: RiSettingsLine },
 ]
 
@@ -38,8 +38,8 @@ export const assistantNavigation: NavItem[] = [
   { name: "Appointments", href: "/appointments", icon: RiCalendarLine, featureKey: "appointments" },
   { name: "Insights", href: "/insights", icon: RiBarChartLine, featureKey: "insights" },
   { name: "Tasks", href: "/tasks", icon: RiTaskLine, featureKey: "tasks" },
-  { name: "Archive", href: "/archive", icon: RiArchiveLine },
   { name: "Accounting", href: "/accounting", icon: RiMoneyDollarCircleLine, featureKey: "accounting" },
+  { name: "Archive", href: "/archive", icon: RiArchiveLine },
   { name: "Settings", href: "/settings", icon: RiSettingsLine },
 ]
 
@@ -49,8 +49,8 @@ export const managerNavigation: NavItem[] = [
   { name: "Appointments", href: "/appointments", icon: RiCalendarLine, featureKey: "appointments" },
   { name: "Insights", href: "/insights", icon: RiBarChartLine, featureKey: "insights" },
   { name: "Tasks", href: "/tasks", icon: RiTaskLine, featureKey: "tasks" },
-  { name: "Archive", href: "/archive", icon: RiArchiveLine },
   { name: "Accounting", href: "/accounting", icon: RiMoneyDollarCircleLine, featureKey: "accounting" },
+  { name: "Archive", href: "/archive", icon: RiArchiveLine },
   { name: "Settings", href: "/settings", icon: RiSettingsLine },
 ]
 
