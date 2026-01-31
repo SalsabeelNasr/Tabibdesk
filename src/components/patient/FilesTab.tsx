@@ -202,8 +202,8 @@ export function FilesTab({
     setEditValues(newRow)
   }
 
-  const handleDelete = (id: string) => {
-    console.log("Delete:", id)
+  const handleDelete = (_id: string) => {
+    // TODO: Delete from backend
   }
 
   const getStatusColor = (status: string) => {

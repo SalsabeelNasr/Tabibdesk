@@ -107,9 +107,8 @@ export function DoctorTab({
     { id: "glp1a_previous_exposure", label: "GLP-1A Previous Exposure", value: patient.glp1a_previous_exposure },
   ]
 
-  const handleConditionToggle = (conditionId: string) => {
+  const handleConditionToggle = (_conditionId: string) => {
     // TODO: Update condition in database
-    console.log("Toggle condition:", conditionId)
   }
 
   const aiDiagnosis = patient.ai_diagnosis || null

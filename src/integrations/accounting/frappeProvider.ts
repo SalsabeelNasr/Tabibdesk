@@ -9,32 +9,14 @@ import { simulateDelay } from "./accountingProvider"
 import type { Payment, Expense } from "@/features/accounting/accounting.types"
 
 export const frappeProvider: AccountingProvider = {
-  async pushInvoice(payment: Payment): Promise<void> {
+  async pushInvoice(_payment: Payment): Promise<void> {
     await simulateDelay()
-    
-    // Mock: Would POST to Frappe API
-    // POST /api/resource/Sales Invoice
-    console.log("[Frappe/ERPNext] Would push sales invoice:", {
-      customer: payment.patientName,
-      posting_date: payment.createdAt,
-      grand_total: payment.amount,
-      currency: "EGP",
-      status: payment.status === "paid" ? "Paid" : "Unpaid",
-    })
+    // Mock: Would POST to Frappe API - POST /api/resource/Sales Invoice
   },
 
-  async pushExpense(expense: Expense): Promise<void> {
+  async pushExpense(_expense: Expense): Promise<void> {
     await simulateDelay()
-    
-    // Mock: Would POST to Frappe API
-    // POST /api/resource/Purchase Invoice
-    console.log("[Frappe/ERPNext] Would push purchase invoice:", {
-      supplier: expense.vendor,
-      posting_date: expense.date,
-      grand_total: expense.amount,
-      expense_account: expense.category,
-      description: expense.description,
-    })
+    // Mock: Would POST to Frappe API - POST /api/resource/Purchase Invoice
   },
 
   async syncStatus() {

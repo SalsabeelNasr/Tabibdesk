@@ -259,12 +259,7 @@ export async function listTasks(params: ListTasksParams): Promise<ListTasksRespo
   
   const { clinicId, assignedToUserId, createdByUserId, status, type, priority, source, query, page, pageSize } = params
 
-  // Debug logging
-  console.log("listTasks called with:", { clinicId, status, totalTasksInStore: tasksStore.length })
-  console.log("Tasks in store:", tasksStore.map(t => ({ id: t.id, clinicId: t.clinicId, status: t.status })))
-
   let filteredTasks = tasksStore.filter((task) => task.clinicId === clinicId)
-  console.log("After clinic filter:", filteredTasks.length)
 
   // Filter by assigned user
   if (assignedToUserId !== undefined) {

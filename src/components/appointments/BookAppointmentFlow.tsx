@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/Button"
-import { Input } from "@/components/Input"
 import { Label } from "@/components/Label"
-import { Alert } from "@/components/Alert"
 import {
   RiUserLine,
   RiArrowLeftLine,
@@ -77,10 +75,10 @@ interface BookAppointmentFlowProps {
 
 export function BookAppointmentFlow({
   initialPatient = null,
-  showBackButton = true,
+  showBackButton: _showBackButton = true,
   showTitle = true,
-  showHeader = true,
-  isEmbedded = false,
+  showHeader: _showHeader = true,
+  isEmbedded: _isEmbedded = false,
   preSelectedSlot = null,
   rescheduleAppointmentId = null,
   waitlistEntry = null,
@@ -363,8 +361,8 @@ export function BookAppointmentFlow({
     }
   }
 
-  // Handle New Booking
-  const handleNewBooking = () => {
+  // Handle New Booking (for future use - e.g. "Book another" button)
+  const _handleNewBooking = () => {
     setSelectedPatient(initialPatient)
     setSelectedService(null)
     setSelectedDate(null)
@@ -381,8 +379,8 @@ export function BookAppointmentFlow({
     })
   }
 
-  // Format Date
-  const formatDate = (dateString: string) => {
+  // Format Date (for slot context display)
+  const _formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',

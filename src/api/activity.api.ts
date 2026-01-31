@@ -1,6 +1,4 @@
 import { ActivityEvent, ListActivityParams, ListActivityResponse } from "@/types/activity";
-import { mockData } from "@/data/mock/mock-data";
-import { mockUsers } from "@/data/mock/users-clinics";
 
 // In-memory store for activities (demo mode)
 let activitiesStore: ActivityEvent[] = [];

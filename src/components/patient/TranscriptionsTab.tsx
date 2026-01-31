@@ -168,8 +168,7 @@ export function TranscriptionsTab({ transcriptions }: TranscriptionsTabProps) {
           setSelectedTranscription(null)
         }}
         clinicalNotes={selectedTranscription?.transcription_text || ""}
-        onAccept={(diagnosis, severity) => {
-          console.log("AI data accepted from transcription:", { diagnosis, severity })
+        onAccept={(_diagnosis, _severity) => {
           // TODO: Save to database
         }}
       />

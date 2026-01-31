@@ -65,7 +65,6 @@ export function AIExtractedInfo({
   const handleApprove = () => {
     setIsApproved(true)
     // TODO: Save approval to backend
-    console.log("AI information approved")
   }
 
   const handleDiscard = () => {

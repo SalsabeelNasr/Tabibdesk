@@ -88,14 +88,6 @@ export async function approve(payload: ApproveAppointmentPayload): Promise<Appoi
   const index = approvalRequestsStore.findIndex((r) => r.id === requestId)
   approvalRequestsStore[index] = updated
 
-  // In a real system, create the appointment here
-  // For now, we just log it
-  console.log(`[Approval] Approved appointment request ${requestId}`, {
-    patientId: request.patientId,
-    startAt: updated.requestedStartAt,
-    endAt: updated.requestedEndAt,
-  })
-
   return updated
 }
 
@@ -126,8 +118,6 @@ export async function reject(
 
   const index = approvalRequestsStore.findIndex((r) => r.id === requestId)
   approvalRequestsStore[index] = updated
-
-  console.log(`[Approval] Rejected appointment request ${requestId}`, { reason })
 
   return updated
 }

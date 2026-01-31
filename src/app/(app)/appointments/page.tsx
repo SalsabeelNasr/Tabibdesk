@@ -14,7 +14,7 @@ import type { Slot, WaitlistEntry } from "@/features/appointments/types"
 
 export default function AppointmentsPage() {
   const { currentUser, currentClinic } = useUserClinic()
-  const { isDemoMode } = useDemo()
+  useDemo()
   
   // Use global clinic from context
   const clinicId = currentClinic?.id || DEMO_CLINIC_ID

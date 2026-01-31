@@ -6,7 +6,6 @@ import Link from "next/link"
 import { Button } from "@/components/Button"
 import { Badge } from "@/components/Badge"
 import { Card, CardContent } from "@/components/Card"
-import { PageHeader } from "@/components/shared/PageHeader"
 import { useDemo } from "@/contexts/demo-context"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { mockData, mockAppointments } from "@/data/mock/mock-data"
@@ -46,7 +45,6 @@ import {
   RiHistoryLine,
   RiStethoscopeLine,
   RiMoneyDollarCircleLine,
-  RiTimeLine,
 } from "@remixicon/react"
 
 function orderProgressMetricsByTracked(
@@ -87,7 +85,7 @@ export default function PatientDetailPage() {
   // Data for tabs
   const [progressMetrics, setProgressMetrics] = useState<ProgressMetric[]>([])
   const [enabledProgressMetricIds, setEnabledProgressMetricIds] = useState<string[]>([])
-  const [medications, setMedications] = useState<any[]>([])
+  const [, setMedications] = useState<any[]>([])
   const [prescriptions, setPrescriptions] = useState<any[]>([])
   const [labResults, setLabResults] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
@@ -95,7 +93,7 @@ export default function PatientDetailPage() {
   const [notes, setNotes] = useState<any[]>([])
   const [attachments, setAttachments] = useState<any[]>([])
   const [scanExtractions, setScanExtractions] = useState<any[]>([])
-  const [transcriptions, setTranscriptions] = useState<any[]>([])
+  const [, setTranscriptions] = useState<any[]>([])
   const [pastMedications, setPastMedications] = useState<any[]>([])
   const [totalDue, setTotalDue] = useState<number>(0)
   const { showToast } = useToast()
@@ -415,9 +413,8 @@ export default function PatientDetailPage() {
         {activeTab === "note" && (
           <ClinicalNotesTab
             metricsToRecord={metricsToRecord}
-            onSaveNote={(note) => {
+            onSaveNote={(_note) => {
               // TODO: Implement save note
-              console.log("Save note:", note)
             }}
           />
         )}
@@ -454,9 +451,8 @@ export default function PatientDetailPage() {
                 setAttachments(mockData.attachments.filter((a) => a.patient_id === patientId))
               }
             }}
-            onExtractLab={(attachmentId) => {
+            onExtractLab={(_attachmentId) => {
               // TODO: Call API to extract lab from file; for demo no-op
-              console.log("Extract lab for attachment:", attachmentId)
             }}
             onExtractScan={(attachmentId, text) => {
               if (isDemoMode && text.trim()) {
@@ -560,7 +556,6 @@ export default function PatientDetailPage() {
               showToast(`${files.length} file(s) uploaded`, "success")
             } else {
               // TODO: POST to API with kind and thumbnails
-              console.log("Upload files:", files, "kind:", kind, "thumbnails:", thumbnails)
             }
           }}
         />

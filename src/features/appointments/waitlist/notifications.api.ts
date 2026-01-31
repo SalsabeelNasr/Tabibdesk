@@ -66,13 +66,6 @@ export async function sendOffer(params: SendOfferParams): Promise<NotificationMe
 
   notificationsStore.push(message)
 
-  // Log for debugging
-  console.log(`[Notification] Sent offer via ${channel}`, {
-    patientId,
-    slot: slot.startAt,
-    messageId: message.id,
-  })
-
   return message
 }
 
@@ -97,12 +90,6 @@ export async function sendCancellationConfirm(
   }
 
   notificationsStore.push(message)
-
-  console.log(`[Notification] Sent cancellation confirm via ${channel}`, {
-    patientId,
-    appointmentId,
-    messageId: message.id,
-  })
 
   return message
 }

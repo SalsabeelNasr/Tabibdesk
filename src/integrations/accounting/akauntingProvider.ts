@@ -9,31 +9,14 @@ import { simulateDelay } from "./accountingProvider"
 import type { Payment, Expense } from "@/features/accounting/accounting.types"
 
 export const akauntingProvider: AccountingProvider = {
-  async pushInvoice(payment: Payment): Promise<void> {
+  async pushInvoice(_payment: Payment): Promise<void> {
     await simulateDelay()
-    
-    // Mock: Would POST to Akaunting API
-    // POST /api/v1/invoices
-    console.log("[Akaunting] Would push invoice:", {
-      customer_id: payment.patientId,
-      amount: payment.amount,
-      currency: "EGP",
-      status: payment.status === "paid" ? "paid" : "draft",
-      payment_method: payment.method,
-    })
+    // Mock: Would POST to Akaunting API - POST /api/v1/invoices
   },
 
-  async pushExpense(expense: Expense): Promise<void> {
+  async pushExpense(_expense: Expense): Promise<void> {
     await simulateDelay()
-    
-    // Mock: Would POST to Akaunting API
-    // POST /api/v1/expenses
-    console.log("[Akaunting] Would push expense:", {
-      category: expense.category,
-      amount: expense.amount,
-      vendor: expense.vendor,
-      description: expense.description,
-    })
+    // Mock: Would POST to Akaunting API - POST /api/v1/expenses
   },
 
   async syncStatus() {

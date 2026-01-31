@@ -269,7 +269,7 @@ export default function DashboardPage() {
     }
   }
 
-  const getQueueStatusColor = (status?: QueueStatus) => {
+  const _getQueueStatusColor = (status?: QueueStatus) => {
     switch (status) {
       case "now":
         return "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
@@ -346,7 +346,7 @@ export default function DashboardPage() {
     
     // Calculate new time: if moving forward, use target's time; if moving backward, use target's time minus duration
     let newScheduledAt: string
-    const draggedTime = new Date(draggedItem.scheduled_at)
+    const _draggedTime = new Date(draggedItem.scheduled_at)
     const durationMinutes = 30 // Default duration
     
     if (draggedIndex < dropIndex) {
@@ -413,7 +413,7 @@ export default function DashboardPage() {
     }
   }
 
-  const getGreeting = () => {
+  const _getGreeting = () => {
     return role === "doctor" ? "Welcome back, Doctor!" : "Welcome back, Assistant!"
   }
 

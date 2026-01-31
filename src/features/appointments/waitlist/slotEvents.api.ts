@@ -40,15 +40,6 @@ export async function onSlotOpened(params: SlotOpenedParams): Promise<SlotOpened
     limit: 5,
   })
 
-  // Log the event (for debugging in demo mode)
-  console.log(`[Slot Event] Slot opened: ${slotId}`, {
-    reason,
-    doctorId,
-    appointmentType,
-    startAt,
-    candidateCount: suggestedCandidates.length,
-  })
-
   return {
     slotId,
     suggestedCandidates,

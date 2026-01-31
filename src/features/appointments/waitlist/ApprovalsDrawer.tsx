@@ -69,14 +69,6 @@ export function ApprovalsDrawer({ open, onClose }: ApprovalsDrawerProps) {
       showToast(`Approved appointment for ${request.patientName}`, "success")
       // Remove from list
       setRequests((prev) => prev.filter((r) => r.id !== request.id))
-      
-      // In a real system, this would create the appointment
-      // For now, we just log it
-      console.log("[Approval] Appointment created:", {
-        patientId: request.patientId,
-        startAt: request.requestedStartAt,
-        endAt: request.requestedEndAt,
-      })
     } catch (error) {
       console.error("Failed to approve request:", error)
       showToast("Failed to approve request", "error")

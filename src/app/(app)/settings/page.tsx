@@ -18,7 +18,6 @@ import {
   RiUserLine,
   RiLockLine,
   RiBuildingLine,
-  RiPaletteLine,
   RiPuzzleLine,
   RiSparklingLine,
   RiCalendarLine,
@@ -32,7 +31,6 @@ import {
   RiVoiceprintLine,
   RiScan2Line,
   RiRefreshLine,
-  RiLineChartLine,
   RiUserHeartLine,
 } from "@remixicon/react"
 import { FollowUpRulesTab } from "./FollowUpRulesTab"

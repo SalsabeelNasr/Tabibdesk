@@ -85,9 +85,8 @@ export async function syncPaymentsWithInvoices() {
         })
       })
     }
-  } catch (error) {
+  } catch {
     // If invoices not initialized yet, will sync later
-    console.log("Payments sync deferred:", error)
   }
 }
 

@@ -22,29 +22,20 @@ import {
   RiInformationLine,
   RiWhatsappLine,
 } from "@remixicon/react"
+import type { Patient } from "@/features/patients/patients.types"
 
-interface Patient {
-  id: string
-  first_name: string
-  last_name: string
-  age: number | null
-  gender: string
-  phone: string
-  email: string | null
-  address: string | null
-  height: number | null
-  job: string | null
-  social_status?: string | null
-  source?: string | null
-  source_other?: string | null
-  complaint: string | null
-  created_at: string
-  updated_at: string
-}
+/** Subset of Patient fields used by BasicInfoCompact - accepts full Patient or extended types from DoctorTab/GeneralTab */
+export type BasicInfoPatient = Pick<
+  Patient,
+  "id" | "first_name" | "last_name" | "gender" | "phone" | "complaint" | "created_at" | "updated_at"
+> &
+  Partial<
+    Pick<Patient, "age" | "email" | "address" | "height" | "job" | "social_status" | "source" | "source_other">
+  >
 
 interface BasicInfoCompactProps {
-  patient: Patient
-  onUpdate?: (updates: Partial<Patient>) => Promise<void>
+  patient: BasicInfoPatient
+  onUpdate?: (updates: Partial<BasicInfoPatient>) => Promise<void>
 }
 
 interface FormData {
@@ -77,9 +68,9 @@ export function BasicInfoCompact({ patient, onUpdate }: BasicInfoCompactProps) {
     address: patient.address || "",
     job: patient.job || "",
     height: patient.height?.toString() || "",
-    social_status: (patient as any).social_status || "",
-    source: (patient as any).source || "",
-    source_other: (patient as any).source_other || "",
+    social_status: patient.social_status || "",
+    source: patient.source || "",
+    source_other: patient.source_other || "",
     complaint: patient.complaint || "",
   }))
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
@@ -147,7 +138,7 @@ export function BasicInfoCompact({ patient, onUpdate }: BasicInfoCompactProps) {
 
     setIsSaving(true)
     try {
-      const updates: Partial<Patient> = {
+      const updates: Partial<BasicInfoPatient> = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         phone: formData.phone.trim(),
@@ -185,9 +176,9 @@ export function BasicInfoCompact({ patient, onUpdate }: BasicInfoCompactProps) {
       address: patient.address || "",
       job: patient.job || "",
       height: patient.height?.toString() || "",
-      social_status: (patient as any).social_status || "",
-      source: (patient as any).source || "",
-      source_other: (patient as any).source_other || "",
+      social_status: patient.social_status || "",
+      source: patient.source || "",
+      source_other: patient.source_other || "",
       complaint: patient.complaint || "",
     })
     setErrors({})
@@ -307,17 +298,17 @@ export function BasicInfoCompact({ patient, onUpdate }: BasicInfoCompactProps) {
             {patient.job ? (
               <InfoItem icon={RiBriefcaseLine} label="Occupation" value={patient.job} />
             ) : null}
-            {(patient as any).social_status ? (
-              <InfoItem icon={RiUserLine} label="Social status" value={(patient as any).social_status} />
+            {patient.social_status ? (
+              <InfoItem icon={RiUserLine} label="Social status" value={patient.social_status} />
             ) : null}
             {patient.height ? (
               <InfoItem icon={RiRulerLine} label="Height" value={`${patient.height} cm`} />
             ) : null}
-            {(patient as any).source ? (
+            {patient.source ? (
               <InfoItem
                 icon={RiUserLine}
                 label="Source"
-                value={formatSource((patient as any).source, (patient as any).source_other)}
+                value={formatSource(patient.source, patient.source_other)}
               />
             ) : null}
             <InfoItem

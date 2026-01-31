@@ -70,7 +70,6 @@ export function LabResultsTab({ labResults }: LabResultsTabProps) {
 
   const handleSave = () => {
     // TODO: Save to backend
-    console.log("Save:", editValues)
     setEditingId(null)
     setEditValues({})
   }
@@ -80,9 +79,8 @@ export function LabResultsTab({ labResults }: LabResultsTabProps) {
     setEditValues({})
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (_id: string) => {
     // TODO: Delete from backend
-    console.log("Delete:", id)
   }
 
   const handleAddRow = (date: string) => {
@@ -92,7 +90,6 @@ export function LabResultsTab({ labResults }: LabResultsTabProps) {
 
   const handleSaveNewRow = () => {
     // TODO: Save to backend
-    console.log("Save new row:", newRow)
     setAddingToDate(null)
     setNewRow({})
   }
