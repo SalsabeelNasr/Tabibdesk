@@ -61,11 +61,11 @@ export function BotPage() {
   }
 
   return (
-    <div className="page-content">
-      <PageHeader title={t.nav.bot} />
+    <div className="page-content flex h-full min-h-0 max-w-6xl flex-col mx-auto w-full lg:h-[calc(100vh-6rem)]">
+      <PageHeader title={t.nav.bot} className="shrink-0" />
 
-      <div className="w-full max-w-6xl mx-auto">
-        <div className="space-y-4">
+      <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
+        <div className="flex min-h-0 flex-1 flex-col">
           <ChatBox
             messages={messages}
             question={question}
@@ -73,15 +73,16 @@ export function BotPage() {
             onSubmit={() => handleSubmit()}
             isLoading={isLoading}
             quickPrompts={[t.insights.quickPrompt1, t.insights.quickPrompt2, t.insights.quickPrompt3, t.insights.quickPrompt4]}
+            quickPromptsSettings={[t.insights.quickPromptSettings1, t.insights.quickPromptSettings2, t.insights.quickPromptSettings3, t.insights.quickPromptSettings4]}
             onQuickPrompt={handleQuickPrompt}
           />
-
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              {error}
-            </div>
-          )}
         </div>
+
+        {error && (
+          <div className="mt-4 shrink-0 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   )

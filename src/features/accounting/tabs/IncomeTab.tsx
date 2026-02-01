@@ -291,7 +291,7 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
                                 setShowProofModal(true)
                               }}
                               className="cursor-pointer hover:opacity-70 transition-opacity"
-                              title="View proof"
+                              title={t.invoice.viewProof}
                             >
                               <RiFileLine className="size-5 text-primary-600 dark:text-primary-400" />
                             </button>
@@ -339,7 +339,7 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
                                 setShowProofModal(true)
                               }}
                               className="cursor-pointer hover:opacity-70 transition-opacity"
-                              title="View proof"
+                              title={t.invoice.viewProof}
                             >
                               <RiFileLine className="size-5 text-primary-600 dark:text-primary-400" />
                             </button>
@@ -409,7 +409,7 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
                           className="flex items-center gap-2 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 cursor-pointer"
                         >
                           <RiFileLine className="size-4 shrink-0" />
-                          <span>View proof</span>
+                          <span>{t.invoice.viewProof}</span>
                         </button>
                       )}
                     </div>
@@ -454,7 +454,7 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
                           className="flex items-center gap-2 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 cursor-pointer"
                         >
                           <RiFileLine className="size-4 shrink-0" />
-                          <span>View proof</span>
+                          <span>{t.invoice.viewProof}</span>
                         </button>
                       )}
                     </div>
@@ -470,7 +470,7 @@ export function IncomeTab({ dateRangePreset }: IncomeTabProps) {
         open={showProofModal}
         onOpenChange={setShowProofModal}
         fileId={selectedProofFileId}
-        title="Proof of Payment"
+        title={t.invoice.proofOfPayment}
       />
 
       <InvoiceDrawer

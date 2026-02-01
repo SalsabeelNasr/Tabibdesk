@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/Dialog"
 import { Button } from "@/components/Button"
+import { useAppTranslations } from "@/lib/useAppTranslations"
 import { RiDownloadLine, RiCloseLine } from "@remixicon/react"
 import Image from "next/image"
 
@@ -41,9 +42,12 @@ export function ProofViewerModal({
   open,
   onOpenChange,
   fileId,
-  title = "Proof of Payment",
+  title,
 }: ProofViewerModalProps) {
+  const t = useAppTranslations()
   const imageUrl = getProofImageUrl(fileId)
+  const modalTitle = title ?? t.invoice.proofOfPayment
+  const proofAlt = title ?? t.invoice.proofOfPayment
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,15 +55,15 @@ export function ProofViewerModal({
         <DialogClose asChild>
           <Button
             variant="ghost"
-            className="absolute right-4 top-4 z-10 aspect-square p-1 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+            className="absolute end-4 top-4 z-10 aspect-square p-1 hover:bg-gray-100 hover:dark:bg-gray-400/10"
           >
             <RiCloseLine className="size-6" aria-hidden="true" />
           </Button>
         </DialogClose>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{modalTitle}</DialogTitle>
           <DialogDescription>
-            View and download the proof of payment document
+            {t.invoice.proofViewerDescription}
           </DialogDescription>
         </DialogHeader>
         
@@ -67,13 +71,13 @@ export function ProofViewerModal({
           {imageUrl.endsWith('.svg') ? (
             <img
               src={imageUrl}
-              alt="Proof of payment"
+              alt={proofAlt}
               className="object-contain max-w-full max-h-[60vh] mx-auto"
             />
           ) : (
             <Image
               src={imageUrl}
-              alt="Proof of payment"
+              alt={proofAlt}
               width={800}
               height={1000}
               className="object-contain max-w-full max-h-[60vh]"
@@ -85,7 +89,7 @@ export function ProofViewerModal({
         <DialogFooter className="mt-6">
           <DialogClose asChild>
             <Button variant="secondary">
-              Close
+              {t.common.close}
             </Button>
           </DialogClose>
           <Button
@@ -98,8 +102,8 @@ export function ProofViewerModal({
               link.click()
             }}
           >
-            <RiDownloadLine className="mr-2 size-4" />
-            Download
+            <RiDownloadLine className="me-2 size-4" />
+            {t.common.download}
           </Button>
         </DialogFooter>
       </DialogContent>

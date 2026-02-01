@@ -151,18 +151,18 @@ export function TasksCards({
 
                 <div className="flex-1 min-w-0 space-y-1">
                   {task.patientName && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {t.table.patient}:{" "}
                       <Link
                         href={`/patients/${task.patientId}`}
-                        className="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+                        className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
                       >
                         {task.patientName}
                       </Link>
                     </p>
                   )}
                   <p className={cx(
-                    "text-xs text-gray-900 dark:text-white",
+                    "text-sm font-medium text-gray-900 dark:text-white",
                     isDone && "text-gray-400 line-through decoration-gray-400/50"
                   )}>
                     {task.description || task.title}
@@ -172,13 +172,18 @@ export function TasksCards({
 
               {/* Right Side - Actions Only */}
               <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                {waHref && (
-                  <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0" title="Contact on WhatsApp">
-                    <a href={waHref} target="_blank" rel="noreferrer">
-                      <RiWhatsappLine className="size-4" />
-                      <span className="sr-only">Contact on WhatsApp</span>
-                    </a>
-                  </Button>
+                {(task.patientName || task.patientId) && task.patientPhone && (
+                  <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 rtl:flex-row-reverse">
+                    <span className="tabular-nums">{task.patientPhone}</span>
+                    {waHref && (
+                      <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0" title="Contact on WhatsApp">
+                        <a href={waHref} target="_blank" rel="noreferrer">
+                          <RiWhatsappLine className="size-4" />
+                          <span className="sr-only">Contact on WhatsApp</span>
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {task.follow_up_kind && onSnooze && !isDone && (
                   <Button

@@ -16,6 +16,7 @@ interface ChatBoxProps {
   onSubmit: () => void
   isLoading: boolean
   quickPrompts: string[]
+  quickPromptsSettings?: string[]
   onQuickPrompt: (prompt: string) => void
 }
 
@@ -26,6 +27,7 @@ export function ChatBox({
   onSubmit,
   isLoading,
   quickPrompts,
+  quickPromptsSettings = [],
   onQuickPrompt,
 }: ChatBoxProps) {
   const t = useAppTranslations()
@@ -47,7 +49,7 @@ export function ChatBox({
   }
 
   return (
-    <Card className="flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
+    <Card className="flex min-h-[400px] flex-col lg:min-h-0 lg:h-full">
       <div 
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800"
@@ -58,25 +60,43 @@ export function ChatBox({
               <div className="size-12 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center mx-auto mb-2">
                 <RiRobot2Line className="size-6 text-primary-600" />
               </div>
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">{t.insights.aiName}</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-16">{t.insights.aiName}</span>
             </div>
-            <div className="grid gap-6 w-fit max-w-full mx-auto grid-cols-1">
+            <div className="grid gap-6 w-fit max-w-full mx-auto grid-cols-1 lg:grid-cols-2">
               <div className="flex flex-col items-center text-center lg:items-start lg:text-start rtl:lg:items-end rtl:lg:text-end max-w-xs w-full">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-end rtl:text-start">
+                <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-start rtl:text-end">
                   {t.insights.askAboutPerformance}
                 </p>
-                <div className="flex flex-col gap-2 w-full max-w-full px-0 text-end rtl:text-start">
+                <div className="flex flex-col gap-2 w-full max-w-full px-0 text-start rtl:text-end">
                   {quickPrompts.map((prompt) => (
                     <button
                       key={prompt}
                       onClick={() => onQuickPrompt(prompt)}
-                      className="text-inherit text-xs p-2 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full"
+                      className="text-inherit text-xs p-2 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-start rtl:text-end"
                     >
                       {prompt}
                     </button>
                   ))}
                 </div>
               </div>
+              {quickPromptsSettings.length > 0 && (
+                <div className="flex flex-col items-center text-center lg:items-start lg:text-start rtl:lg:items-end rtl:lg:text-end max-w-xs w-full">
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-start rtl:text-end">
+                    {t.insights.askAboutSettings}
+                  </p>
+                  <div className="flex flex-col gap-2 w-full max-w-full px-0 text-start rtl:text-end">
+                    {quickPromptsSettings.map((prompt) => (
+                      <button
+                        key={prompt}
+                        onClick={() => onQuickPrompt(prompt)}
+                        className="text-inherit text-xs p-2 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full text-start rtl:text-end"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -94,7 +114,7 @@ export function ChatBox({
               </div>
               <div className={`rounded-2xl px-4 py-2 text-sm shadow-sm ${
                 message.role === "user" 
-                  ? "bg-primary-600 text-white rounded-tr-none" 
+                  ? "bg-primary-600 text-white rounded-tr-none text-end rtl:text-start" 
                   : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-tl-none"
               }`}>
                 {message.role === "assistant" && message.response ? (

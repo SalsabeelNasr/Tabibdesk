@@ -164,9 +164,11 @@ See `src/app/(app)/dashboard/page.tsx` for the canonical widget implementation.
 
 ### Translations (Egyptian Dialect)
 
-1. **All user-facing strings must be translated**:
-   - Use `useAppTranslations()` to access translations—never hardcode UI text.
-   - Add new keys to `src/lib/app-translations.ts` in **both** `ar` and `en` objects.
+1. **All user-facing strings must be translated — no hardcoded UI text**:
+   - **Never** hardcode user-visible strings (labels, titles, buttons, placeholders, tooltips, `title=`, `aria-label=`, modal/dialog text, etc.) in components.
+   - Always use `useAppTranslations()` to access translations.
+   - Add every new user-facing string to `src/lib/app-translations.ts` in **both** `ar` and `en` objects before using it in the UI.
+   - When adding a new feature or component, add all required translation keys first, then reference them via `t.*` in the component.
 
 2. **Egyptian Arabic dialect**:
    - Use Egyptian colloquial Arabic (عامية مصرية) for `ar` keys, not formal Modern Standard Arabic.
@@ -177,6 +179,13 @@ See `src/app/(app)/dashboard/page.tsx` for the canonical widget implementation.
    - Group keys by feature (e.g. `dashboard`, `patients`, `appointments`, `common`).
    - Use nested objects for related strings.
    - Keep keys semantic: `modalNoShowTitle` not `title1`.
+
+4. **Checklist for new UI**:
+   - Buttons, links, labels, placeholders → translation key.
+   - Modal/drawer titles and descriptions → translation key.
+   - Tooltips (`title=`), `aria-label` → translation key.
+   - Error/success messages → translation key.
+   - If a string is shown to the user, it must come from `app-translations.ts`.
 
 ### Reference Files
 

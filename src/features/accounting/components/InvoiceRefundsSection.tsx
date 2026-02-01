@@ -131,7 +131,7 @@ export function InvoiceRefundsSection({
                     type="button"
                     onClick={() => handleProofClick(r.proofFileId!)}
                     className="shrink-0 text-primary-600 hover:opacity-80 dark:text-primary-400"
-                    title="View proof"
+                    title={t.invoice.viewProof}
                   >
                     <RiFileLine className="size-4" />
                   </button>
@@ -159,7 +159,7 @@ export function InvoiceRefundsSection({
         open={showProofModal}
         onOpenChange={setShowProofModal}
         fileId={selectedProofFileId}
-        title="Proof of refund"
+        title={t.invoice.proofOfRefund}
       />
     </>
   )
