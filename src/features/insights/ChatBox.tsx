@@ -9,11 +9,6 @@ import { RiSendPlaneLine, RiExternalLinkLine, RiFileCopyLine, RiUserLine, RiRobo
 import { useRouter } from "next/navigation"
 import type { ChatMessage } from "./insights.types"
 
-export interface SettingsSectionItem {
-  label: string
-  tab: string
-}
-
 interface ChatBoxProps {
   messages: ChatMessage[]
   question: string
@@ -22,9 +17,6 @@ interface ChatBoxProps {
   isLoading: boolean
   quickPrompts: string[]
   onQuickPrompt: (prompt: string) => void
-  /** Shown only when user role can change settings (e.g. doctor/manager). Sample ways to open settings tabs. */
-  settingsSection?: { title: string; items: SettingsSectionItem[] } | null
-  onSettingsAction?: (tab: string) => void
 }
 
 export function ChatBox({
@@ -35,8 +27,6 @@ export function ChatBox({
   isLoading,
   quickPrompts,
   onQuickPrompt,
-  settingsSection,
-  onSettingsAction,
 }: ChatBoxProps) {
   const t = useAppTranslations()
   const router = useRouter()
@@ -70,13 +60,7 @@ export function ChatBox({
               </div>
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">{t.insights.aiName}</span>
             </div>
-            <div
-              className={`grid gap-6 w-fit max-w-full mx-auto ${
-                settingsSection && settingsSection.items.length > 0 && onSettingsAction
-                  ? "grid-cols-1 lg:grid-cols-2"
-                  : "grid-cols-1"
-              }`}
-            >
+            <div className="grid gap-6 w-fit max-w-full mx-auto grid-cols-1">
               <div className="flex flex-col items-center text-center lg:items-start lg:text-start rtl:lg:items-end rtl:lg:text-end max-w-xs w-full">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-end rtl:text-start">
                   {t.insights.askAboutPerformance}
@@ -93,25 +77,6 @@ export function ChatBox({
                   ))}
                 </div>
               </div>
-
-              {settingsSection && settingsSection.items.length > 0 && onSettingsAction && (
-                <div className="flex flex-col items-center text-center lg:items-start lg:text-start rtl:lg:items-end rtl:lg:text-end pt-4 lg:pt-0 max-w-xs w-full">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 text-end rtl:text-start">
-                    {settingsSection.title}
-                  </p>
-                  <div className="flex flex-col gap-2 w-full mb-4 text-end rtl:text-start">
-                    {settingsSection.items.map((item: SettingsSectionItem) => (
-                      <button
-                        key={item.tab}
-                        onClick={() => onSettingsAction(item.tab)}
-                        className="text-inherit text-xs p-2 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full"
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}

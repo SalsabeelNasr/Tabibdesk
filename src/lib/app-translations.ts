@@ -426,14 +426,6 @@ export const appTranslations = {
       quickPrompt3: "مين أشطر مصدر يجيب مرضى؟",
       quickPrompt4: "مين نتابع معاه النهاردة عشان نملى المواعيد؟",
     },
-    bot: {
-      helpMeSetSettings: "ساعدني أعد الإعدادات",
-      settingsPromptChangeLanguage: "تغيير اللغة",
-      settingsPromptAIFeatures: "تشغيل ميزات الذكاء الاصطناعي",
-      settingsPromptBuffer: "ضبط وقت الفاصل بين المواعيد",
-      settingsPromptFollowUp: "تعديل قواعد المتابعة",
-      settingsPromptProfile: "تحديث بياناتي",
-    },
     archive: {
       title: "الأرشيف",
       searchAppointments: "ابحث في المواعيد المؤرشفة...",
@@ -1185,14 +1177,6 @@ export const appTranslations = {
       quickPrompt2: "What times are we losing money from empty slots?",
       quickPrompt3: "Which lead source brings the best patients?",
       quickPrompt4: "Who should we follow up with today to fill slots?",
-    },
-    bot: {
-      helpMeSetSettings: "Help me set my settings",
-      settingsPromptChangeLanguage: "Change language",
-      settingsPromptAIFeatures: "Turn on AI features",
-      settingsPromptBuffer: "Set appointment buffer",
-      settingsPromptFollowUp: "Edit follow-up rules",
-      settingsPromptProfile: "Update my profile",
     },
     archive: {
       title: "Archive",
