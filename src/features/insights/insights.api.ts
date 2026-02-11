@@ -1,4 +1,5 @@
-import { mockData, DEMO_CLINIC_ID } from "@/data/mock/mock-data"
+import { DEMO_CLINIC_ID } from "@/lib/constants"
+import { mockData } from "@/data/mock/mock-data"
 import type { AskInsightParams, InsightResponse } from "./insights.types"
 import { getTimeRangeDates, formatRecordCount } from "./insights.utils"
 import { listPayments } from "@/api/payments.api"

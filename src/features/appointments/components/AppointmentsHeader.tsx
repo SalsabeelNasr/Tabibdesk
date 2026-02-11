@@ -5,7 +5,7 @@ import { useAppTranslations } from "@/lib/useAppTranslations"
 import { Select } from "@/components/Select"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { listDoctorsByClinic } from "../availability.api"
-import { DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
+import { DEMO_DOCTOR_ID } from "@/lib/constants"
 
 /** Doctor dropdown for page header (top right), used in Appointments page like Insights time-range dropdown */
 export interface DoctorSelectorProps {

@@ -1,4 +1,5 @@
-import { mockData, mockDoctor } from "@/data/mock/mock-data"
+import { mockDoctor } from "@/lib/constants"
+import { mockData } from "@/data/mock/mock-data"
 
 export interface PatientAppointment {
   id: string

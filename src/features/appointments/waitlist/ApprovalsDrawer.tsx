@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/useToast"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { listPending, approve, reject } from "./approvals.api"
 import { createTask } from "@/features/tasks/tasks.api"
-import { DEMO_CLINIC_ID } from "@/data/mock/mock-data"
+import { DEMO_CLINIC_ID } from "@/lib/constants"
 import type { AppointmentApprovalRequest } from "./waitlist.types"
 import {
   RiCalendarLine,

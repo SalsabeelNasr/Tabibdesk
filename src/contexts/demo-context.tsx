@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useCallback, useEffect } from "react"
 import { mockQueries } from "@/data/mock/mock-queries"
 import * as mockData from "@/data/mock/mock-data"
+import { initializeRepositories, getBackendType, resetRepositories } from "@/lib/api/repository-factory"
 
 interface DemoContextType {
   isDemoMode: boolean
@@ -26,16 +27,20 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   })
 
   useEffect(() => {
-    // Sync with localStorage on mount in case initial state was wrong
     const storedDemoMode = localStorage.getItem("demo-mode")
     if (storedDemoMode === null) {
-      // If no preference stored, enable demo mode by default
       setIsDemoMode(true)
       localStorage.setItem("demo-mode", "true")
     } else if (storedDemoMode === "true") {
       setIsDemoMode(true)
     }
   }, [])
+
+  useEffect(() => {
+    const backend = isDemoMode ? "mock" : getBackendType()
+    resetRepositories()
+    initializeRepositories(backend)
+  }, [isDemoMode])
 
   const enableDemoMode = useCallback(() => {
     setIsDemoMode(true)

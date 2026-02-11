@@ -8,7 +8,7 @@ import { CancelledSlotRow } from "./CancelledSlotRow"
 import { BufferGap } from "./BufferGap"
 import { useDailySlots } from "../hooks/useDailySlots"
 import { calculateBufferTime } from "../utils/slotFormatters"
-import { DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
+import { DEMO_DOCTOR_ID } from "@/lib/constants"
 import { ListSkeleton } from "@/components/skeletons"
 import type { Slot } from "../types"
 

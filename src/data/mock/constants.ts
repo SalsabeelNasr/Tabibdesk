@@ -1,28 +1,10 @@
-// Demo mode constants and base entities
-
-export const DEMO_DOCTOR_ID = "demo-doctor-001"
-export const DEMO_CLINIC_ID = "demo-clinic-001"
-
-export const mockDoctor = {
-  id: DEMO_DOCTOR_ID,
-  email: "demo@tabibdesk.com",
-  full_name: "Dr. Ahmed Hassan",
-  specialization: "Physical Therapy & Nutrition",
-  biography: "Expert in therapeutic exercise and nutritional counseling",
-  image_url: "/images/tabibdesk-logo.png",
-  role: "doctor",
-  doctor_id: DEMO_DOCTOR_ID,
-  created_at: new Date().toISOString(),
-}
-
-export const mockClinic = {
-  id: DEMO_CLINIC_ID,
-  name: "TabibDesk Wellness Center",
-  address: "123 Medical Street, Cairo, Egypt",
-  location: "Downtown Cairo",
-  phone: "+20 123 456 7890",
-  created_at: new Date().toISOString(),
-  tidycal_booking_type_id: "demo-booking-type",
-}
-
-export const mockDoctors = [mockDoctor]
+// Re-export from single source of truth so existing @/data/mock/mock-data imports still work.
+export {
+  DEMO_DOCTOR_ID,
+  DEMO_CLINIC_ID,
+  DEFAULT_CURRENT_USER_ID,
+  DEFAULT_CURRENT_CLINIC_ID,
+  mockDoctor,
+  mockClinic,
+  mockDoctors,
+} from "@/lib/constants"

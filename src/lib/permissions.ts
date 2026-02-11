@@ -37,4 +37,3 @@ export function canRefundAccounting(user: UserWithRole | null | undefined): bool
   if (user.permissions?.includes("accounting.refund")) return true
   return user.role === "manager" || user.role === "assistant"
 }
-

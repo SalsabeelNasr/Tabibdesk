@@ -3,8 +3,8 @@
  * Provides functions to list archived appointments and tasks
  */
 
-import { mockData } from "@/data/mock/mock-data"
-import { getCreatedAppointments } from "@/features/appointments/appointments.api"
+import { getAppointmentsRepository, getPatientsRepository } from "@/lib/api/repository-factory"
+import { DEMO_CLINIC_ID } from "@/lib/constants"
 import { isAppointmentArchived } from "@/features/archive/archive.rules"
 import { isTaskArchived } from "@/features/archive/archive.rules"
 import type {
@@ -15,9 +15,6 @@ import type {
 } from "@/features/archive/archive.types"
 import type { AppointmentListItem } from "@/features/appointments/appointments.types"
 import type { TaskListItem } from "@/features/tasks/tasks.types"
-
-// Import tasks store - we'll need to access it
-// Since tasks.api.ts doesn't export the store, we'll need to use listTasks and filter
 import { listTasks } from "@/features/tasks/tasks.api"
 
 /**
@@ -27,52 +24,37 @@ export async function listArchivedAppointments(
   params: ListArchivedAppointmentsParams
 ): Promise<ListArchivedAppointmentsResponse> {
   const { clinicId, from, to, query, status, doctorId, type, page, pageSize } = params
+  const effectiveClinicId = clinicId ?? DEMO_CLINIC_ID
 
-  // Transform mock appointments to match AppointmentListItem format
-  const allAppointments: AppointmentListItem[] = mockData.appointments.map((apt) => {
-    const date = new Date(apt.scheduled_at)
-    const patient = mockData.patients.find((p) => p.id === apt.patient_id)
+  const repo = await getAppointmentsRepository()
+  const patientsRepo = await getPatientsRepository()
+  const appointments = await repo.getAppointments(effectiveClinicId)
 
-    return {
-      id: apt.id,
-      patient_id: apt.patient_id,
-      patient_name: apt.patient_name,
-      patient_phone: patient?.phone || "",
-      appointment_date: date.toISOString().split("T")[0],
-      appointment_time: date.toTimeString().slice(0, 5),
-      duration_minutes: 30,
-      status: apt.status,
-      type: apt.type,
-      scheduled_at: apt.scheduled_at,
-      notes: apt.notes,
-      created_at: apt.created_at,
-    }
-  })
+  const allAppointments: AppointmentListItem[] = await Promise.all(
+    appointments.map(async (apt) => {
+      const date = new Date(apt.scheduled_at)
+      const patient = await patientsRepo.getById(apt.patient_id)
+      return {
+        id: apt.id,
+        patient_id: apt.patient_id,
+        patient_name: apt.patient_name ?? "",
+        patient_phone: patient?.phone ?? "",
+        appointment_date: date.toISOString().split("T")[0],
+        appointment_time: date.toTimeString().slice(0, 5),
+        duration_minutes: 30,
+        status: apt.status as AppointmentListItem["status"],
+        type: apt.type ?? "consultation",
+        scheduled_at: apt.scheduled_at,
+        notes: apt.notes,
+        created_at: apt.created_at,
+      }
+    })
+  )
 
-  // Combine with created appointments
-  const createdAppointments = getCreatedAppointments()
-  const combinedAppointments = [...allAppointments, ...createdAppointments]
+  const appointmentIdToDoctorId = new Map(appointments.map((a) => [a.id, a.doctor_id]))
 
-  // Filter by clinic
-  let filteredAppointments = combinedAppointments.filter((apt) => {
-    // Extract clinic_id from appointment if available
-    const appointment = mockData.appointments.find((a) => a.id === apt.id)
-    // If appointment exists in mockData, check clinic_id
-    // If not, it's a created appointment - check if it matches clinicId
-    // Created appointments should have clinic_id in the store, but for now we'll include them
-    // In a real implementation, clinic_id would be part of AppointmentListItem
-    if (appointment) {
-      return appointment.clinic_id === clinicId
-    }
-    // For created appointments, we'll include them (they're created for current clinic)
-    // In production, clinic_id should be part of the appointment data
-    return true
-  })
+  let filteredAppointments = allAppointments.filter((apt) => isAppointmentArchived(apt))
 
-  // Apply archive rules - only include archived appointments
-  filteredAppointments = filteredAppointments.filter((apt) => isAppointmentArchived(apt))
-
-  // Filter by date range
   if (from || to) {
     filteredAppointments = filteredAppointments.filter((apt) => {
       const appointmentDate = new Date(`${apt.appointment_date}T00:00:00`)
@@ -86,16 +68,14 @@ export async function listArchivedAppointments(
     })
   }
 
-  // Filter by status (multi-select)
   if (status && status.length > 0) {
-    filteredAppointments = filteredAppointments.filter((apt) => status.includes(apt.status as any))
+    filteredAppointments = filteredAppointments.filter((apt) => status.includes(apt.status as never))
   }
 
-  // Filter by doctor
   if (doctorId) {
     filteredAppointments = filteredAppointments.filter((apt) => {
-      const appointment = mockData.appointments.find((a) => a.id === apt.id)
-      return appointment?.doctor_id === doctorId
+      const aptDoctorId = appointmentIdToDoctorId.get(apt.id)
+      return aptDoctorId === doctorId
     })
   }
 

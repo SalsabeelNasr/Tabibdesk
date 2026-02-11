@@ -3,7 +3,8 @@
  * Currently uses mock data, but structured for easy backend replacement
  */
 
-import { mockData, DEMO_CLINIC_ID, DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
+import { DEMO_CLINIC_ID, DEMO_DOCTOR_ID } from "@/lib/constants"
+import { mockData } from "@/data/mock/mock-data"
 import type { DoctorAvailability } from "./types"
 
 // In-memory store for availability (demo mode only)

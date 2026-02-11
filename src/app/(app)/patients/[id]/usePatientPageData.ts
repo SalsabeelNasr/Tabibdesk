@@ -5,7 +5,7 @@ import { useAppTranslations } from "@/lib/useAppTranslations"
 import { useRouter } from "next/navigation"
 import { mockData, mockAppointments } from "@/data/mock/mock-data"
 import { listInvoices } from "@/api/invoices.api"
-import { update as updatePatient } from "@/api/patients.api"
+import { update as updatePatient, getById as getPatientById } from "@/api/patients.api"
 import { getByPatientId as getNotesByPatientId } from "@/api/notes.api"
 import { getProgressByPatientId } from "@/api/progress.api"
 import { getClinicSettings } from "@/api/settings.api"
@@ -65,8 +65,8 @@ export function usePatientPageData(
 
   const fetchPatientData = async () => {
     setLoading(true)
-    if (isDemoMode) {
-      const foundPatient = mockData.patients.find((p) => p.id === patientId)
+    try {
+      const foundPatient = await getPatientById(patientId)
       if (foundPatient) {
         setPatient(foundPatient)
         getProgressByPatientId(patientId).then((res) => setProgressMetrics(res.metrics))
@@ -80,8 +80,9 @@ export function usePatientPageData(
       } else {
         router.push("/patients")
       }
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const fetchDueTotal = async () => {
@@ -165,12 +166,8 @@ export function usePatientPageData(
   }
 
   const handleUpdatePatient = async (updates: Partial<any>) => {
-    const updatedPatient = await updatePatient(patientId, updates)
+    const updatedPatient = await updatePatient(patientId, updates, currentClinicId)
     setPatient(updatedPatient)
-    const mockIndex = mockData.patients.findIndex((p) => p.id === patientId)
-    if (mockIndex !== -1) {
-      mockData.patients[mockIndex] = updatedPatient as any
-    }
     return updatedPatient
   }
 

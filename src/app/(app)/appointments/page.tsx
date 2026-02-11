@@ -10,7 +10,7 @@ import { BookAppointmentDrawer } from "@/features/appointments/components/BookAp
 import { AddToWaitlistDrawer } from "@/features/appointments/waitlist/AddToWaitlistDrawer"
 import { useUserClinic } from "@/contexts/user-clinic-context"
 import { useDemo } from "@/contexts/demo-context"
-import { DEMO_CLINIC_ID, DEMO_DOCTOR_ID } from "@/data/mock/mock-data"
+import { DEMO_CLINIC_ID, DEMO_DOCTOR_ID } from "@/lib/constants"
 import type { Slot, WaitlistEntry } from "@/features/appointments/types"
 
 export default function AppointmentsPage() {

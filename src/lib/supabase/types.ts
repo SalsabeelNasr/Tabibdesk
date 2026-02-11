@@ -48,6 +48,20 @@ export interface Database {
           created_at: string
           updated_at: string
           deleted_at: string | null
+          address: string | null
+          age: number | null
+          height: number | null
+          complaint: string | null
+          job: string | null
+          social_status: string | null
+          source: string | null
+          source_other: string | null
+          status: string | null
+          doctor_id: string | null
+          first_visit_at: string | null
+          last_visit_at: string | null
+          last_activity_at: string | null
+          is_cold: boolean | null
         }
         Insert: {
           id?: string
@@ -61,6 +75,20 @@ export interface Database {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+          address?: string | null
+          age?: number | null
+          height?: number | null
+          complaint?: string | null
+          job?: string | null
+          social_status?: string | null
+          source?: string | null
+          source_other?: string | null
+          status?: string | null
+          doctor_id?: string | null
+          first_visit_at?: string | null
+          last_visit_at?: string | null
+          last_activity_at?: string | null
+          is_cold?: boolean | null
         }
         Update: {
           id?: string
@@ -74,6 +102,20 @@ export interface Database {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+          address?: string | null
+          age?: number | null
+          height?: number | null
+          complaint?: string | null
+          job?: string | null
+          social_status?: string | null
+          source?: string | null
+          source_other?: string | null
+          status?: string | null
+          doctor_id?: string | null
+          first_visit_at?: string | null
+          last_visit_at?: string | null
+          last_activity_at?: string | null
+          is_cold?: boolean | null
         }
       }
       appointments: {
@@ -87,6 +129,9 @@ export interface Database {
           created_at: string
           updated_at: string
           deleted_at: string | null
+          doctor_id: string | null
+          type: string | null
+          patient_name: string | null
         }
         Insert: {
           id?: string
@@ -98,6 +143,9 @@ export interface Database {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+          doctor_id?: string | null
+          type?: string | null
+          patient_name?: string | null
         }
         Update: {
           id?: string
@@ -109,6 +157,9 @@ export interface Database {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+          doctor_id?: string | null
+          type?: string | null
+          patient_name?: string | null
         }
       }
       visits: {
@@ -152,4 +203,3 @@ export interface Database {
     }
   }
 }
-
